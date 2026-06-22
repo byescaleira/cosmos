@@ -1,0 +1,69 @@
+// swift-tools-version: 6.2
+// The swift-tools-version declares the minimum version of Swift required to build this package.
+
+import PackageDescription
+
+let package = Package(
+    name: "Cosmos",
+    defaultLocalization: "en",
+    platforms: [
+        .iOS(.v26),
+        .macOS(.v26),
+        .tvOS(.v26),
+        .watchOS(.v26),
+        .macCatalyst(.v26),
+        .visionOS(.v26)
+    ],
+    products: [
+        .library(
+            name: "Cosmos",
+            targets: ["Cosmos"]
+        ),
+        .library(
+            name: "CosmosBase",
+            targets: ["CosmosBase"]
+        ),
+        .library(
+            name: "CosmosScreen",
+            targets: ["CosmosScreen"]
+        )
+    ],
+    dependencies: [
+        .package(url: "https://github.com/nalexn/ViewInspector.git", from: "0.10.1"),
+        .package(url: "https://github.com/pointfreeco/swift-snapshot-testing.git", from: "1.18.1")
+    ],
+    targets: [
+        .target(
+            name: "CosmosBase",
+            dependencies: [],
+            resources: [
+                .process("Resources")
+            ]
+        ),
+        .target(
+            name: "Cosmos",
+            dependencies: ["CosmosBase"]
+        ),
+        .target(
+            name: "CosmosScreen",
+            dependencies: ["Cosmos", "CosmosBase"]
+        ),
+        .testTarget(
+            name: "CosmosTests",
+            dependencies: ["Cosmos", "CosmosBase"]
+        ),
+        .testTarget(
+            name: "CosmosUITests",
+            dependencies: [
+                "Cosmos",
+                "CosmosScreen",
+                .product(name: "ViewInspector", package: "ViewInspector"),
+                .product(name: "SnapshotTesting", package: "swift-snapshot-testing")
+            ],
+            exclude: [
+                "Snapshot/__Snapshots__"
+            ]
+        )
+    ],
+    swiftLanguageModes: [.v6]
+)
