@@ -75,6 +75,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added `CosmosListStyle`, `CosmosTabRole`, and `CosmosTabAdaptiveStrategy` theme tokens.
 - Implemented adaptive `CosmosTabView` that switches between `TabView` (compact) and `NavigationSplitView` sidebar (regular) via `horizontalSizeClass`.
 - Wired `CosmosSection`, `CosmosList`, and `CosmosTabView` into `CosmosScreen` JSON models and renderer.
+- Added project-level Claude Code context: `.claude/CLAUDE.md`, `.claude/commands/byescaleira.md`, and `.claude/skills/cosmos/SKILL.md`.
+- Added molecule module folder `Sources/Cosmos/Molecules/`.
+- Added `CosmosInputRow` molecule (label + text field) with JSON model and renderer support.
+- Added `CosmosListRow` molecule (icon + title + subtitle + trailing) with `.none`, `.badge`, `.chevron`, and `.text` trailing variants.
+- Added `CosmosFormRow` molecule (label + control) with toggle, picker, stepper, slider, and value variants.
+- Wired `CosmosInputRow`, `CosmosListRow`, and `CosmosFormRow` into `CosmosScreen` JSON models and renderer.
+- Added renderer-local `@State` wrappers for interactive molecules (`RenderedCosmosInputRow`, `RenderedCosmosFormRow`) with optional action dispatch on value changes.
+- Added ViewInspector tests for the first three molecules.
+- Added `CosmosEmptyState` molecule (image + title + subtitle + button) for empty/error/onboarding placeholders.
+- Added `CosmosButtonRow` molecule (full-width icon + text button) with primary and danger variants.
+- Added `CosmosSearchBar` molecule (search icon + text field + clear button) with rounded surface background.
+- Wired `CosmosEmptyState`, `CosmosButtonRow`, and `CosmosSearchBar` into `CosmosScreen` JSON models and renderer.
+- Added `RenderedCosmosSearchBar` renderer wrapper with local `@State` and optional text-change / clear actions.
+- Added ViewInspector tests for `CosmosEmptyState`, `CosmosButtonRow`, and `CosmosSearchBar`.
+- Added `CosmosStatusRow` molecule (icon/image + title/subtitle + badge) for notification and status rows.
+- Added `CosmosCard` molecule (image + title + subtitle + badge + button) for content cards.
+- Added `CosmosAlertBanner` molecule (icon + title + action button) with info/success/warning/error variants.
+- Added `CosmosLoadingState` molecule (progress indicator + title + subtitle) for loading placeholders.
+- Wired `CosmosStatusRow`, `CosmosCard`, `CosmosAlertBanner`, and `CosmosLoadingState` into `CosmosScreen` JSON models and renderer.
+- Added ViewInspector tests and JSON round-trip tests for all four new molecules.
 
 ### Changed
 - `CosmosLocalizationConfiguration` now defaults to `CosmosResources.bundle` instead of `Bundle.main`, letting the library ship baseline translations.

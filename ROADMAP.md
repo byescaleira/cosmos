@@ -31,19 +31,26 @@
 - [x] Implement adaptive `CosmosTabView` for compact/regular size classes
 - [x] Wire all atoms into `CosmosScreen` JSON models and renderer
 - [x] Add ViewInspector tests for all atoms
+- [x] Add molecule: `CosmosInputRow` (label + text field)
+- [x] Add molecule: `CosmosListRow` (icon + text + divider)
+- [x] Add molecule: `CosmosFormRow` (label + control)
+- [x] Add molecule: `CosmosEmptyState` (image + title + subtitle + button)
+- [x] Add molecule: `CosmosButtonRow` (full-width icon + text button)
+- [x] Add molecule: `CosmosSearchBar` (search icon + text field + clear button)
+
+## Now (current cycle)
+- [x] Add molecule: `CosmosStatusRow` (icon + text + badge)
+- [x] Add molecule: `CosmosCard` (image + title + subtitle + badge/button)
+- [x] Add molecule: `CosmosAlertBanner` (icon + text + action)
+- [x] Add molecule: `CosmosLoadingState` (progress + text)
 
 ## Next
-- [ ] Create `/byescaleira` Claude Code plugin with project context
-- [ ] Add molecule: `CosmosInputRow` (label + text field)
-- [ ] Add molecule: `CosmosListRow` (icon + text + divider)
-
-## Later
 - [ ] Modifiers module: typography, spacing, surface
 - [ ] Organisms
 - [ ] Preview catalog app
 - [ ] GitHub CI
 
-## Future
+## Later
 - [ ] Runtime theming engine
 - [ ] Accessibility audit tooling
 - [ ] Component gallery website

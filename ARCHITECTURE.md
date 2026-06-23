@@ -44,7 +44,8 @@ Cosmos/
 │   │   ├── Theme/           # CosmosTheme + color/typography/spacing/radius tokens
 │   │   └── Environment/     # @Entry definitions and focused modifiers
 │   ├── Cosmos/              # Design system components
-│   │   └── Atoms/           # Flat folder: Button, Text, Icon, Image, Label, Link, TextField, Toggle, Progress, Slider, Picker, Stepper, DatePicker, Menu, Badge, Divider, Spacer, Section, List, TabView
+│   │   ├── Atoms/           # Flat folder: Button, Text, Icon, Image, Label, Link, TextField, Toggle, Progress, Slider, Picker, Stepper, DatePicker, Menu, Badge, Divider, Spacer, Section, List, TabView
+│   │   └── Molecules/       # InputRow, ListRow, FormRow, EmptyState, ButtonRow, SearchBar, StatusRow, Card, AlertBanner, LoadingState
 │   └── CosmosScreen/        # Data-driven screen assembly
 │       ├── Model/           # CosmosScreen, CosmosComponent
 │       ├── Renderer/        # CosmosScreenRenderer
@@ -124,7 +125,7 @@ Selectors (`CosmosTextStyle`, `CosmosButtonStyle`, `CosmosIconScale`, `CosmosDiv
 The `CosmosScreen` target renders a serializable screen model into SwiftUI:
 
 - `CosmosScreen` — identifier + array of `CosmosComponent`.
-- `CosmosComponent` — `Sendable`, `Codable`, `Equatable` enum covering text, button, icon, image, label, link, textField, toggle, progress, slider, picker, stepper, datePicker, menu, badge, divider, spacer, the three stack axes, list, section, and tabView.
+- `CosmosComponent` — `Sendable`, `Codable`, `Equatable` enum covering text, button, icon, image, label, link, textField, toggle, progress, slider, picker, stepper, datePicker, menu, badge, divider, spacer, the three stack axes, list, section, tabView, inputRow, listRow, formRow, emptyState, buttonRow, searchBar, statusRow, card, alertBanner, and loadingState.
 - `CosmosScreenRenderer` — recursive renderer that maps each component case to its atom, wrapped in `AnyView` to break recursive opaque-type inference.
 - `CosmosActionRegistry` — decouples serializable action identifiers from runtime closures.
 - `CosmosScreenLoader` — decodes `CosmosScreen` from JSON using a snake-case decoder.
@@ -178,6 +179,23 @@ Three atoms manage child layout and selection:
 - `CosmosTabView` — adaptive tab container. On `.compact` horizontal size classes it renders a `TabView`; on `.regular` it renders a `NavigationSplitView` sidebar. The adaptive behavior can be overridden via the `.cosmosTabAdaptiveStrategy(_:)` environment value.
 
 These atoms stay native-first: they use SwiftUI primitives and size classes rather than orientation or idiom checks, aligning with the iOS 27 resizable-app guidance.
+
+## Molecules
+
+Molecules are small, recognizable combinations of atoms:
+
+- `CosmosInputRow` — `CosmosLabel` + `CosmosTextField` for labeled form inputs.
+- `CosmosListRow` — icon + title/subtitle + trailing element (`none`, `badge`, `chevron`, `text`) for list content.
+- `CosmosFormRow` — `CosmosLabel` + trailing control (`toggle`, `picker`, `stepper`, `slider`, `value`) for settings rows.
+- `CosmosEmptyState` — image + title + subtitle + button for empty/error/onboarding placeholders.
+- `CosmosButtonRow` — full-width icon + text button for primary CTAs and list-style actions.
+- `CosmosSearchBar` — search icon + text field + clear button with rounded surface background.
+- `CosmosStatusRow` — icon/image + title/subtitle + optional badge for status and notification rows.
+- `CosmosCard` — optional image + title + subtitle + badge + button for content cards.
+- `CosmosAlertBanner` — icon + title + optional action button with info/success/warning/error variants.
+- `CosmosLoadingState` — progress indicator + optional title/subtitle for loading placeholders.
+
+Interactive molecules accept `Binding` values in Swift code. In `CosmosScreen` JSON the renderer creates a local `@State` wrapper initialized from the model's `initialValue` and dispatches actions through `CosmosActionRegistry` when the value changes. This keeps JSON declarative while supporting live controls. Non-interactive molecules such as `CosmosStatusRow`, `CosmosCard`, `CosmosAlertBanner`, and `CosmosLoadingState` are rendered directly from their models.
 
 ## Dependencies
 
