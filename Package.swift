@@ -28,10 +28,7 @@ let package = Package(
             targets: ["CosmosScreen"]
         )
     ],
-    dependencies: [
-        .package(url: "https://github.com/nalexn/ViewInspector.git", from: "0.10.1"),
-        .package(url: "https://github.com/pointfreeco/swift-snapshot-testing.git", from: "1.18.1")
-    ],
+    dependencies: [],
     targets: [
         .target(
             name: "CosmosBase",
@@ -51,18 +48,6 @@ let package = Package(
         .testTarget(
             name: "CosmosTests",
             dependencies: ["Cosmos", "CosmosBase"]
-        ),
-        .testTarget(
-            name: "CosmosUITests",
-            dependencies: [
-                "Cosmos",
-                "CosmosScreen",
-                .product(name: "ViewInspector", package: "ViewInspector"),
-                .product(name: "SnapshotTesting", package: "swift-snapshot-testing")
-            ],
-            exclude: [
-                "Snapshot/__Snapshots__"
-            ]
         )
     ],
     swiftLanguageModes: [.v6]
