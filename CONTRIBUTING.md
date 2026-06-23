@@ -4,7 +4,7 @@
 2. Prefer semantic tokens from `CosmosStyles` over raw values.
 3. Add modifiers to `CosmosModifiers` when a visual behavior is reusable across atoms/molecules.
 4. Document public APIs with DocC.
-5. Add snapshot or unit tests for every new component.
+5. Add Swift Testing unit tests for models and behavior. Use Xcode Previews and the `CosmosPreview` catalog app for visual validation.
 6. Maintain backward compatibility for a major version after deprecation.
 
 ## Branching

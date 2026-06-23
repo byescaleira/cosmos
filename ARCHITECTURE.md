@@ -30,8 +30,6 @@ Every component — atom, molecule, or organism — reads both values via the en
 - Swift 6.2
 - SwiftUI
 - Swift Testing
-- ViewInspector (headless UI unit tests)
-- SnapshotTesting (visual regression)
 - DocC
 
 ## Structure
@@ -52,9 +50,6 @@ Cosmos/
 │       └── Registry/        # CosmosActionRegistry
 └── Tests/
     ├── CosmosTests/         # Base + atom unit tests
-    └── CosmosUITests/       # ViewInspector + Snapshot tests
-        ├── ViewInspector/
-        └── Snapshot/
 ```
 
 ## Configuration and theme
@@ -134,12 +129,13 @@ This layer lets screens be defined as JSON or server payloads and rendered with 
 
 ## UI testing strategy
 
-Two tools cover different failure modes:
+Cosmos ships without third-party UI testing dependencies. Visual and structural validation happens through:
 
-- **ViewInspector** — headless structural tests. Verifies that `CosmosScreenRenderer` produces the expected VStack/ForEach hierarchy and that atoms expose the correct SwiftUI primitives (Button, Text, Link, TextField, Toggle, ProgressView, Slider, Picker, Stepper, DatePicker, Menu, Shape, Image, Spacer) under their custom views.
-- **SnapshotTesting** — visual regression on iOS. Wraps atoms and rendered screens in a `UIHostingController` and compares PNG output. Status modifiers (`.cosmosEnabled(false)`, `.cosmosLoading(true)`, `.cosmosRedacted(true)`) are validated here because they depend on the full SwiftUI render environment.
+- **Swift Testing** — unit tests for models, configuration, theme, and JSON round-trips.
+- **Xcode Previews** — visual regression and state inspection during development.
+- **Catalog app** (planned) — a dedicated `CosmosPreview` executable target that renders every atom and molecule in default, disabled, loading, redacted, dark mode, and dynamic-type states.
 
-Note: SwiftUI emits a runtime warning when custom environment values are read outside an installed view hierarchy. This warning appears during ViewInspector's static traversal but does not affect runtime rendering or snapshot output.
+The project intentionally avoids snapshot and inspection libraries because none are provided by Apple. A future native alternative, if Apple introduces one, will be evaluated without breaking the public API.
 
 ## Conventions
 
@@ -148,7 +144,7 @@ Note: SwiftUI emits a runtime warning when custom environment values are read ou
 - Components read configuration and theme from the environment; they do not own it.
 - Atom initializers accept only content (text, label view, icon name). State, configuration, and theme are environment-driven.
 - Previews are co-located with components using `#Preview`.
-- Every public component has a Swift Testing unit test.
+- Every public component has a Swift Testing unit test or a visible preview in the catalog app.
 
 ## Image loading
 

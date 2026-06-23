@@ -14,13 +14,11 @@
 - [x] Add environment modifiers for state, accessibility, and theme overrides
 - [x] Flatten atom folder structure into `Sources/Cosmos/Atoms/`
 - [x] Build `CosmosScreen` data-driven renderer, action registry, and JSON loader
-- [x] Add ViewInspector structural tests for atoms, renderer, and JSON loader
-- [x] Add SnapshotTesting visual regression tests on iOS
+- [x] Add Swift Testing unit tests for base contracts, models, and JSON round-trips
 - [x] Build + test passing on macOS and iOS simulator
 - [x] Wire localization into atoms so JSON keys resolve through configured bundle/locale
 - [x] Fix empty accessibility label/hint overrides that silenced VoiceOver
 - [x] Decouple `CosmosScreen` models from `Cosmos` target
-- [x] Exclude snapshot baselines from SwiftPM test target
 - [x] Harden existing atoms (`CosmosText`, `CosmosButton`, `CosmosIcon`, `CosmosDivider`) with native controls
 - [x] Add `CosmosControlSize` and redaction support across atoms
 - [x] Add `CosmosImage` atom supporting resource, SF Symbol, URL (URL and String), placeholder, and loading redaction
@@ -30,7 +28,6 @@
 - [x] Add `CosmosSection`, `CosmosList`, and `CosmosTabView` container atoms
 - [x] Implement adaptive `CosmosTabView` for compact/regular size classes
 - [x] Wire all atoms into `CosmosScreen` JSON models and renderer
-- [x] Add ViewInspector tests for all atoms
 - [x] Add molecule: `CosmosInputRow` (label + text field)
 - [x] Add molecule: `CosmosListRow` (icon + text + divider)
 - [x] Add molecule: `CosmosFormRow` (label + control)

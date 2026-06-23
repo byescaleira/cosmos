@@ -156,7 +156,7 @@ swift build
 swift test
 ```
 
-The `CosmosUITests` target combines **ViewInspector** structural tests with **SnapshotTesting** visual regression on iOS. Snapshot baselines live in `Tests/CosmosUITests/Snapshot/__Snapshots__/`. Run iOS simulator tests to record or assert against them.
+Tests run with Swift Testing and cover base contracts, models, and JSON round-trips. Cosmos has no third-party dependencies; visual validation is done through Xcode Previews and the planned `CosmosPreview` catalog app.
 
 ## License
 

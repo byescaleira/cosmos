@@ -89,6 +89,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Wired `CosmosEmptyState`, `CosmosButtonRow`, and `CosmosSearchBar` into `CosmosScreen` JSON models and renderer.
 - Added `RenderedCosmosSearchBar` renderer wrapper with local `@State` and optional text-change / clear actions.
 - Added ViewInspector tests for `CosmosEmptyState`, `CosmosButtonRow`, and `CosmosSearchBar`.
+
+### Removed
+- Removed `ViewInspector` and `swift-snapshot-testing` dependencies.
+- Removed `CosmosUITests` target and all UI/snapshot tests. Visual validation now relies on Xcode Previews and the planned `CosmosPreview` catalog app.
+
+### Added
 - Added `CosmosStatusRow` molecule (icon/image + title/subtitle + badge) for notification and status rows.
 - Added `CosmosCard` molecule (image + title + subtitle + badge + button) for content cards.
 - Added `CosmosAlertBanner` molecule (icon + title + action button) with info/success/warning/error variants.
