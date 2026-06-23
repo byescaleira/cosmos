@@ -22,6 +22,8 @@ public enum CosmosComponent: Sendable, Codable, Equatable {
     case label(CosmosLabelModel)
     case link(CosmosLinkModel)
     case textField(CosmosTextFieldModel)
+    case inputRow(CosmosInputRowModel)
+    case formRow(CosmosFormRowModel)
     case toggle(CosmosToggleModel)
     case progress(CosmosProgressModel)
     case slider(CosmosSliderModel)
@@ -34,6 +36,14 @@ public enum CosmosComponent: Sendable, Codable, Equatable {
     case spacer(CosmosSpacerModel)
     case list(CosmosListModel)
     case section(CosmosSectionModel)
+    case listRow(CosmosListRowModel)
+    case emptyState(CosmosEmptyStateModel)
+    case buttonRow(CosmosButtonRowModel)
+    case searchBar(CosmosSearchBarModel)
+    case statusRow(CosmosStatusRowModel)
+    case card(CosmosCardModel)
+    case alertBanner(CosmosAlertBannerModel)
+    case loadingState(CosmosLoadingStateModel)
     case tabView(CosmosTabViewModel)
 
     case vStack(CosmosStackModel)
@@ -48,6 +58,8 @@ public enum CosmosComponent: Sendable, Codable, Equatable {
         case label
         case link
         case textField
+        case inputRow
+        case formRow
         case toggle
         case progress
         case slider
@@ -60,6 +72,14 @@ public enum CosmosComponent: Sendable, Codable, Equatable {
         case spacer
         case list
         case section
+        case listRow
+        case emptyState
+        case buttonRow
+        case searchBar
+        case statusRow
+        case card
+        case alertBanner
+        case loadingState
         case tabView
         case vStack
         case hStack
@@ -83,6 +103,10 @@ public enum CosmosComponent: Sendable, Codable, Equatable {
             self = .link(value)
         } else if let value = try container.decodeIfPresent(CosmosTextFieldModel.self, forKey: .textField) {
             self = .textField(value)
+        } else if let value = try container.decodeIfPresent(CosmosInputRowModel.self, forKey: .inputRow) {
+            self = .inputRow(value)
+        } else if let value = try container.decodeIfPresent(CosmosFormRowModel.self, forKey: .formRow) {
+            self = .formRow(value)
         } else if let value = try container.decodeIfPresent(CosmosToggleModel.self, forKey: .toggle) {
             self = .toggle(value)
         } else if let value = try container.decodeIfPresent(CosmosProgressModel.self, forKey: .progress) {
@@ -111,6 +135,22 @@ public enum CosmosComponent: Sendable, Codable, Equatable {
             self = .list(value)
         } else if let value = try container.decodeIfPresent(CosmosSectionModel.self, forKey: .section) {
             self = .section(value)
+        } else if let value = try container.decodeIfPresent(CosmosListRowModel.self, forKey: .listRow) {
+            self = .listRow(value)
+        } else if let value = try container.decodeIfPresent(CosmosEmptyStateModel.self, forKey: .emptyState) {
+            self = .emptyState(value)
+        } else if let value = try container.decodeIfPresent(CosmosButtonRowModel.self, forKey: .buttonRow) {
+            self = .buttonRow(value)
+        } else if let value = try container.decodeIfPresent(CosmosSearchBarModel.self, forKey: .searchBar) {
+            self = .searchBar(value)
+        } else if let value = try container.decodeIfPresent(CosmosStatusRowModel.self, forKey: .statusRow) {
+            self = .statusRow(value)
+        } else if let value = try container.decodeIfPresent(CosmosCardModel.self, forKey: .card) {
+            self = .card(value)
+        } else if let value = try container.decodeIfPresent(CosmosAlertBannerModel.self, forKey: .alertBanner) {
+            self = .alertBanner(value)
+        } else if let value = try container.decodeIfPresent(CosmosLoadingStateModel.self, forKey: .loadingState) {
+            self = .loadingState(value)
         } else if let value = try container.decodeIfPresent(CosmosTabViewModel.self, forKey: .tabView) {
             self = .tabView(value)
         } else if container.contains(.divider) {
@@ -142,6 +182,10 @@ public enum CosmosComponent: Sendable, Codable, Equatable {
             try container.encode(value, forKey: .link)
         case .textField(let value):
             try container.encode(value, forKey: .textField)
+        case .inputRow(let value):
+            try container.encode(value, forKey: .inputRow)
+        case .formRow(let value):
+            try container.encode(value, forKey: .formRow)
         case .toggle(let value):
             try container.encode(value, forKey: .toggle)
         case .progress(let value):
@@ -166,6 +210,22 @@ public enum CosmosComponent: Sendable, Codable, Equatable {
             try container.encode(value, forKey: .list)
         case .section(let value):
             try container.encode(value, forKey: .section)
+        case .listRow(let value):
+            try container.encode(value, forKey: .listRow)
+        case .emptyState(let value):
+            try container.encode(value, forKey: .emptyState)
+        case .buttonRow(let value):
+            try container.encode(value, forKey: .buttonRow)
+        case .searchBar(let value):
+            try container.encode(value, forKey: .searchBar)
+        case .statusRow(let value):
+            try container.encode(value, forKey: .statusRow)
+        case .card(let value):
+            try container.encode(value, forKey: .card)
+        case .alertBanner(let value):
+            try container.encode(value, forKey: .alertBanner)
+        case .loadingState(let value):
+            try container.encode(value, forKey: .loadingState)
         case .tabView(let value):
             try container.encode(value, forKey: .tabView)
         case .vStack(let value):

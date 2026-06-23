@@ -84,6 +84,10 @@ public struct CosmosScreenRenderer: View {
             AnyView(CosmosLink(model.titleKey, urlString: model.url))
         case .textField(let model):
             AnyView(CosmosTextField(text: .constant(""), prompt: model.promptKey, secure: model.secure))
+        case .inputRow(let model):
+            AnyView(RenderedCosmosInputRow(model: model, registry: registry))
+        case .formRow(let model):
+            AnyView(RenderedCosmosFormRow(model: model, registry: registry))
         case .toggle(let model):
             AnyView(CosmosToggle(isOn: .constant(false), model.titleKey, systemImage: model.systemImage))
         case .progress(let model):
@@ -127,6 +131,22 @@ public struct CosmosScreenRenderer: View {
             AnyView(renderList(model))
         case .section(let model):
             AnyView(renderSection(model))
+        case .listRow(let model):
+            AnyView(renderListRow(model))
+        case .emptyState(let model):
+            AnyView(renderEmptyState(model))
+        case .buttonRow(let model):
+            AnyView(renderButtonRow(model))
+        case .searchBar(let model):
+            AnyView(RenderedCosmosSearchBar(model: model, registry: registry))
+        case .statusRow(let model):
+            AnyView(renderStatusRow(model))
+        case .card(let model):
+            AnyView(renderCard(model))
+        case .alertBanner(let model):
+            AnyView(renderAlertBanner(model))
+        case .loadingState(let model):
+            AnyView(renderLoadingState(model))
         case .tabView(let model):
             AnyView(renderTabView(model))
         case .vStack(let model):
@@ -244,9 +264,115 @@ private extension CosmosScreenRenderer {
             AnyView(renderComponents(components))
         }
     }
+
+    func renderListRow(_ model: CosmosListRowModel) -> some View {
+        let row = CosmosListRow(
+            model.titleKey,
+            subtitle: model.subtitleKey,
+            systemImage: model.systemImage,
+            trailing: model.trailing
+        )
+
+        if let action = model.action {
+            return AnyView(
+                CosmosButton(action: { try registry.handle(action.id) }) {
+                    row
+                }
+                .buttonStyle(.plain)
+            )
+        }
+
+        return AnyView(row)
+    }
+
+    func renderEmptyState(_ model: CosmosEmptyStateModel) -> some View {
+        CosmosEmptyState(
+            image: model.image.map(imageSource),
+            title: model.titleKey,
+            subtitle: model.subtitleKey,
+            buttonTitle: model.buttonTitleKey,
+            buttonAction: model.buttonAction.map { action in
+                { try registry.handle(action.id) }
+            }
+        )
+    }
+
+    func imageSource(_ model: CosmosImageModel.Source) -> CosmosImage.Source {
+        switch model {
+        case .resource(let name, let bundle):
+            return .resource(name: name, bundle: bundle.flatMap(Bundle.init(identifier:)))
+        case .system(let name):
+            return .system(name: name)
+        case .url(let string):
+            if let url = URL(string: string) {
+                return .url(url)
+            }
+            return .urlString(string)
+        }
+    }
+
+    func renderButtonRow(_ model: CosmosButtonRowModel) -> some View {
+        CosmosButtonRow(
+            model.titleKey,
+            systemImage: model.systemImage,
+            variant: model.variant
+        ) {
+            try registry.handle(model.action.id)
+        }
+    }
+
+    func renderStatusRow(_ model: CosmosStatusRowModel) -> some View {
+        CosmosStatusRow(
+            image: model.image.map(imageSource),
+            systemImage: model.systemImage,
+            title: model.titleKey,
+            subtitle: model.subtitleKey,
+            badge: model.badge.map(renderBadge)
+        )
+    }
+
+    func renderBadge(_ model: CosmosBadgeModel) -> CosmosBadge {
+        if let text = model.text {
+            return CosmosBadge(text, variant: model.variant)
+        }
+        return CosmosBadge(dot: model.variant)
+    }
+
+    func renderCard(_ model: CosmosCardModel) -> some View {
+        CosmosCard(
+            image: model.image.map(imageSource),
+            title: model.titleKey,
+            subtitle: model.subtitleKey,
+            badge: model.badge.map(renderBadge),
+            buttonTitle: model.buttonTitleKey,
+            buttonAction: model.buttonAction.map { action in
+                { try registry.handle(action.id) }
+            }
+        )
+    }
+
+    func renderAlertBanner(_ model: CosmosAlertBannerModel) -> some View {
+        CosmosAlertBanner(
+            systemImage: model.systemImage,
+            title: model.titleKey,
+            actionTitle: model.actionTitleKey,
+            action: model.action.map { action in
+                { try registry.handle(action.id) }
+            },
+            variant: model.variant
+        )
+    }
+
+    func renderLoadingState(_ model: CosmosLoadingStateModel) -> some View {
+        CosmosLoadingState(
+            title: model.titleKey,
+            subtitle: model.subtitleKey,
+            progressValue: model.progressValue
+        )
+    }
 }
 
-// MARK: - Stateful tab view wrapper
+// MARK: - Stateful wrappers for interactive components
 
 private struct RenderedCosmosTabView: View {
     let model: CosmosTabViewModel
@@ -279,6 +405,128 @@ private struct RenderedCosmosTabView: View {
             if let tabModel = model.tabs.first(where: { $0.id == tab.id }) {
                 render(tabModel.components)
             }
+        }
+    }
+}
+
+private struct RenderedCosmosInputRow: View {
+    let model: CosmosInputRowModel
+    let registry: CosmosActionRegistry
+
+    @State private var text: String
+
+    init(model: CosmosInputRowModel, registry: CosmosActionRegistry) {
+        self.model = model
+        self.registry = registry
+        _text = State(initialValue: model.initialText ?? "")
+    }
+
+    var body: some View {
+        CosmosInputRow(
+            text: $text,
+            label: model.labelKey,
+            prompt: model.promptKey,
+            secure: model.secure
+        )
+        .onChange(of: text) { _, newValue in
+            if let action = model.textChangeAction {
+                try? registry.handle(action.id)
+            }
+        }
+    }
+}
+
+private struct RenderedCosmosSearchBar: View {
+    let model: CosmosSearchBarModel
+    let registry: CosmosActionRegistry
+
+    @State private var text: String
+
+    init(model: CosmosSearchBarModel, registry: CosmosActionRegistry) {
+        self.model = model
+        self.registry = registry
+        _text = State(initialValue: model.initialText ?? "")
+    }
+
+    var body: some View {
+        CosmosSearchBar(
+            text: $text,
+            placeholder: model.placeholderKey ?? "search.placeholder",
+            onClear: {
+                if let action = model.clearAction {
+                    try? registry.handle(action.id)
+                }
+            }
+        )
+        .onChange(of: text) { _, _ in
+            if let action = model.textChangeAction {
+                try? registry.handle(action.id)
+            }
+        }
+    }
+}
+
+private struct RenderedCosmosFormRow: View {
+    let model: CosmosFormRowModel
+    let registry: CosmosActionRegistry
+
+    @State private var boolValue: Bool
+    @State private var stringValue: String
+    @State private var doubleValue: Double
+
+    init(model: CosmosFormRowModel, registry: CosmosActionRegistry) {
+        self.model = model
+        self.registry = registry
+
+        switch model.initialValue {
+        case .bool(let value):
+            _boolValue = State(initialValue: value)
+            _stringValue = State(initialValue: "")
+            _doubleValue = State(initialValue: 0)
+        case .string(let value):
+            _boolValue = State(initialValue: false)
+            _stringValue = State(initialValue: value)
+            _doubleValue = State(initialValue: 0)
+        case .double(let value):
+            _boolValue = State(initialValue: false)
+            _stringValue = State(initialValue: "")
+            _doubleValue = State(initialValue: value)
+        case .none:
+            _boolValue = State(initialValue: false)
+            _stringValue = State(initialValue: "")
+            _doubleValue = State(initialValue: 0)
+        }
+    }
+
+    var body: some View {
+        CosmosFormRow(
+            model.titleKey,
+            systemImage: model.systemImage,
+            control: control
+        )
+        .onChange(of: boolValue) { _, _ in dispatchChange() }
+        .onChange(of: stringValue) { _, _ in dispatchChange() }
+        .onChange(of: doubleValue) { _, _ in dispatchChange() }
+    }
+
+    private var control: CosmosFormRow.Control {
+        switch model.control {
+        case .toggle:
+            return .toggle($boolValue)
+        case .picker:
+            return .picker($stringValue, [])
+        case .stepper:
+            return .stepper($doubleValue, 0...100, 1)
+        case .slider:
+            return .slider($doubleValue, 0...100, nil)
+        case .value:
+            return .value(stringValue)
+        }
+    }
+
+    private func dispatchChange() {
+        if let action = model.valueChangeAction {
+            try? registry.handle(action.id)
         }
     }
 }

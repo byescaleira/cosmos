@@ -121,6 +121,202 @@ struct CosmosScreenRoundTripTests {
 
         #expect(decoded == screen)
     }
+
+    @Test func encodeThenDecodePreservesInputRow() throws {
+        let screen = CosmosScreen(
+            id: "input-screen",
+            components: [
+                .inputRow(.init(
+                    labelKey: "login.name_label",
+                    promptKey: "login.name_prompt",
+                    secure: false,
+                    initialText: "Rafael",
+                    textChangeAction: .init(id: "name.changed")
+                ))
+            ]
+        )
+
+        let data = try loader.encode(screen: screen)
+        let decoded = try loader.screen(from: data)
+
+        #expect(decoded == screen)
+    }
+
+    @Test func encodeThenDecodePreservesListRow() throws {
+        let screen = CosmosScreen(
+            id: "listrow-screen",
+            components: [
+                .listRow(.init(
+                    titleKey: "settings.account",
+                    subtitleKey: "settings.account_subtitle",
+                    systemImage: "person",
+                    trailing: .chevron,
+                    action: .init(id: "open.account")
+                ))
+            ]
+        )
+
+        let data = try loader.encode(screen: screen)
+        let decoded = try loader.screen(from: data)
+
+        #expect(decoded == screen)
+    }
+
+    @Test func encodeThenDecodePreservesFormRow() throws {
+        let screen = CosmosScreen(
+            id: "formrow-screen",
+            components: [
+                .formRow(.init(
+                    titleKey: "settings.notifications",
+                    systemImage: "bell",
+                    control: .toggle,
+                    initialValue: .bool(true),
+                    valueChangeAction: .init(id: "notifications.changed")
+                ))
+            ]
+        )
+
+        let data = try loader.encode(screen: screen)
+        let decoded = try loader.screen(from: data)
+
+        #expect(decoded == screen)
+    }
+
+    @Test func encodeThenDecodePreservesEmptyState() throws {
+        let screen = CosmosScreen(
+            id: "empty-screen",
+            components: [
+                .emptyState(.init(
+                    image: .system(name: "magnifyingglass"),
+                    titleKey: "empty.title",
+                    subtitleKey: "empty.subtitle",
+                    buttonTitleKey: "empty.action",
+                    buttonAction: .init(id: "empty.action")
+                ))
+            ]
+        )
+
+        let data = try loader.encode(screen: screen)
+        let decoded = try loader.screen(from: data)
+
+        #expect(decoded == screen)
+    }
+
+    @Test func encodeThenDecodePreservesButtonRow() throws {
+        let screen = CosmosScreen(
+            id: "buttonrow-screen",
+            components: [
+                .buttonRow(.init(
+                    titleKey: "continue.title",
+                    systemImage: "arrow.right",
+                    variant: .primary,
+                    action: .init(id: "continue")
+                ))
+            ]
+        )
+
+        let data = try loader.encode(screen: screen)
+        let decoded = try loader.screen(from: data)
+
+        #expect(decoded == screen)
+    }
+
+    @Test func encodeThenDecodePreservesSearchBar() throws {
+        let screen = CosmosScreen(
+            id: "searchbar-screen",
+            components: [
+                .searchBar(.init(
+                    placeholderKey: "search.placeholder",
+                    initialText: "query",
+                    textChangeAction: .init(id: "search.textChanged"),
+                    clearAction: .init(id: "search.cleared")
+                ))
+            ]
+        )
+
+        let data = try loader.encode(screen: screen)
+        let decoded = try loader.screen(from: data)
+
+        #expect(decoded == screen)
+    }
+
+    @Test func encodeThenDecodePreservesStatusRow() throws {
+        let screen = CosmosScreen(
+            id: "statusrow-screen",
+            components: [
+                .statusRow(.init(
+                    systemImage: "bell.fill",
+                    titleKey: "notification.title",
+                    subtitleKey: "notification.subtitle",
+                    badge: .init(text: "3", variant: .primary)
+                ))
+            ]
+        )
+
+        let data = try loader.encode(screen: screen)
+        let decoded = try loader.screen(from: data)
+
+        #expect(decoded == screen)
+    }
+
+    @Test func encodeThenDecodePreservesCard() throws {
+        let screen = CosmosScreen(
+            id: "card-screen",
+            components: [
+                .card(.init(
+                    image: .system(name: "photo"),
+                    titleKey: "card.title",
+                    subtitleKey: "card.subtitle",
+                    badge: .init(text: "New", variant: .success),
+                    buttonTitleKey: "card.action",
+                    buttonAction: .init(id: "card.tapped")
+                ))
+            ]
+        )
+
+        let data = try loader.encode(screen: screen)
+        let decoded = try loader.screen(from: data)
+
+        #expect(decoded == screen)
+    }
+
+    @Test func encodeThenDecodePreservesAlertBanner() throws {
+        let screen = CosmosScreen(
+            id: "alert-screen",
+            components: [
+                .alertBanner(.init(
+                    systemImage: "exclamationmark.triangle",
+                    titleKey: "alert.title",
+                    actionTitleKey: "alert.action",
+                    action: .init(id: "alert.tapped"),
+                    variant: .warning
+                ))
+            ]
+        )
+
+        let data = try loader.encode(screen: screen)
+        let decoded = try loader.screen(from: data)
+
+        #expect(decoded == screen)
+    }
+
+    @Test func encodeThenDecodePreservesLoadingState() throws {
+        let screen = CosmosScreen(
+            id: "loading-screen",
+            components: [
+                .loadingState(.init(
+                    titleKey: "loading.title",
+                    subtitleKey: "loading.subtitle",
+                    progressValue: 0.42
+                ))
+            ]
+        )
+
+        let data = try loader.encode(screen: screen)
+        let decoded = try loader.screen(from: data)
+
+        #expect(decoded == screen)
+    }
 }
 
 private extension Array {
