@@ -62,6 +62,7 @@ extension CosmosButtonRow {
         case primary
         case danger
 
+        @MainActor
         fileprivate var buttonStyle: some PrimitiveButtonStyle {
             switch self {
             case .primary, .danger:
