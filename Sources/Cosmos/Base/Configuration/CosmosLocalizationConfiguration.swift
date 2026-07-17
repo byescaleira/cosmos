@@ -29,14 +29,25 @@ public struct CosmosLocalizationConfiguration: Sendable {
     public func string(for key: String) -> String {
         let resolvedBundle = bundle ?? Bundle.module
 
-        // When a locale is explicitly configured, resolve from its `.lproj` sub-bundle so the
-        // result is deterministic and does not depend on the process preferred-language list.
-        // `String(localized:bundle:locale:)` does not reliably honor `locale` for lookup across
-        // all bundle layouts/OS versions, so the lproj route is the robust path.
+        // Route 1 — compiled `.lproj/Localizable.strings` (Xcode 27 / Swift 6.4 SwiftPM compiles
+        // the `.xcstrings` into per-locale `.lproj` sub-bundles). When a locale is explicitly
+        // configured, resolve from its `.lproj` so the result is deterministic and does not depend
+        // on the process preferred-language list. `String(localized:bundle:locale:)` does not
+        // reliably honor `locale` for lookup across all bundle layouts/OS versions, so the lproj
+        // route is the robust path.
         if let locale {
             if let lprojBundle = Self.lprojBundle(for: locale, in: resolvedBundle) {
                 return NSLocalizedString(key, tableName: tableName, bundle: lprojBundle, value: key, comment: "")
             }
+        }
+
+        // Route 2 — read the `.xcstrings` catalog directly. Xcode 26 / Swift 6.3 SwiftPM copies
+        // the `.xcstrings` verbatim instead of compiling `.lproj` (no `.lproj` is produced), so
+        // `NSLocalizedString` cannot resolve and would return the key. Parse the catalog JSON and
+        // extract the value for the configured locale (full id → language code → source language).
+        // No-op when the `.lproj` route already resolved or when no `.xcstrings` is present.
+        if let value = Self.xcstringsValue(for: key, table: tableName, locale: locale, in: resolvedBundle) {
+            return value
         }
 
         return NSLocalizedString(key, tableName: tableName, bundle: resolvedBundle, value: key, comment: "")
@@ -53,6 +64,46 @@ public struct CosmosLocalizationConfiguration: Sendable {
            let path = container.path(forResource: languageCode, ofType: "lproj"),
            let bundle = Bundle(path: path) {
             return bundle
+        }
+        return nil
+    }
+
+    /// Parses the `.xcstrings` catalog at `<table>.xcstrings` in `container` and returns the
+    /// resolved value for `key`, trying the full locale id (hyphen- and underscore-normalized),
+    /// the language code, a `language-Region` reconstruction, and finally the source language.
+    /// `nil` when the catalog or key is absent. Used as the fallback when no `.lproj` exists.
+    private static func xcstringsValue(for key: String, table: String, locale: Locale?, in container: Bundle) -> String? {
+        guard let url = container.url(forResource: table, withExtension: "xcstrings"),
+              let data = try? Data(contentsOf: url),
+              let object = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+              let strings = object["strings"] as? [String: Any],
+              let entry = strings[key] as? [String: Any],
+              let localizations = entry["localizations"] as? [String: Any] else {
+            return nil
+        }
+
+        var candidateIds: [String] = []
+        if let locale {
+            let raw = locale.identifier
+            candidateIds.append(raw)
+            candidateIds.append(raw.replacingOccurrences(of: "_", with: "-"))
+            if let lang = locale.language.languageCode?.identifier {
+                candidateIds.append(lang)
+                if let region = locale.region?.identifier {
+                    candidateIds.append("\(lang)-\(region)")
+                }
+            }
+        }
+        if let sourceLanguage = object["sourceLanguage"] as? String {
+            candidateIds.append(sourceLanguage)
+        }
+
+        for id in candidateIds {
+            if let loc = localizations[id] as? [String: Any],
+               let unit = loc["stringUnit"] as? [String: Any],
+               let value = unit["value"] as? String {
+                return value
+            }
         }
         return nil
     }
