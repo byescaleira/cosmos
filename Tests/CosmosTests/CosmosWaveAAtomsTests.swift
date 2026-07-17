@@ -33,6 +33,14 @@ struct CosmosWaveAAtomsTests {
         #expect(CosmosToggleAccessibility.valueString(isOn: false, isMixed: true) == "Mixed")
     }
 
+    @Test func toggleSelectionHapticOnlyForButton() {
+        // The .selection haptic fires only for .button (the variant with no native haptic);
+        // .switch/.automatic emit their own, so Cosmos must not double-haptic.
+        #expect(CosmosToggleAccessibility.shouldEmitSelectionHaptic(style: .button) == true)
+        #expect(CosmosToggleAccessibility.shouldEmitSelectionHaptic(style: .switch) == false)
+        #expect(CosmosToggleAccessibility.shouldEmitSelectionHaptic(style: .automatic) == false)
+    }
+
     // MARK: - CosmosProgressAccessibility (pure determinate/indeterminate branch logic)
 
     @Test func progressIsIndeterminateWhenFractionNil() {

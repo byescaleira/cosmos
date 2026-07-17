@@ -128,6 +128,8 @@ public enum CosmosProgressAccessibility {
 /// (with a policy-gated `.valueChange` animation and re-applied `.updatesFrequently` trait + value
 /// string), delegating the indeterminate case to the native circular spinner. The native spinner
 /// is requested with an explicit `.progressViewStyle(.circular)` to avoid recursing into this style.
+/// The translucent track collapses to opaque when `accessibilityReduceTransparency` is active and
+/// `configuration.motion.respectReduceTransparency` is set (config-aware, mirroring ``CosmosCard``).
 public struct CosmosProgressChrome: ProgressViewStyle {
     public init() {}
     public func makeBody(configuration: Configuration) -> some View {
@@ -138,6 +140,15 @@ public struct CosmosProgressChrome: ProgressViewStyle {
 private struct CosmosProgressChromeBody: View {
     let configuration: ProgressViewStyle.Configuration
     @Environment(\.cosmosTheme) private var theme
+    @Environment(\.cosmosConfiguration) private var cosmosConfiguration
+    @Environment(\.accessibilityReduceTransparency) private var reduceTransparency
+
+    /// Collapses the translucent track to opaque when Reduce Transparency is active and respected
+    /// by config (mirrors the ``CosmosCard`` shadow-suppression pattern — config-aware, not the
+    /// bare env value).
+    private var trackFillOpacity: Double {
+        (reduceTransparency && cosmosConfiguration.motion.respectReduceTransparency) ? 1.0 : 0.4
+    }
 
     var body: some View {
         if CosmosProgressAccessibility.isIndeterminate(fractionCompleted: configuration.fractionCompleted) {
@@ -150,7 +161,7 @@ private struct CosmosProgressChromeBody: View {
                 GeometryReader { geo in
                     ZStack(alignment: .leading) {
                         RoundedRectangle(cornerRadius: CosmosRadiusTokens.small, style: .continuous)
-                            .fill(theme.colors.outline.opacity(0.4))
+                            .fill(theme.colors.outline.opacity(trackFillOpacity))
                         RoundedRectangle(cornerRadius: CosmosRadiusTokens.small, style: .continuous)
                             .fill(theme.colors.accent)
                             .frame(width: max(0, geo.size.width * CGFloat(max(0, min(1, fraction)))))
@@ -198,5 +209,16 @@ private struct CosmosProgressChromeBody: View {
         .padding()
         .cosmosPreviewVariant(.reduceMotion)
         .cosmosPreviewEnv(dynamicTypeSize: .accessibility3)
+    }
+}
+
+#Preview("Progress – reduce transparency collapses track", traits: .sizeThatFitsLayout) {
+    CosmosPreviewContainer {
+        VStack(alignment: .leading, spacing: 24) {
+            CosmosProgress(value: 0.5).cosmosProgressStyle(.cosmos)
+            CosmosProgress(value: 0.8).cosmosProgressStyle(.cosmos)
+        }
+        .padding()
+        .cosmosPreviewVariant(.reduceTransparency)
     }
 }
