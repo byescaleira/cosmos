@@ -55,6 +55,11 @@ public struct CosmosTheme: Sendable {
     /// entire atom is guarded `#if !os(tvOS)` — the selector is still carried for API uniformity).
     public var datePickerStyle: CosmosDatePickerStyle
 
+    /// Default picker style variant for ``CosmosPicker`` (`.automatic`). `PickerStyle` is
+    /// opaque/native-bridged — this enum is consumed by the applier, which guards each case per
+    /// platform and falls back to `.automatic` where a requested style is unavailable.
+    public var pickerStyle: CosmosPickerStyle
+
     /// Default text-field variant for ``CosmosTextField`` (`.automatic`).
     public var textFieldStyle: CosmosTextFieldStyle
 
@@ -80,6 +85,7 @@ public struct CosmosTheme: Sendable {
         groupBoxStyle: CosmosGroupBoxStyle = .automatic,
         menuStyle: CosmosMenuStyle = .automatic,
         datePickerStyle: CosmosDatePickerStyle = .automatic,
+        pickerStyle: CosmosPickerStyle = .automatic,
         textFieldStyle: CosmosTextFieldStyle = .automatic,
         textEditorStyle: CosmosTextEditorStyle = .automatic,
         motion: CosmosMotionTokens = .default
@@ -97,6 +103,7 @@ public struct CosmosTheme: Sendable {
         self.groupBoxStyle = groupBoxStyle
         self.menuStyle = menuStyle
         self.datePickerStyle = datePickerStyle
+        self.pickerStyle = pickerStyle
         self.textFieldStyle = textFieldStyle
         self.textEditorStyle = textEditorStyle
         self.motion = motion
@@ -120,6 +127,7 @@ public struct CosmosTheme: Sendable {
     public func withGroupBoxStyle(_ groupBoxStyle: CosmosGroupBoxStyle) -> CosmosTheme { var c = self; c.groupBoxStyle = groupBoxStyle; return c }
     public func withMenuStyle(_ menuStyle: CosmosMenuStyle) -> CosmosTheme { var c = self; c.menuStyle = menuStyle; return c }
     public func withDatePickerStyle(_ datePickerStyle: CosmosDatePickerStyle) -> CosmosTheme { var c = self; c.datePickerStyle = datePickerStyle; return c }
+    public func withPickerStyle(_ pickerStyle: CosmosPickerStyle) -> CosmosTheme { var c = self; c.pickerStyle = pickerStyle; return c }
     public func withTextFieldStyle(_ textFieldStyle: CosmosTextFieldStyle) -> CosmosTheme { var c = self; c.textFieldStyle = textFieldStyle; return c }
     public func withTextEditorStyle(_ textEditorStyle: CosmosTextEditorStyle) -> CosmosTheme { var c = self; c.textEditorStyle = textEditorStyle; return c }
     public func withMotion(_ motion: CosmosMotionTokens) -> CosmosTheme { var c = self; c.motion = motion; return c }
