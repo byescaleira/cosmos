@@ -37,4 +37,15 @@ struct CosmosWaveERefinementsTests {
         #expect(CosmosSliderClusterAvailability.isAvailable(on: .visionos))
         #expect(!CosmosSliderClusterAvailability.isAvailable(on: .tvos))
     }
+
+    // MARK: - cosmosTabViewBottomAccessory(isEnabled:) availability (iOS 26.1; pure, host-agnostic)
+
+    @Test func bottomAccessoryEnabledAvailabilityIOSOnly() {
+        // The isEnabled: overload is @available(iOS 26.1, *) — unavailable on the other 4.
+        #expect(CosmosTabViewBottomAccessoryEnabledAvailability.isAvailable(on: .ios))
+        #expect(!CosmosTabViewBottomAccessoryEnabledAvailability.isAvailable(on: .macos))
+        #expect(!CosmosTabViewBottomAccessoryEnabledAvailability.isAvailable(on: .tvos))
+        #expect(!CosmosTabViewBottomAccessoryEnabledAvailability.isAvailable(on: .watchos))
+        #expect(!CosmosTabViewBottomAccessoryEnabledAvailability.isAvailable(on: .visionos))
+    }
 }
