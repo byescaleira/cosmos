@@ -33,7 +33,7 @@ The legacy `init(selection: Binding?, @ViewBuilder content:)` and `.tabItem { }`
 
 ## Selecting content
 
-Callers use the native `Tab` / `TabSection` primitives directly inside the `@TabContentBuilder` closure (Cosmos does not wrap `Tab`). `Tab` inits (Xcode 27): content-only `Tab(value:content:)` (`Label == EmptyView`), explicit-label `Tab(value:content:label:)`, and `Tab(_ titleKey:, systemImage:, value:, content:)` (title+systemImage). The non-selectable `Tab` inits (`Value == Never`) drop the `value:`. `TabRole.search` is at the iOS 18 floor (safe); `TabRole.prominent` is `@available(anyAppleOS 27.0, *)` — **above** the floor — not surfaced (callers gate it themselves).
+Callers use the native `Tab` / `TabSection` primitives directly inside the `@TabContentBuilder` closure (Cosmos does not wrap `Tab`). `Tab` inits (Xcode 27): content-only `Tab(value:content:)` (`Label == EmptyView`), explicit-label `Tab(value:content:label:)`, and `Tab(_ titleKey:, systemImage:, value:, content:)` (title+systemImage). The non-selectable `Tab` inits (`Value == Never`) drop the `value:`. `TabRole` is passed to `Tab(role:)` via **`CosmosTabRole`** (`.none`/`.search`/`.prominent`, file `Sources/Cosmos/Atoms/CosmosTabRole.swift`): `.search` is floor (iOS 18, all 5); `.prominent` is `@available(anyAppleOS 27.0, *)` — the **first above-floor (Cosmos-27) surface** — gated via `nativeRole() -> TabRole?` (`if #available(...27...)` → `.prominent` else `nil`). **There is no native `.tabRole(_:)` modifier** (`TabRole` is a `Tab(role:)` init parameter, verified in the `.swiftinterface`), so the exposure is the resolver, not a modifier — see [[above-floor-gating-pattern]].
 
 `@_disfavoredOverload` makes a string literal prefer the `LocalizedStringKey` Tab init over the `StringProtocol` one.
 
@@ -56,7 +56,7 @@ All version bounds ≤ the Cosmos 26 floor → `#if os()` only, no runtime `if #
 
 - `.cosmosTabViewCustomization(_:)` — wraps `.tabViewCustomization(_:)`. `TabViewCustomization` is unavailable on tvOS/watchOS → the **whole modifier** is `#if !os(tvOS) && !os(watchOS)`-guarded (the parameter *type* is unavailable, so a body-only guard is insufficient — same lesson as `ListSectionSpacing` in [[cosmos-section]]). Available iOS 18/macOS 15/visionOS 2.
 - `.cosmosTabBarMinimizeBehavior(_:)` — all 5 platforms at iOS 26 (the floor) → no guard. Only `.automatic` is portable; `.onScrollDown`/`.onScrollUp`/`.never` are iOS-only (enforced by the type system).
-- `.cosmosTabViewBottomAccessory(_:)` — `#if os(iOS)` (iOS 26). The `isEnabled:` overload is iOS 26.1 (above floor) — not wrapped, to avoid a runtime gate.
+- `.cosmosTabViewBottomAccessory(_:)` — `#if os(iOS)` (iOS 26). The `isEnabled:`-bearing overload `.cosmosTabViewBottomAccessory(isEnabled:content:)` (iOS 26.1, above floor) **is now wrapped** (PHASE3): `#if os(iOS)` + `if #available(iOS 26.1, *)` → native `isEnabled:` form, else degrades to the iOS 26.0 content-only form; no-op on the other 4 platforms. The shallowest runtime `if #available` gate in the library — see [[above-floor-gating-pattern]].
 
 ## Cross-cutting
 
