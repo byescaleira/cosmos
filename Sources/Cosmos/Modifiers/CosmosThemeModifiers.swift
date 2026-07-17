@@ -52,6 +52,18 @@ private struct CosmosDatePickerStyleModifier: ViewModifier {
     func body(content: Content) -> some View { content.environment(\.cosmosTheme, theme.withDatePickerStyle(style)) }
 }
 
+private struct CosmosTextFieldStyleModifier: ViewModifier {
+    let style: CosmosTextFieldStyle
+    @Environment(\.cosmosTheme) private var theme
+    func body(content: Content) -> some View { content.environment(\.cosmosTheme, theme.withTextFieldStyle(style)) }
+}
+
+private struct CosmosTextEditorStyleModifier: ViewModifier {
+    let style: CosmosTextEditorStyle
+    @Environment(\.cosmosTheme) private var theme
+    func body(content: Content) -> some View { content.environment(\.cosmosTheme, theme.withTextEditorStyle(style)) }
+}
+
 private struct CosmosTextStyleModifier: ViewModifier {
     let style: CosmosTextStyle
     @Environment(\.cosmosTheme) private var theme
@@ -99,6 +111,11 @@ extension View {
     public func cosmosMenuStyle(_ style: CosmosMenuStyle) -> some View { modifier(CosmosMenuStyleModifier(style: style)) }
     /// Overrides the default date picker style variant for descendant components.
     public func cosmosDatePickerStyle(_ style: CosmosDatePickerStyle) -> some View { modifier(CosmosDatePickerStyleModifier(style: style)) }
+    /// Overrides the default text-field style variant for descendant components.
+    public func cosmosTextFieldStyle(_ style: CosmosTextFieldStyle) -> some View { modifier(CosmosTextFieldStyleModifier(style: style)) }
+    /// Overrides the default text-editor style variant for descendant components (applied only
+    /// where `TextEditor` exists — iOS/macOS/visionOS).
+    public func cosmosTextEditorStyle(_ style: CosmosTextEditorStyle) -> some View { modifier(CosmosTextEditorStyleModifier(style: style)) }
     /// Overrides the default text style for descendant components.
     public func cosmosTextStyle(_ style: CosmosTextStyle) -> some View { modifier(CosmosTextStyleModifier(style: style)) }
     /// Overrides the default padding selector for descendant components.
