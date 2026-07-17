@@ -34,6 +34,24 @@ private struct CosmosProgressStyleModifier: ViewModifier {
     func body(content: Content) -> some View { content.environment(\.cosmosTheme, theme.withProgressStyle(style)) }
 }
 
+private struct CosmosGroupBoxStyleModifier: ViewModifier {
+    let style: CosmosGroupBoxStyle
+    @Environment(\.cosmosTheme) private var theme
+    func body(content: Content) -> some View { content.environment(\.cosmosTheme, theme.withGroupBoxStyle(style)) }
+}
+
+private struct CosmosMenuStyleModifier: ViewModifier {
+    let style: CosmosMenuStyle
+    @Environment(\.cosmosTheme) private var theme
+    func body(content: Content) -> some View { content.environment(\.cosmosTheme, theme.withMenuStyle(style)) }
+}
+
+private struct CosmosDatePickerStyleModifier: ViewModifier {
+    let style: CosmosDatePickerStyle
+    @Environment(\.cosmosTheme) private var theme
+    func body(content: Content) -> some View { content.environment(\.cosmosTheme, theme.withDatePickerStyle(style)) }
+}
+
 private struct CosmosTextStyleModifier: ViewModifier {
     let style: CosmosTextStyle
     @Environment(\.cosmosTheme) private var theme
@@ -75,6 +93,12 @@ extension View {
     public func cosmosLabelStyle(_ style: CosmosLabelStyle) -> some View { modifier(CosmosLabelStyleModifier(style: style)) }
     /// Overrides the default progress style variant for descendant components.
     public func cosmosProgressStyle(_ style: CosmosProgressStyle) -> some View { modifier(CosmosProgressStyleModifier(style: style)) }
+    /// Overrides the default group box style variant for descendant components.
+    public func cosmosGroupBoxStyle(_ style: CosmosGroupBoxStyle) -> some View { modifier(CosmosGroupBoxStyleModifier(style: style)) }
+    /// Overrides the default menu style variant for descendant components.
+    public func cosmosMenuStyle(_ style: CosmosMenuStyle) -> some View { modifier(CosmosMenuStyleModifier(style: style)) }
+    /// Overrides the default date picker style variant for descendant components.
+    public func cosmosDatePickerStyle(_ style: CosmosDatePickerStyle) -> some View { modifier(CosmosDatePickerStyleModifier(style: style)) }
     /// Overrides the default text style for descendant components.
     public func cosmosTextStyle(_ style: CosmosTextStyle) -> some View { modifier(CosmosTextStyleModifier(style: style)) }
     /// Overrides the default padding selector for descendant components.
