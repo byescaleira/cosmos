@@ -58,6 +58,12 @@ private struct CosmosPickerStyleModifier: ViewModifier {
     func body(content: Content) -> some View { content.environment(\.cosmosTheme, theme.withPickerStyle(style)) }
 }
 
+private struct CosmosListStyleModifier: ViewModifier {
+    let style: CosmosListStyle
+    @Environment(\.cosmosTheme) private var theme
+    func body(content: Content) -> some View { content.environment(\.cosmosTheme, theme.withListStyle(style)) }
+}
+
 private struct CosmosTextFieldStyleModifier: ViewModifier {
     let style: CosmosTextFieldStyle
     @Environment(\.cosmosTheme) private var theme
@@ -120,6 +126,9 @@ extension View {
     /// Overrides the default picker style variant for descendant components (each case is guarded
     /// per platform by the applier, falling back to `.automatic` where unavailable).
     public func cosmosPickerStyle(_ style: CosmosPickerStyle) -> some View { modifier(CosmosPickerStyleModifier(style: style)) }
+    /// Overrides the default list style variant for descendant components (each case is guarded
+    /// per platform by the applier, falling back to `.automatic` where unavailable).
+    public func cosmosListStyle(_ style: CosmosListStyle) -> some View { modifier(CosmosListStyleModifier(style: style)) }
     /// Overrides the default text-field style variant for descendant components.
     public func cosmosTextFieldStyle(_ style: CosmosTextFieldStyle) -> some View { modifier(CosmosTextFieldStyleModifier(style: style)) }
     /// Overrides the default text-editor style variant for descendant components (applied only
