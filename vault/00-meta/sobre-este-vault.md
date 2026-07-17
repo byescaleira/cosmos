@@ -33,6 +33,6 @@ A pesquisa de átomos foi gerada pelo workflow [[Phase 2 Research Workflow]] (3 
 - Links: `[[Nome do Note]]` (usa o título, não o filename).
 - Notas de átomo: tag `#atom` + `tier` no frontmatter.
 
-## Não é sincronizado automaticamente
+## Não é sincronizado automaticamente — mas é **vivo**
 
-Este vault é um snapshot. Mudanças nos docs raiz não se propagam sozinhas — revise após ondas grandes (ex.: Wave E).
+Este vault é a **memória de longo prazo** do projeto. Mudanças nos docs raiz não se propagam sozinhas — revise após ondas grandes (ex.: Wave E). E, por regra binding do `CLAUDE.md` ("Research → Obsidian vault"), **toda pesquisa nova a partir de 2026-07-17 deve ser persistida aqui** como nota interligada (não pode terminar só no chat). Nova pesquisa → nova nota na pasta certa (`03-componentes/` / `06-concorrencia/` / `07-metodologia/` / `08-riscos/` / `02-decisoes/`), linkar do `[[Home]]` e relacionados, verificar wikilinks.
