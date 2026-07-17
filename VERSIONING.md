@@ -23,8 +23,13 @@ Feature → OS gate reference:
 | `.sensoryFeedback`, `symbolEffect`, `ShapeStyle.resolve(in:)`, `listSectionSpacing` | iOS 17 |
 | `Tab`, `.sectionActions`, `TabViewStyle.sidebarAdaptable` | iOS 18 |
 | Liquid Glass (`.glassEffect`, `.glassProminent`), `listSectionMargins` | iOS 26 |
+| `tabViewBottomAccessory(isEnabled:)` | iOS 26.1 — runtime `if #available(iOS 26.1, *)`, degrades to the iOS 26.0 content-only `tabViewBottomAccessory(content:)` form (``cosmosTabViewBottomAccessory(isEnabled:content:)``); no-op on the other 4 platforms. |
+| `TabsPickerStyle` (`.tabs`) | iOS 27 / macOS 27 / tvOS 27 / visionOS 27, **watchOS unavailable** — **combined** compile (`#if !os(watchOS)` — the symbol is `@available(watchOS, unavailable)`) + runtime (`if #available(iOS 27, macOS 27, tvOS 27, visionOS 27, *)`) gate in ``CosmosPickerStyleApplier``; degrades to `.automatic` below OS 27 and on watchOS. First above-floor (Cosmos-27) surface. |
+| `TabRole.prominent` | `@available(anyAppleOS 27.0, *)` — all 5 platforms at OS 27 — runtime `if #available(iOS 27, macOS 27, tvOS 27, watchOS 27, visionOS 27, *)` in ``CosmosTabRole/nativeRole()``; degrades to `nil` below OS 27. First above-floor (Cosmos-27) surface. |
 
 Motion primitives (`Spring`, `PhaseAnimator`, `KeyframeAnimator`, `BlurReplaceTransition`, `withAnimation(completion)`, the generic `.transition<T>(_:)`, `matchedGeometryEffect`, and the `CosmosMotion*` tokens/modifiers) are all iOS 17/18 ≤ 26 and available on all 5 platforms — **no `if #available` gating is needed** at the Cosmos 26 baseline. `GlassEffectTransition.matchedGeometry` (iOS 26) is the only motion-adjacent API that would need a gate if the floor ever lowers.
+
+**Above-floor gating pattern (PHASE3).** Three surfaces now sit above the Cosmos 26 floor and establish the library's gating conventions for future Cosmos-27 work: (1) a **shallow runtime-only gate** for a same-OS-minor bump (`tabViewBottomAccessory(isEnabled:)`, iOS 26.1 → degrade to the 26.0 form); (2) a **combined compile + runtime gate** for an OS-major-introduced, platform-fragmented style (`.tabs`: `#if !os(watchOS)` for the unavailable symbol + `if #available(...27...)` for the version); (3) a **runtime-only gate in a resolver** for an OS-major-introduced, all-platforms value (`TabRole.prominent` → `nil` below OS 27). The combined gate is the template for future OS-27 `PickerStyle`/`ListStyle`/`TabViewStyle` cases; the resolver is the template for OS-27 value-typed surfaces that have no corresponding `.modifier` (verified: there is no native `.tabRole(_:)` — `TabRole` is a `Tab(role:)` init parameter, so ``CosmosTabRole`` exposes `nativeRole() -> TabRole?` rather than a modifier).
 
 ## Runtime design-language pin
 

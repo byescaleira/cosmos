@@ -30,9 +30,10 @@ import SwiftUI
 /// referenced — `.verticalPage` is its replacement.
 ///
 /// **Selecting content.** Inside the `@TabContentBuilder` content closure, callers use the native
-/// `Tab` / `TabSection` primitives directly (Cosmos does not wrap `Tab`). `TabRole.search` is at the
-/// iOS 18 floor and safe; `TabRole.prominent` is `@available(anyAppleOS 27.0, *)` — **above** the
-/// Cosmos 26 floor — and is deliberately not surfaced (callers who need it gate it themselves).
+/// `Tab` / `TabSection` primitives directly (Cosmos does not wrap `Tab`). `TabRole` is passed to
+/// `Tab(role:)` via ``CosmosTabRole`` — `.search` (floor, all 5) and `.prominent` (OS 27 / Cosmos 27,
+/// all 5, runtime-gated to `nil` below OS 27). There is no native `.tabRole(_:)` modifier, so
+/// ``CosmosTabRole/nativeRole()`` returns the `TabRole?` to pass into `Tab(role:)`.
 ///
 /// **Generic shape.** `CosmosTabView<SelectionValue, Content>`: `SelectionValue` is constrained
 /// **`Hashable & Sendable`** (matching native `TabView`'s `Hashable`, plus `Sendable` to drive

@@ -17,8 +17,9 @@ import SwiftUI
 /// `.automatic` where a requested style is unavailable on the current platform — never blindly
 /// forwards a user-chosen style. All version bounds are ≤ the Cosmos 26 floor, so the guards are
 /// compile-time `#if os()` only (no runtime `if #available`); `.menu`'s tvOS 17 bound is below the
-/// floor. `TabsPickerStyle` (`.tabs`) is `@available(iOS 27 / macOS 27 / tvOS 27 / visionOS 27, *)`
-/// — above the Cosmos 26 floor — and is deliberately **not** exposed.
+/// floor. The **one exception** is `.tabs` (`TabsPickerStyle`, OS 27) — the first above-floor
+/// (Cosmos-27) surface — which needs a **combined compile + runtime gate** in the applier (see
+/// ``CosmosPickerStyle``).
 ///
 /// **Platform guard.** None at the type level — `Picker` is available on all 5 platforms (via the
 /// `*` wildcard). Default style differs per platform (macOS/iOS ≈ menu, watchOS ≈ wheel/list,
@@ -155,27 +156,33 @@ extension CosmosPicker where Label == SwiftUI.Label<CosmosLocalizedText, Image> 
 /// - `.palette` (`PalettePickerStyle`): iOS/macOS/visionOS (via `*`); **not tvOS, not watchOS**.
 /// - `.navigationLink` (`NavigationLinkPickerStyle`): iOS/tvOS/watchOS/visionOS; **not macOS**.
 /// - `.radioGroup` (`RadioGroupPickerStyle`): **macOS only**.
+/// - `.tabs` (`TabsPickerStyle`): iOS/macOS/tvOS/visionOS (OS 27, above floor); **not watchOS**
+///   (`@available(watchOS, unavailable)`). The table reports the **platform** gate only — the
+///   OS-27 version gate is applied at runtime in the applier (the table is host-agnostic and cannot
+///   know the OS version), so `isAvailable(.tabs, on: .ios)` is `true` meaning "usable on iOS at
+///   all (on OS 27+)"; `resolve(.tabs, on:)` returns `.tabs` and the applier degrades to
+///   `.automatic` below OS 27.
 public enum CosmosPickerAvailability {
     public static func isAvailable(_ style: CosmosPickerStyle, on platform: CosmosPlatform) -> Bool {
         switch platform {
         case .ios, .visionos:
             // visionOS gets every style via the `*` wildcard that the iOS interface declares.
             switch style {
-            case .automatic, .menu, .segmented, .wheel, .inline, .palette, .navigationLink:
+            case .automatic, .menu, .segmented, .wheel, .inline, .palette, .navigationLink, .tabs:
                 return true
             case .radioGroup:
                 return false // radioGroup is macOS-only (unavailable on iOS + visionOS)
             }
         case .macos:
             switch style {
-            case .automatic, .menu, .segmented, .inline, .palette, .radioGroup:
+            case .automatic, .menu, .segmented, .inline, .palette, .radioGroup, .tabs:
                 return true
             case .wheel, .navigationLink:
                 return false
             }
         case .tvos:
             switch style {
-            case .automatic, .menu, .segmented, .inline, .navigationLink:
+            case .automatic, .menu, .segmented, .inline, .navigationLink, .tabs:
                 return true
             case .wheel, .palette, .radioGroup:
                 return false
@@ -184,8 +191,8 @@ public enum CosmosPickerAvailability {
             switch style {
             case .automatic, .wheel, .inline, .navigationLink:
                 return true
-            case .menu, .segmented, .palette, .radioGroup:
-                return false
+            case .menu, .segmented, .palette, .radioGroup, .tabs:
+                return false // .tabs is @available(watchOS, unavailable)
             }
         }
     }
@@ -200,7 +207,11 @@ public enum CosmosPickerAvailability {
 
 /// Resolves a ``CosmosPickerStyle`` to a concrete `PickerStyle`, guarding each case with `#if os()`
 /// for its per-platform availability and falling back to `.automatic` where the requested style is
-/// unavailable on the current platform (never blanket-applies).
+/// unavailable on the current platform (never blanket-applies). The `.tabs` case is the first
+/// above-floor surface and uses a **combined compile + runtime gate**: `#if !os(watchOS)` (the
+/// `TabsPickerStyle` symbol is itself `@available(watchOS, unavailable)`) plus
+/// `if #available(iOS 27, macOS 27, tvOS 27, visionOS 27, *)` (OS-27-introduced → `.automatic`
+/// below OS 27).
 private struct CosmosPickerStyleApplier: ViewModifier {
     let style: CosmosPickerStyle
     func body(content: Content) -> some View {
@@ -252,6 +263,20 @@ private struct CosmosPickerStyleApplier: ViewModifier {
             #else
             content.pickerStyle(.automatic)
             #endif
+        case .tabs:
+            // iOS/macOS/tvOS/visionOS at OS 27 (above the Cosmos 26 floor); unavailable watchOS.
+            // Combined compile + runtime gate: the TabsPickerStyle symbol is @available(watchOS,
+            // unavailable) → #if !os(watchOS) excludes the reference on watchOS; the style is
+            // OS-27-introduced → if #available(...27...) degrades to .automatic on a floor-26 device.
+            #if os(watchOS)
+            content.pickerStyle(.automatic)
+            #else
+            if #available(iOS 27, macOS 27, tvOS 27, visionOS 27, *) {
+                content.pickerStyle(.tabs)
+            } else {
+                content.pickerStyle(.automatic)
+            }
+            #endif
         }
     }
 }
@@ -275,6 +300,17 @@ private struct CosmosPickerStyleApplier: ViewModifier {
         }
         .cosmosPickerStyle(.menu)
     }
+    .padding()
+}
+
+#Preview("Picker – .tabs (OS 27)", traits: .sizeThatFitsLayout) {
+    @Previewable @State var option = "a"
+    // .tabs is the first above-floor (Cosmos-27) surface: degrades to .automatic below OS 27 /
+    // on watchOS via the applier's combined compile + runtime gate.
+    CosmosPicker("preview.title", selection: $option) {
+        Text("A").tag("a"); Text("B").tag("b"); Text("C").tag("c")
+    }
+    .cosmosPickerStyle(.tabs)
     .padding()
 }
 

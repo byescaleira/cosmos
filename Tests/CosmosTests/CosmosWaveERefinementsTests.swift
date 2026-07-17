@@ -78,4 +78,45 @@ struct CosmosWaveERefinementsTests {
         // An available style resolves to itself (no spurious fallback).
         #expect(CosmosListAvailability.resolve(.plain, on: .ios) == .plain)
     }
+
+    // MARK: - OS-27 surfaces: PickerStyle.tabs + TabRole.prominent (first Cosmos-27 surface)
+
+    @Test func pickerStyleTabsIsExposedAndCaseIterable() {
+        // .tabs (TabsPickerStyle, OS 27) is the 9th case — present in CaseIterable.
+        #expect(CosmosPickerStyle.tabs.rawValue == "tabs")
+        #expect(CosmosPickerStyle.allCases.contains(.tabs))
+    }
+
+    @Test func pickerTabsAvailableOnFourPlatformsNotWatchOS() {
+        // TabsPickerStyle is @available(iOS/macOS/tvOS/visionOS 27) @available(watchOS, unavailable).
+        // The table reports the platform gate; the OS-27 version gate is runtime (in the applier).
+        #expect(CosmosPickerAvailability.isAvailable(.tabs, on: .ios))
+        #expect(CosmosPickerAvailability.isAvailable(.tabs, on: .macos))
+        #expect(CosmosPickerAvailability.isAvailable(.tabs, on: .tvos))
+        #expect(CosmosPickerAvailability.isAvailable(.tabs, on: .visionos))
+        #expect(!CosmosPickerAvailability.isAvailable(.tabs, on: .watchos))
+        // resolve returns .tabs on the 4 supporting platforms (applier degrades to .automatic
+        // below OS 27); .automatic on watchOS.
+        #expect(CosmosPickerAvailability.resolve(.tabs, on: .ios) == .tabs)
+        #expect(CosmosPickerAvailability.resolve(.tabs, on: .watchos) == .automatic)
+    }
+
+    @Test func tabRoleSearchAndProminentAvailableOnAllFivePlatforms() {
+        // TabRole.search is ≤ floor (all 5); TabRole.prominent is @available(anyAppleOS 27) —
+        // all 5 platforms (no watchOS exclusion, unlike .tabs). Version gate is runtime.
+        for platform in CosmosPlatform.allCases {
+            #expect(CosmosTabRoleAvailability.searchAvailable(on: platform),
+                    ".search should be available on \(platform)")
+            #expect(CosmosTabRoleAvailability.prominentAvailable(on: platform),
+                    ".prominent should be platform-available on \(platform)")
+        }
+    }
+
+    @Test func tabRoleNativeRoleResolvesNoneAndSearchDeterministically() {
+        // Floor-available roles are deterministic. (.prominent.nativeRole() depends on the host OS
+        // version — OS 27 → .prominent, below → nil — so it is not asserted here.)
+        #expect(CosmosTabRole.none.nativeRole() == nil)
+        #expect(CosmosTabRole.search.nativeRole() == .search)
+        #expect(CosmosTabRole.allCases == [.none, .search, .prominent])
+    }
 }
