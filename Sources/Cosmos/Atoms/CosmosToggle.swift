@@ -38,7 +38,7 @@ public struct CosmosToggle<Label: View>: View {
 
     /// `true` only for `.button` — the only variant without a native selection haptic.
     private var shouldEmitHaptic: Bool {
-        theme.toggleStyle == .button
+        CosmosToggleAccessibility.shouldEmitSelectionHaptic(style: theme.toggleStyle)
     }
 
     public var body: some View {
@@ -52,7 +52,7 @@ public struct CosmosToggle<Label: View>: View {
                 .applyCosmosAccessibility(configuration.accessibility, extraTraits: .isToggle)
                 .onAppear { trackAppear() }
                 .onChange(of: isOn.wrappedValue) { _, _ in trackValueChange() }
-                .modifier(CosmosToggleHapticModifier(isOn: isOn.wrappedValue, enabled: shouldEmitHaptic))
+                .modifier(CosmosToggleSelectionHapticModifier(enabled: shouldEmitHaptic, isOn: isOn.wrappedValue))
         } else {
             EmptyView()
         }
@@ -131,6 +131,15 @@ public enum CosmosToggleAccessibility {
         if isMixed { return "Mixed" }
         return isOn ? "On" : "Off"
     }
+
+    /// Whether the `.selection` haptic should fire for the given toggle style. Only `.button`
+    /// lacks a native selection haptic; `.switch`/`.automatic` (and the ``CosmosToggleChrome``
+    /// that delegates to `.switch`) emit their own on flip, so Cosmos attaches one only for
+    /// `.button` to avoid a double haptic. On tvOS `.button` is remapped to the switch chrome, but
+    /// `.sensoryFeedback` is a no-op there, so emitting remains harmless.
+    public static func shouldEmitSelectionHaptic(style: CosmosToggleStyle) -> Bool {
+        style == .button
+    }
 }
 
 /// Custom `ToggleStyle` that delegates to the native `.switch` (inheriting the accent tint from
@@ -156,27 +165,18 @@ private struct CosmosToggleChromeBody: View {
     }
 }
 
-/// Attaches a `.selection` haptic only when `enabled` (i.e. only for `.button`); otherwise a no-op,
-/// so the native switch's own haptic is not doubled. Gated by the haptics policy + Reduce Motion.
-private struct CosmosToggleHapticModifier: ViewModifier {
-    let isOn: Bool
+/// Attaches the canonical `.cosmosHaptic(.selection)` only when `enabled` (i.e. only for
+/// `.button`); otherwise a pass-through. Delegates the sensory-feedback emission, the
+/// `@Sendable` handler forwarding, and the `CosmosHapticsPolicy`/Reduce-Motion gating to
+/// ``View/cosmosHaptic(_:trigger:)`` so the toggle does not duplicate that logic — only the
+/// `.button`-only gate is toggle-specific (see ``CosmosToggleAccessibility/shouldEmitSelectionHaptic(style:)``).
+private struct CosmosToggleSelectionHapticModifier: ViewModifier {
     let enabled: Bool
-    @Environment(\.cosmosConfiguration) private var configuration
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    let isOn: Bool
 
     func body(content: Content) -> some View {
-        guard enabled, CosmosHapticsPolicy.shouldEmit(
-            isEnabled: configuration.haptics.isEnabled,
-            respectReduceMotion: configuration.haptics.respectReduceMotion,
-            reduceMotion: reduceMotion
-        ) else {
-            return AnyView(content)
-        }
-        return AnyView(
-            content
-                .sensoryFeedback(.selection, trigger: isOn)
-                .onChange(of: isOn) { _, _ in configuration.haptics.handler(.selection) }
-        )
+        guard enabled else { return AnyView(content) }
+        return AnyView(content.cosmosHaptic(.selection, trigger: isOn))
     }
 }
 
