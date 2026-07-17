@@ -109,4 +109,14 @@ struct CosmosWaveDAtomsTests {
         #expect(CosmosStepperMath.advance(3.0, by: 0.5, in: 0.0...5.0) == 3.5)
         #expect(CosmosStepperMath.advance(3.5, by: -0.5, in: 0.0...5.0) == 3.0)
     }
+
+    @Test func stepperDoesNotOverflowTrapForIntNearBounds() {
+        // Regression: advance clamps the stride to the remaining in-bounds distance BEFORE
+        // advanced(by:), so Int near Int.max does not trap on overflow before the post-clamp.
+        #expect(CosmosStepperMath.advance(Int.max - 1, by: 2, in: 0...Int.max) == Int.max)
+        #expect(CosmosStepperMath.advance(Int.min + 1, by: -2, in: Int.min...0) == Int.min)
+        // A stride that overshoots both bounds clamps (no trap).
+        #expect(CosmosStepperMath.advance(8, by: Int.max, in: 0...10) == 10)
+        #expect(CosmosStepperMath.advance(2, by: -Int.max, in: 0...10) == 0)
+    }
 }

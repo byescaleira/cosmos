@@ -22,16 +22,22 @@ import SwiftUI
 /// `SliderTickContent` surface that fragments the API); it can be added in a `.v27` init cluster
 /// when the floor raises.
 ///
-/// **Accessibility:** VoiceOver adjustable element — **step is required** for meaningful
-/// adjustment (without it VoiceOver uses a default increment). Always supply a label and set
+/// **Default step.** `step` defaults to `0` — **continuous**, matching native
+/// `Slider(value:in:)` (the thumb is not quantized). Pass an explicit `step` for a discrete
+/// slider; `steppedValue` is a passthrough when `step <= 0`. (A `step` default of `1` over the
+/// default `0...1` bounds would make the default slider binary — avoided.)
+///
+/// **Accessibility:** VoiceOver adjustable element — VoiceOver uses a default increment when no
+/// `step` is set; pass a `step` for meaningful discrete adjustment. Always supply a label and set
 /// `.cosmosAccessibilityValue` when the displayed value differs from the raw `Double`. Do not
 /// rely on tint alone (WCAG 1.4.1 — thumb position is the primary signal).
 ///
 /// **Haptics:** `.selection` on step-snap (discrete `steppedValue` change), gated by
-/// ``CosmosHapticsPolicy`` via `.cosmosHaptic`. For continuous (no-step) sliders this fires on
-/// every `value` change — prefer a `step` for discrete haptics. The atom does **not** layer an
-/// edit-begin/end `.impact` to avoid fighting the native drag (and because `.sensoryFeedback`
-/// on the binding `trigger` cannot distinguish drag-begin cleanly without extra state).
+/// ``CosmosHapticsPolicy`` via `.cosmosHaptic`. The trigger is `nil` when `step <= 0` so a
+/// continuous slider fires **no** per-pixel selection haptic (noisy/vestibular-hostile) — pass a
+/// `step` for discrete haptics. The atom does **not** layer an edit-begin/end `.impact` to avoid
+/// fighting the native drag (and because `.sensoryFeedback` on the binding `trigger` cannot
+/// distinguish drag-begin cleanly without extra state).
 ///
 /// **Motion:** `valueChange` — but the binding is **never** wrapped in `withAnimation` per drag
 /// frame (`withAnimation` fights the gesture). The thumb/tint are gesture-tracked (not
@@ -56,7 +62,7 @@ public struct CosmosSlider<Label: View, ValueLabel: View>: View {
     public init(
         value: Binding<Double>,
         in bounds: ClosedRange<Double> = 0...1,
-        step: Double.Stride = 1,
+        step: Double.Stride = 0,
         @ViewBuilder label: @escaping () -> Label,
         @ViewBuilder minimumValueLabel: @escaping () -> ValueLabel,
         @ViewBuilder maximumValueLabel: @escaping () -> ValueLabel,
@@ -75,7 +81,7 @@ public struct CosmosSlider<Label: View, ValueLabel: View>: View {
     public init(
         value: Binding<Double>,
         in bounds: ClosedRange<Double> = 0...1,
-        step: Double.Stride = 1,
+        step: Double.Stride = 0,
         @ViewBuilder label: @escaping () -> Label,
         onEditingChanged: @escaping (Bool) -> Void = { _ in }
     ) where ValueLabel == EmptyView {
@@ -92,7 +98,7 @@ public struct CosmosSlider<Label: View, ValueLabel: View>: View {
     public init(
         value: Binding<Double>,
         in bounds: ClosedRange<Double> = 0...1,
-        step: Double.Stride = 1,
+        step: Double.Stride = 0,
         onEditingChanged: @escaping (Bool) -> Void = { _ in }
     ) where Label == EmptyView, ValueLabel == EmptyView {
         self.value = value
@@ -113,18 +119,26 @@ public struct CosmosSlider<Label: View, ValueLabel: View>: View {
                 .opacity(configuration.loading.isLoading ? 0.6 : 1.0)
                 .applyCosmosAccessibility(configuration.accessibility)
                 .cosmosAnimation(.valueChange, value: steppedValue)
-                .cosmosHaptic(.selection, trigger: steppedValue)
+                .cosmosHaptic(.selection, trigger: step > 0 ? steppedValue : nil)
                 .onAppear { trackAppear() }
-                .onChange(of: value.wrappedValue) { _, newValue in trackValueChangeIfNeeded(newValue) }
+                .onChange(of: steppedValue) { _, _ in trackStepChange() }
         } else {
             EmptyView()
         }
     }
 
     @ViewBuilder private var slider: some View {
-        Slider(value: value, in: bounds, step: step, label: label,
-               minimumValueLabel: minimumValueLabel, maximumValueLabel: maximumValueLabel,
-               onEditingChanged: onEditingChanged)
+        if step > 0 {
+            Slider(value: value, in: bounds, step: step, label: label,
+                   minimumValueLabel: minimumValueLabel, maximumValueLabel: maximumValueLabel,
+                   onEditingChanged: onEditingChanged)
+        } else {
+            // Continuous (no step): use the no-step `Slider` init so the thumb is not quantized —
+            // matching native `Slider(value:in:)`. `steppedValue` is a passthrough when step <= 0.
+            Slider(value: value, in: bounds, label: label,
+                   minimumValueLabel: minimumValueLabel, maximumValueLabel: maximumValueLabel,
+                   onEditingChanged: onEditingChanged)
+        }
     }
 
     private var effectiveEnabled: Bool {
@@ -147,9 +161,12 @@ public struct CosmosSlider<Label: View, ValueLabel: View>: View {
         ))
     }
 
-    private func trackValueChangeIfNeeded(_ newValue: Double) {
-        // Emit a tracking event only on step-snap (discrete), not per drag pixel.
-        guard abs(newValue - steppedValue) < .ulpOfOne else { return }
+    private func trackStepChange() {
+        // Track on step-snap (discrete) or per change (continuous): `steppedValue` only changes
+        // when the quantized value moves, so this never double-fires per drag pixel. (The
+        // previous `abs(newValue - steppedValue) < .ulpOfOne` gate desynced from the `==`-gated
+        // haptic at non-trivial magnitude — FP residual exceeded `.ulpOfOne` and dropped events
+        // the haptic emitted. Tracking the quantized value removes the float-compare entirely.)
         configuration.tracking.track(.init(
             name: "slider_change",
             component: "CosmosSlider",
@@ -182,7 +199,7 @@ extension CosmosSlider where Label == CosmosLocalizedText, ValueLabel == EmptyVi
         _ titleKey: String,
         value: Binding<Double>,
         in bounds: ClosedRange<Double> = 0...1,
-        step: Double.Stride = 1,
+        step: Double.Stride = 0,
         onEditingChanged: @escaping (Bool) -> Void = { _ in }
     ) {
         self.value = value
@@ -201,7 +218,7 @@ extension CosmosSlider where Label == Text, ValueLabel == EmptyView {
         verbatim title: S,
         value: Binding<Double>,
         in bounds: ClosedRange<Double> = 0...1,
-        step: Double.Stride = 1,
+        step: Double.Stride = 0,
         onEditingChanged: @escaping (Bool) -> Void = { _ in }
     ) {
         self.value = value
