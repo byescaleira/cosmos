@@ -25,8 +25,9 @@ let package = Package(
             name: "Cosmos",
             dependencies: [],
             resources: [
-                // .process compiles Localizable.xcstrings → .lproj/.strings at runtime
-                // and copies the bundled .ttf fonts into the module bundle.
+                // .process compiles Localizable.xcstrings → .lproj/.strings at runtime.
+                // Cosmos ships no bundled fonts; bring your own and pass the PostScript name
+                // to CosmosTheme.withCustomFont(_:).
                 .process("Resources"),
             ]
         ),

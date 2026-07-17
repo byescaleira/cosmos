@@ -1,16 +1,12 @@
 import Foundation
 
-/// Access to the compiled Cosmos resource bundle and one-time setup.
+/// Access to the compiled Cosmos resource bundle.
 ///
-/// `bundle` is a global `let` of the `Sendable` type `Bundle`, so it is thread-safe without
-/// any synchronization (SE-0412). ``prepare()`` registers bundled fonts via the once-token
-/// pattern in ``CosmosFont`` — call once at app launch, or let atoms call it lazily.
+/// `bundle` is a global `let` of the `Sendable` type `Bundle`, so it is thread-safe without any
+/// synchronization (SE-0412). The bundle carries the compiled String Catalog
+/// (`Localizable.xcstrings`); Cosmos ships **no bundled fonts** — register custom fonts in your
+/// app and pass the PostScript name to ``CosmosTheme/withCustomFont(_:)``.
 public enum CosmosResources {
-    /// The SwiftPM-generated resource bundle containing compiled String Catalogs and fonts.
+    /// The SwiftPM-generated resource bundle containing compiled String Catalogs.
     public static let bundle: Bundle = Bundle.module
-
-    /// Registers bundled fonts and performs any other one-time resource setup. Idempotent.
-    public static func prepare() {
-        CosmosFont.registerIfNeeded()
-    }
 }
