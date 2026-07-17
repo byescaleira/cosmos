@@ -65,6 +65,12 @@ public struct CosmosTheme: Sendable {
     /// platform and falls back to `.automatic` where a requested style is unavailable.
     public var listStyle: CosmosListStyle
 
+    /// Default tab-view style variant for ``CosmosTabView`` (`.automatic`). `TabViewStyle` is
+    /// opaque/native-bridged (only underscored `_makeView`/`_makeViewList`, no `makeBody`) — this enum
+    /// is consumed by the applier, which guards each case per platform and falls back to `.automatic`
+    /// where a requested style is unavailable.
+    public var tabViewStyle: CosmosTabViewStyle
+
     /// Default text-field variant for ``CosmosTextField`` (`.automatic`).
     public var textFieldStyle: CosmosTextFieldStyle
 
@@ -92,6 +98,7 @@ public struct CosmosTheme: Sendable {
         datePickerStyle: CosmosDatePickerStyle = .automatic,
         pickerStyle: CosmosPickerStyle = .automatic,
         listStyle: CosmosListStyle = .automatic,
+        tabViewStyle: CosmosTabViewStyle = .automatic,
         textFieldStyle: CosmosTextFieldStyle = .automatic,
         textEditorStyle: CosmosTextEditorStyle = .automatic,
         motion: CosmosMotionTokens = .default
@@ -111,6 +118,7 @@ public struct CosmosTheme: Sendable {
         self.datePickerStyle = datePickerStyle
         self.pickerStyle = pickerStyle
         self.listStyle = listStyle
+        self.tabViewStyle = tabViewStyle
         self.textFieldStyle = textFieldStyle
         self.textEditorStyle = textEditorStyle
         self.motion = motion
@@ -136,6 +144,7 @@ public struct CosmosTheme: Sendable {
     public func withDatePickerStyle(_ datePickerStyle: CosmosDatePickerStyle) -> CosmosTheme { var c = self; c.datePickerStyle = datePickerStyle; return c }
     public func withPickerStyle(_ pickerStyle: CosmosPickerStyle) -> CosmosTheme { var c = self; c.pickerStyle = pickerStyle; return c }
     public func withListStyle(_ listStyle: CosmosListStyle) -> CosmosTheme { var c = self; c.listStyle = listStyle; return c }
+    public func withTabViewStyle(_ tabViewStyle: CosmosTabViewStyle) -> CosmosTheme { var c = self; c.tabViewStyle = tabViewStyle; return c }
     public func withTextFieldStyle(_ textFieldStyle: CosmosTextFieldStyle) -> CosmosTheme { var c = self; c.textFieldStyle = textFieldStyle; return c }
     public func withTextEditorStyle(_ textEditorStyle: CosmosTextEditorStyle) -> CosmosTheme { var c = self; c.textEditorStyle = textEditorStyle; return c }
     public func withMotion(_ motion: CosmosMotionTokens) -> CosmosTheme { var c = self; c.motion = motion; return c }

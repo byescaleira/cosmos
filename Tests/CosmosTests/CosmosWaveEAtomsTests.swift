@@ -205,4 +205,93 @@ struct CosmosWaveEAtomsTests {
         _ = base.withListStyle(.grouped)
         #expect(base.listStyle == .automatic)
     }
+
+    // MARK: - CosmosTabViewStyle selector enum
+
+    @Test func tabViewStyleAllCases() {
+        #expect(CosmosTabViewStyle.allCases == [
+            .automatic, .page, .sidebarAdaptable, .tabBarOnly, .verticalPage, .grouped
+        ])
+    }
+
+    // MARK: - CosmosTabViewAvailability (full style × platform matrix, Xcode 27 .swiftinterface)
+
+    @Test func tabViewAvailabilityAutomaticAllPlatforms() {
+        for platform in [CosmosPlatform.ios, .macos, .tvos, .watchos, .visionos] {
+            #expect(CosmosTabViewAvailability.isAvailable(.automatic, on: platform))
+        }
+    }
+
+    @Test func tabViewAvailabilityPageNotMacOS() {
+        #expect(CosmosTabViewAvailability.isAvailable(.page, on: .ios))
+        #expect(CosmosTabViewAvailability.isAvailable(.page, on: .tvos))
+        #expect(CosmosTabViewAvailability.isAvailable(.page, on: .watchos))
+        #expect(CosmosTabViewAvailability.isAvailable(.page, on: .visionos))
+        #expect(!CosmosTabViewAvailability.isAvailable(.page, on: .macos))
+    }
+
+    @Test func tabViewAvailabilitySidebarAdaptableNotWatchOS() {
+        #expect(CosmosTabViewAvailability.isAvailable(.sidebarAdaptable, on: .ios))
+        #expect(CosmosTabViewAvailability.isAvailable(.sidebarAdaptable, on: .macos))
+        #expect(CosmosTabViewAvailability.isAvailable(.sidebarAdaptable, on: .tvos))
+        #expect(CosmosTabViewAvailability.isAvailable(.sidebarAdaptable, on: .visionos))
+        #expect(!CosmosTabViewAvailability.isAvailable(.sidebarAdaptable, on: .watchos))
+    }
+
+    @Test func tabViewAvailabilityTabBarOnlyNotWatchOS() {
+        #expect(CosmosTabViewAvailability.isAvailable(.tabBarOnly, on: .ios))
+        #expect(CosmosTabViewAvailability.isAvailable(.tabBarOnly, on: .macos))
+        #expect(CosmosTabViewAvailability.isAvailable(.tabBarOnly, on: .tvos))
+        #expect(CosmosTabViewAvailability.isAvailable(.tabBarOnly, on: .visionos))
+        #expect(!CosmosTabViewAvailability.isAvailable(.tabBarOnly, on: .watchos))
+    }
+
+    @Test func tabViewAvailabilityVerticalPageWatchOSOnly() {
+        #expect(CosmosTabViewAvailability.isAvailable(.verticalPage, on: .watchos))
+        for platform in [CosmosPlatform.ios, .macos, .tvos, .visionos] {
+            #expect(!CosmosTabViewAvailability.isAvailable(.verticalPage, on: platform))
+        }
+    }
+
+    @Test func tabViewAvailabilityGroupedMacOSOnly() {
+        #expect(CosmosTabViewAvailability.isAvailable(.grouped, on: .macos))
+        for platform in [CosmosPlatform.ios, .tvos, .watchos, .visionos] {
+            #expect(!CosmosTabViewAvailability.isAvailable(.grouped, on: platform))
+        }
+    }
+
+    @Test func tabViewResolveFallsBackToAutomatic() {
+        // Unavailable requested styles resolve to .automatic; available ones resolve to themselves.
+        #expect(CosmosTabViewAvailability.resolve(.page, on: .macos) == .automatic)
+        #expect(CosmosTabViewAvailability.resolve(.sidebarAdaptable, on: .watchos) == .automatic)
+        #expect(CosmosTabViewAvailability.resolve(.tabBarOnly, on: .watchos) == .automatic)
+        #expect(CosmosTabViewAvailability.resolve(.verticalPage, on: .ios) == .automatic)
+        #expect(CosmosTabViewAvailability.resolve(.verticalPage, on: .macos) == .automatic)
+        #expect(CosmosTabViewAvailability.resolve(.grouped, on: .ios) == .automatic)
+        #expect(CosmosTabViewAvailability.resolve(.grouped, on: .watchos) == .automatic)
+        #expect(CosmosTabViewAvailability.resolve(.page, on: .ios) == .page)
+        #expect(CosmosTabViewAvailability.resolve(.sidebarAdaptable, on: .macos) == .sidebarAdaptable)
+        #expect(CosmosTabViewAvailability.resolve(.verticalPage, on: .watchos) == .verticalPage)
+        #expect(CosmosTabViewAvailability.resolve(.grouped, on: .macos) == .grouped)
+        #expect(CosmosTabViewAvailability.resolve(.automatic, on: .tvos) == .automatic)
+    }
+
+    // MARK: - TabView theme selectors
+
+    @Test func themeDefaultsForTabViewSelector() {
+        #expect(CosmosTheme.default.tabViewStyle == .automatic)
+    }
+
+    @Test func themeFluentBuildersForTabView() {
+        let base = CosmosTheme.default
+        #expect(base.withTabViewStyle(.page).tabViewStyle == .page)
+        #expect(base.withTabViewStyle(.sidebarAdaptable).tabViewStyle == .sidebarAdaptable)
+        #expect(base.withTabViewStyle(.grouped).tabViewStyle == .grouped)
+    }
+
+    @Test func themeFluentBuildersForTabViewDoNotMutateOriginal() {
+        let base = CosmosTheme.default
+        _ = base.withTabViewStyle(.page)
+        #expect(base.tabViewStyle == .automatic)
+    }
 }
