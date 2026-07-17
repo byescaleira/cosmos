@@ -9,4 +9,6 @@ public enum CosmosPreviewStrings {
     public static let previewTitle = "preview.title"
     public static let previewDescription = "preview.description"
     public static let previewName = "preview.name"
+    /// Shared loading label (exercises the localization pipeline for the `Loading` catalog key).
+    public static let loading = "Loading"
 }
