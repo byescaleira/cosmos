@@ -1,7 +1,9 @@
 # Roadmap
 
-> Last updated: 2026-07-17 (restructured: PHASE3 promoted to Next; PHASE4 core navigation/layout
-> atoms added with standing design principles + waves F–I; remaining atoms moved to PHASE5+)
+> Last updated: 2026-07-17 (PHASE3 Wave E refinements done — Slider iOS 26 cluster,
+> `bottomAccessory(isEnabled:)`, `CosmosSelectableList`, OS-27 surfaces `.tabs` + `CosmosTabRole`;
+> PHASE4 core navigation/layout atoms next with standing design principles + waves F–I; remaining
+> atoms moved to PHASE5+)
 >
 > This roadmap reflects the project state **after the from-scratch reset** that produced PHASE2.
 > The earlier pre-reset cycle (molecules, `CosmosScreen` data-driven renderer, `CosmosImage`/
@@ -39,6 +41,7 @@
 - [x] Wave C (style-protocol with guards): `CosmosGroupBox`, `CosmosMenu`, `CosmosDatePicker`
 - [x] Wave D (opaque style / wrap-view with guards): `CosmosTextField` + `CosmosSecureField` + `CosmosTextEditor`, `CosmosSlider`, `CosmosStepper`
 - [x] Wave E (wrap-view, style fragmentation): `CosmosSection`, `CosmosPicker`, `CosmosList`, `CosmosTabView`
+- [x] **PHASE3 — Wave E refinements** (spec: `PHASE3.md`): `CosmosSlider` iOS 26 cluster (ticks / `neutralValue` / `enabledBounds` / current-value label); `.cosmosTabViewBottomAccessory(isEnabled:)` (iOS 26.1 — first shallow runtime `if #available` gate); `CosmosSelectableList` (optional-single universal primary + `Set` `#if !os(watchOS)`, one `Selection` generic, AnyView-in-init); **OS-27 surfaces** — `CosmosPickerStyle.tabs` (combined compile + runtime gate) + `CosmosTabRole` (`.prominent` runtime-gated resolver; first above-floor/Cosmos-27 surface)
 - [x] Style-enum + pure availability-table + applier pattern for opaque styles (`PickerStyle`/`ListStyle`/`TabViewStyle`/`DatePickerStyle`), each case `#if os()`-guarded with `.automatic` fallback
 - [x] Haptics via `.cosmosHaptic(_:trigger:)` gated by `CosmosHapticsPolicy` + reduce-motion
 - [x] Tracking via `CosmosTrackingConfiguration.track(_:)` (passive, opt-in, no network/PII)
@@ -52,19 +55,9 @@
 
 ### Verification
 - [x] 5-platform build (iOS/macOS/tvOS/watchOS/visionOS) + `swift build -c release`, zero warnings
-- [x] 178 Swift Testing tests passing
+- [x] 189 Swift Testing tests passing
 
 ## Next
-
-### PHASE3 — Wave E refinements (already-approved, immediate)
-
-> Spec: `PHASE3.md`. Implementation-ready; build order in §1 of that doc. Promoted here from
-> "Later/Deferred" — this is the immediate next implementation work.
-
-- [ ] `CosmosSlider` iOS 26 cluster (ticks / `neutralValue` / `enabledBounds` / current-value label)
-- [ ] `.cosmosTabViewBottomAccessory(isEnabled:)` (iOS 26.1 — first shallow runtime `if #available` gate)
-- [ ] `CosmosSelectableList` (selection-inits fragment; reuses AnyView-in-init + haptic gate)
-- [ ] OS-27 surfaces: `TabsPickerStyle` (`.tabs`) + `TabRole.prominent` (first Cosmos-27 surface; combined compile + runtime guard in a style applier)
 
 ### PHASE4 — Core navigation & layout atoms
 
