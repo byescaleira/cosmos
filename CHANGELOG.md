@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.1] - 2026-07-17
+
+Build/test fixes so CI passes on the hosted runner (Xcode 26 / Swift 6.3), which
+shipped no Xcode 27 beta. The package now builds on both Xcode 26 and Xcode 27
+(dev baseline); CI runs on Xcode 26 (188/188 tests green).
+
+### Changed
+- **Dual Xcode 26 + 27 build** — `swift-tools-version` lowered `6.4` → `6.3` (minimum; both Xcode 26.6/6.3.3 and Xcode 27/6.4 satisfy it). The three OS-27 SDK symbols (`PickerStyle.tabs` / `TabsPickerStyle`, `TabRole.prominent`, `BorderedTextFieldStyle`) are compile-gated with `#if swift(>=6.4)`: they compile to a graceful fallback (`.automatic` / `nil`) on Swift 6.3 and turn on under Xcode 27 / Swift 6.4, where the existing runtime `if #available(iOS 27, ...)` still degrades on an OS-26 device. Trade-off: the OS-27 code paths are exercised only by the local Xcode 27 build; CI (Xcode 26) compiles them out.
+- **Localization fallback** — `CosmosLocalizationConfiguration.string(for:)` gains a second resolution route: when the `.lproj` route (compiled by Xcode 27 / Swift 6.4 SwiftPM) does not resolve, it reads `Localizable.xcstrings` directly from the bundle and parses the catalog JSON to extract the value for the configured locale. This covers Xcode 26 / Swift 6.3, where SwiftPM copies the `.xcstrings` verbatim instead of compiling per-locale `.lproj/Localizable.strings` — `NSLocalizedString` could not resolve and returned the key. Route 1 (`.lproj`) stays first, so the Xcode 27 path is unchanged. No mutable state, no cache, `try?` on file I/O; `Sendable` unchanged.
+- **CI workflow** — restored to the minimal `swift build` / `swift test` on `macos-latest`; its default Xcode 26 / Swift 6.3.x now satisfies the `swift-tools-version`. No `setup-xcode` step or Apple ID secrets required.
+
 ## [0.1.0] - 2026-07-17
 
 First tagged release. Pre-1.0 alpha: the core control set (23 atoms) is complete and
