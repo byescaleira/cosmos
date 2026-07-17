@@ -46,6 +46,9 @@ private struct ChromeBody: View {
     let tint: Color?
     let configuration: ButtonStyle.Configuration
     @Environment(\.cosmosTheme) private var theme
+    /// Distinctly named — the existing `let configuration: ButtonStyle.Configuration` (above)
+    /// is the ButtonStyle config and has no `.motion`; this is the Cosmos behavior aggregate.
+    @Environment(\.cosmosConfiguration) private var cosmosConfiguration
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     private var resolvedTint: Color { tint ?? theme.colors.accent }
@@ -58,9 +61,21 @@ private struct ChromeBody: View {
             .background(chromeBackground)
             .foregroundStyle(chromeForeground)
             .clipShape(RoundedRectangle(cornerRadius: CosmosRadiusTokens.medium, style: .continuous))
-            .scaleEffect(configuration.isPressed && !reduceMotion ? 0.97 : 1)
+            // Press scale is UNCONDITIONAL — press feedback is a state signal, not decorative
+            // motion (reduce-motion ≠ no feedback). Only the `.animation` is gated, so the scale
+            // snaps instantly instead of animating under reduce-motion (vestibular-safe).
+            .scaleEffect(configuration.isPressed ? 0.97 : 1)
             .opacity(configuration.isPressed ? 0.75 : 1)
-            .animation(reduceMotion ? nil : .easeOut(duration: 0.15), value: configuration.isPressed)
+            .animation(
+                CosmosMotionPolicy.shouldEmit(
+                    isEnabled: cosmosConfiguration.motion.isEnabled,
+                    respectReduceMotion: cosmosConfiguration.motion.respectReduceMotion,
+                    reduceMotion: reduceMotion
+                )
+                    ? theme.motion.animation(for: .press, reduceMotion: reduceMotion, policy: cosmosConfiguration.motion.reduceMotionPolicy)
+                    : nil,
+                value: configuration.isPressed
+            )
     }
 
     @ViewBuilder

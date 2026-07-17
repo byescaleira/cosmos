@@ -17,6 +17,13 @@ public struct CosmosCard<Header: View, Body: View, Footer: View>: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.accessibilityReduceTransparency) private var reduceTransparency
 
+    /// Shadow is suppressed when reduce-transparency is active *and* respected by config, or
+    /// when reduce-motion is active. Config-aware (not the bare env value); tokens replace the
+    /// hardcoded `0.08`/`8` from the pre-motion implementation.
+    private var shadowHidden: Bool {
+        (reduceTransparency && configuration.motion.respectReduceTransparency) || reduceMotion
+    }
+
     public init(
         @ViewBuilder header: @escaping () -> Header = { EmptyView() },
         @ViewBuilder body: @escaping () -> Body,
@@ -37,7 +44,11 @@ public struct CosmosCard<Header: View, Body: View, Footer: View>: View {
         .background(cardBackground)
         .clipShape(RoundedRectangle(cornerRadius: CosmosRadiusTokens.card, style: .continuous))
         .overlay(cardBorder)
-        .shadow(color: theme.colors.primary.opacity(reduceTransparency || reduceMotion ? 0 : 0.08), radius: reduceMotion ? 0 : 8, y: 4)
+        .shadow(
+            color: theme.colors.primary.opacity(shadowHidden ? 0 : theme.motion.shadowOpacity),
+            radius: shadowHidden ? 0 : theme.motion.shadowRadius,
+            y: 4
+        )
         .accessibilityElement(children: .combine)
         .accessibilityLabelOrNil(configuration.accessibility.label)
         .accessibilityHintOrNil(configuration.accessibility.hint)
@@ -107,4 +118,21 @@ public struct CosmosCard<Header: View, Body: View, Footer: View>: View {
     }
     .padding()
     .environment(\.horizontalSizeClass, .regular)
+}
+
+#Preview("Card – mock content + reduce motion", traits: .sizeThatFitsLayout) {
+    CosmosPreviewContainer {
+        CosmosCard {
+            CosmosText(verbatim: CosmosMock.personName()).cosmosTextStyle(.headline)
+        } body: {
+            VStack(alignment: .leading, spacing: 6) {
+                CosmosText(verbatim: CosmosMock.addressLine()).cosmosTextStyle(.body)
+                CosmosText(verbatim: CosmosMock.phone()).cosmosTextStyle(.body)
+            }
+        } footer: {
+            CosmosButton("welcome.continue") {}
+        }
+        .cosmosPreviewVariant(.reduceMotion)
+        .padding()
+    }
 }

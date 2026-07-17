@@ -8,6 +8,7 @@ public struct CosmosText: View {
     @Environment(\.cosmosConfiguration) private var configuration
     @Environment(\.cosmosTheme) private var theme
     @Environment(\.cosmosTrackingId) private var trackingId
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     private enum Storage: Sendable {
         case key(String)
@@ -43,6 +44,9 @@ public struct CosmosText: View {
             .font(theme.typography.font(for: theme.textStyle))
             .foregroundStyle(theme.colors.primary)
             .multilineTextAlignment(.leading)
+            // Token-driven value-change motion, gated through the motion policy (single chokepoint).
+            .cosmosContentTransition(.numeric)
+            .cosmosAnimation(.valueChange, value: resolvedText)
             .accessibilityLabelOrNil(configuration.accessibility.label ?? resolvedText)
             .accessibilityHintOrNil(configuration.accessibility.hint)
             .accessibilityValueOrNil(configuration.accessibility.value)
@@ -59,6 +63,13 @@ public struct CosmosText: View {
                     componentId: trackingId ?? configuration.accessibility.identifier,
                     action: .appear
                 ))
+                if CosmosMotionPolicy.shouldEmit(
+                    isEnabled: configuration.motion.isEnabled,
+                    respectReduceMotion: configuration.motion.respectReduceMotion,
+                    reduceMotion: reduceMotion
+                ) {
+                    configuration.motion.handler(.motion(.valueChange))
+                }
             }
     }
 }
@@ -91,4 +102,15 @@ public struct CosmosText: View {
     }
     .padding()
     .environment(\.locale, Locale(identifier: "pt-BR"))
+}
+
+#Preview("Mock data – randomized strings", traits: .sizeThatFitsLayout) {
+    CosmosPreviewContainer {
+        VStack(alignment: .leading, spacing: 8) {
+            CosmosText(verbatim: CosmosMock.personName()).cosmosTextStyle(.headline)
+            CosmosText(verbatim: CosmosMock.email()).cosmosTextStyle(.body)
+            CosmosText(verbatim: CosmosMock.lorem(paragraphs: 1)).cosmosTextStyle(.body)
+        }
+        .padding()
+    }
 }

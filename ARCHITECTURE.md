@@ -4,15 +4,15 @@
 
 Cosmos is a multi-platform SwiftUI design system distributed as an SPM package. It starts with two shared, mutable-by-replacement value types distributed through the SwiftUI `Environment`:
 
-- `CosmosConfiguration` — cross-cutting **behavior** contracts: accessibility, localization, log, error, loading, and enablement.
-- `CosmosTheme` — visual **tokens**: colors, typography, spacing, radii, plus component style selectors.
+- `CosmosConfiguration` — cross-cutting **behavior** contracts: accessibility, localization, log, error, loading, enablement, haptics, **motion**, and tracking.
+- `CosmosTheme` — visual **tokens**: colors, typography, spacing, radii, **motion** (springs/durations/transitions), plus component style selectors.
 
 Every component — atom, molecule, or organism — reads both values via the environment.
 
 ## Goals
 
 1. **Shared foundation first:** every component inherits the same base contract.
-2. **Modularity:** import `CosmosBase` alone for the foundation, or `Cosmos` for the full component library.
+2. **Modularity:** a single `Cosmos` target exposes both the foundation (configuration/theme/tokens under `Sources/Cosmos/Base`) and the full component library (`Atoms`/`Molecules`/…); import only what you use.
 3. **Testability:** value types and plain environment keys are easy to unit-test.
 4. **Maintainability:** atomic design keeps component scope small and composable.
 5. **Concurrency safety:** Swift 6 strict mode; public types are `Sendable`.
@@ -20,15 +20,15 @@ Every component — atom, molecule, or organism — reads both values via the en
 
 ## Non-goals
 
-- Backwards compatibility with pre-v27 Apple platforms.
+- Backwards compatibility with pre-v26 Apple platforms (Cosmos major == OS major; baseline Cosmos 26).
 - UIKit support or any explicit UIKit dependency.
-- watchOS, visionOS, or Mac Catalyst support.
+- Per-component state/theme structs (concerns are global via `@Entry`).
 - Runtime theming engine (static bundles only for now).
 - Component library without a finished base.
 
 ## Stack
 
-- Swift 6.2
+- Swift 6.4 (language mode v6), Xcode 26
 - SwiftUI
 - Swift Testing
 - DocC
