@@ -60,7 +60,13 @@ private struct ChromeBody: View {
             .frame(minHeight: 44, alignment: .center)
             .background(chromeBackground)
             .foregroundStyle(chromeForeground)
-            .clipShape(RoundedRectangle(cornerRadius: CosmosRadiusTokens.medium, style: .continuous))
+            // Capsule is Apple's Liquid Glass default for filled/prominent buttons
+            // (WWDC25-323: "Bordered buttons now have a capsule shape by default"). The native
+            // `.glassProminent` already renders capsule; this fallback chrome matches it so the
+            // design rhythm is consistent on platforms without the glass style and for the
+            // non-glass variants. Use a discrete `RoundedRectangle` radius only for grouped /
+            // card-nested content (concentricity), not for standalone prominent buttons.
+            .clipShape(Capsule())
             // Press scale is UNCONDITIONAL — press feedback is a state signal, not decorative
             // motion (reduce-motion ≠ no feedback). Only the `.animation` is gated, so the scale
             // snaps instantly instead of animating under reduce-motion (vestibular-safe).
@@ -82,11 +88,11 @@ private struct ChromeBody: View {
     private var chromeBackground: some View {
         switch variant {
         case .primary:
-            RoundedRectangle(cornerRadius: CosmosRadiusTokens.medium, style: .continuous).fill(resolvedTint)
+            Capsule().fill(resolvedTint)
         case .secondary:
-            RoundedRectangle(cornerRadius: CosmosRadiusTokens.medium, style: .continuous).fill(theme.colors.surface)
+            Capsule().fill(theme.colors.surface)
         case .danger:
-            RoundedRectangle(cornerRadius: CosmosRadiusTokens.medium, style: .continuous).fill(theme.colors.error)
+            Capsule().fill(theme.colors.error)
         case .ghost, .glass:
             // `.glass` is unreachable (precondition in init); `.ghost` is chromeless.
             Color.clear
