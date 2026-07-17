@@ -34,6 +34,18 @@ private struct CosmosFontPresetModifier: ViewModifier {
     func body(content: Content) -> some View { content.environment(\.cosmosTheme, theme.withPreset(preset)) }
 }
 
+private struct CosmosMotionTokensModifier: ViewModifier {
+    let tokens: CosmosMotionTokens
+    @Environment(\.cosmosTheme) private var theme
+    func body(content: Content) -> some View { content.environment(\.cosmosTheme, theme.withMotion(tokens)) }
+}
+
+private struct CosmosSpringStyleModifier: ViewModifier {
+    let style: CosmosSpringStyle
+    @Environment(\.cosmosTheme) private var theme
+    func body(content: Content) -> some View { content.environment(\.cosmosTheme, theme.withSpringStyle(style)) }
+}
+
 extension View {
     /// Overrides the default button style variant for descendant components.
     public func cosmosButtonStyle(_ style: CosmosButtonStyle) -> some View { modifier(CosmosButtonStyleModifier(style: style)) }
@@ -45,4 +57,8 @@ extension View {
     public func cosmosPadding(_ padding: CosmosPadding) -> some View { modifier(CosmosPaddingModifier(padding: padding)) }
     /// Overrides the font preset for descendant components (registers fonts if needed).
     public func cosmosFontPreset(_ preset: CosmosFontPreset) -> some View { CosmosFont.registerIfNeeded(); return modifier(CosmosFontPresetModifier(preset: preset)) }
+    /// Overrides the motion tokens (visual) for descendant components.
+    public func cosmosMotionTokens(_ tokens: CosmosMotionTokens) -> some View { modifier(CosmosMotionTokensModifier(tokens: tokens)) }
+    /// Overrides the default spring style for descendant components.
+    public func cosmosSpringStyle(_ style: CosmosSpringStyle) -> some View { modifier(CosmosSpringStyleModifier(style: style)) }
 }

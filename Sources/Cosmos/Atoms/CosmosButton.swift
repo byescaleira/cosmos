@@ -13,6 +13,7 @@ public struct CosmosButton<Label: View>: View {
     @Environment(\.cosmosConfiguration) private var configuration
     @Environment(\.cosmosTheme) private var theme
     @Environment(\.cosmosTrackingId) private var trackingId
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var tapCounter = 0
 
     /// Creates a button with a custom label.
@@ -50,6 +51,17 @@ public struct CosmosButton<Label: View>: View {
                 .controlSize(theme.controlSize.controlSize)
                 .disabled(!effectiveEnabled)
                 .cosmosHaptic(.impact(weight: .light), trigger: tapCounter)
+                // Coordinated motion tracking alongside the haptic on the same tapCounter
+                // trigger, gated by the motion policy (not duplicated, not ungated).
+                .onChange(of: tapCounter) { _, _ in
+                    if CosmosMotionPolicy.shouldEmit(
+                        isEnabled: configuration.motion.isEnabled,
+                        respectReduceMotion: configuration.motion.respectReduceMotion,
+                        reduceMotion: reduceMotion
+                    ) {
+                        configuration.motion.handler(.motion(.press))
+                    }
+                }
                 .applyCosmosAccessibility(configuration.accessibility, extraTraits: .isButton)
                 .opacity(configuration.loading.isLoading ? 0.6 : 1.0)
         } else {
@@ -113,4 +125,17 @@ private struct CosmosButtonChromeApplier: ViewModifier {
     .padding()
     .preferredColorScheme(.dark)
     .dynamicTypeSize(.accessibility5)
+}
+
+#Preview("Button – mock + variants matrix", traits: .sizeThatFitsLayout) {
+    CosmosPreviewContainer {
+        VStack(spacing: 12) {
+            CosmosButton(action: {}) { Text(verbatim: CosmosMock.personName()) }
+            CosmosButton(action: {}) { Text(verbatim: CosmosMock.email()) }.cosmosButtonStyle(.secondary)
+            CosmosButton("welcome.continue") {}.cosmosButtonStyle(.glass)
+        }
+        .padding()
+        .cosmosPreviewVariant(.dark)
+        .cosmosPreviewEnv(dynamicTypeSize: .accessibility3)
+    }
 }

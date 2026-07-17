@@ -11,7 +11,7 @@ import SwiftUI
 /// `.environment(_:)` and read it with `@Environment(CosmosThemeObservable.self)` — do **not**
 /// route it through `@Entry`.
 extension EnvironmentValues {
-    /// The 8 cross-cutting behavior contracts.
+    /// The 9 cross-cutting behavior contracts.
     @Entry public var cosmosConfiguration: CosmosConfiguration = .default
     /// Visual tokens, default selectors, and design-language version.
     @Entry public var cosmosTheme: CosmosTheme = .default
