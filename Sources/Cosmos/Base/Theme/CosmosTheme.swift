@@ -43,6 +43,18 @@ public struct CosmosTheme: Sendable {
     /// Default progress style variant.
     public var progressStyle: CosmosProgressStyle
 
+    /// Default group box style variant (chrome is unavailable on tvOS/watchOS; the atom renders a
+    /// plain fallback there — the selector is still carried for API uniformity).
+    public var groupBoxStyle: CosmosGroupBoxStyle
+
+    /// Default menu style variant (Menu is unavailable on watchOS; the atom renders a
+    /// `CosmosButton` fallback there — the selector is still carried for API uniformity).
+    public var menuStyle: CosmosMenuStyle
+
+    /// Default date picker style variant (DatePicker is type-level unavailable on tvOS; the
+    /// entire atom is guarded `#if !os(tvOS)` — the selector is still carried for API uniformity).
+    public var datePickerStyle: CosmosDatePickerStyle
+
     /// Motion visual tokens (spring presets, duration scale, transition presets, shadow).
     public var motion: CosmosMotionTokens
 
@@ -57,6 +69,9 @@ public struct CosmosTheme: Sendable {
         toggleStyle: CosmosToggleStyle = .automatic,
         labelStyle: CosmosLabelStyle = .automatic,
         progressStyle: CosmosProgressStyle = .automatic,
+        groupBoxStyle: CosmosGroupBoxStyle = .automatic,
+        menuStyle: CosmosMenuStyle = .automatic,
+        datePickerStyle: CosmosDatePickerStyle = .automatic,
         motion: CosmosMotionTokens = .default
     ) {
         self.version = version
@@ -69,6 +84,9 @@ public struct CosmosTheme: Sendable {
         self.toggleStyle = toggleStyle
         self.labelStyle = labelStyle
         self.progressStyle = progressStyle
+        self.groupBoxStyle = groupBoxStyle
+        self.menuStyle = menuStyle
+        self.datePickerStyle = datePickerStyle
         self.motion = motion
     }
 
@@ -87,6 +105,9 @@ public struct CosmosTheme: Sendable {
     public func withToggleStyle(_ toggleStyle: CosmosToggleStyle) -> CosmosTheme { var c = self; c.toggleStyle = toggleStyle; return c }
     public func withLabelStyle(_ labelStyle: CosmosLabelStyle) -> CosmosTheme { var c = self; c.labelStyle = labelStyle; return c }
     public func withProgressStyle(_ progressStyle: CosmosProgressStyle) -> CosmosTheme { var c = self; c.progressStyle = progressStyle; return c }
+    public func withGroupBoxStyle(_ groupBoxStyle: CosmosGroupBoxStyle) -> CosmosTheme { var c = self; c.groupBoxStyle = groupBoxStyle; return c }
+    public func withMenuStyle(_ menuStyle: CosmosMenuStyle) -> CosmosTheme { var c = self; c.menuStyle = menuStyle; return c }
+    public func withDatePickerStyle(_ datePickerStyle: CosmosDatePickerStyle) -> CosmosTheme { var c = self; c.datePickerStyle = datePickerStyle; return c }
     public func withMotion(_ motion: CosmosMotionTokens) -> CosmosTheme { var c = self; c.motion = motion; return c }
     public func withSpringStyle(_ style: CosmosSpringStyle) -> CosmosTheme { var c = self; c.motion.defaultSpringStyle = style; return c }
 }
