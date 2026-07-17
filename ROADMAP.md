@@ -1,6 +1,7 @@
 # Roadmap
 
-> Last updated: 2026-07-17
+> Last updated: 2026-07-17 (restructured: PHASE3 promoted to Next; PHASE4 core navigation/layout
+> atoms added with standing design principles + waves F–I; remaining atoms moved to PHASE5+)
 >
 > This roadmap reflects the project state **after the from-scratch reset** that produced PHASE2.
 > The earlier pre-reset cycle (molecules, `CosmosScreen` data-driven renderer, `CosmosImage`/
@@ -55,6 +56,75 @@
 
 ## Next
 
+### PHASE3 — Wave E refinements (already-approved, immediate)
+
+> Spec: `PHASE3.md`. Implementation-ready; build order in §1 of that doc. Promoted here from
+> "Later/Deferred" — this is the immediate next implementation work.
+
+- [ ] `CosmosSlider` iOS 26 cluster (ticks / `neutralValue` / `enabledBounds` / current-value label)
+- [ ] `.cosmosTabViewBottomAccessory(isEnabled:)` (iOS 26.1 — first shallow runtime `if #available` gate)
+- [ ] `CosmosSelectableList` (selection-inits fragment; reuses AnyView-in-init + haptic gate)
+- [ ] OS-27 surfaces: `TabsPickerStyle` (`.tabs`) + `TabRole.prominent` (first Cosmos-27 surface; combined compile + runtime guard in a style applier)
+
+### PHASE4 — Core navigation & layout atoms
+
+> Per-wave blueprints (`PHASE4.md` or per-wave docs) are deferred to each wave's implementation
+> time and are NOT written now — at which point every `@available` clause is re-verified against the
+> Xcode `.swiftinterface` (the #1 historical rework source). The waves below define scope, order,
+> and the per-atom pattern tag only. Apply the PHASE2 §5 cross-cutting checklist per atom
+> (accessibility, haptics, motion, tracking, enable, loading, localization, multiplatform guards).
+
+**Design principles (standing rules for these waves):**
+
+1. **Size-class-adaptive reflow preserves view identity.** Switch layout by
+   `horizontalSizeClass` / `verticalSizeClass` / `dynamicTypeSize` via `AnyLayout` / `ViewThatFits`,
+   NEVER via `if/else` that recreates view identity. Applies to Scroll / Form axis reflow.
+2. **Stack ↔ SplitView is the documented exception.** `AnyLayout` cannot erase `NavigationStack`
+   into `NavigationSplitView` (different root types; neither is a `Layout`). **Default:** a single
+   `NavigationSplitView` root — it auto-collapses to stack-style push nav in compact width
+   (identity-preserving; the system owns the reflow). **When an explicit compact `NavigationStack`
+   is required** (different destinations, or a tvOS/watchOS shape where collapse is wrong): select
+   one root per size class via the AnyView-in-init pattern and **persist logical nav state in shared
+   bindings** (`path`, `columnVisibility`, `selectedRoute`). Honest tradeoff: physical view identity
+   (focus, per-destination scroll offset, in-flight animation) does NOT survive the root switch;
+   logical nav state (depth, selected route, column visibility) DOES. Coordinate the switch write
+   with one `withAnimation(theme.motion.spring(for: .containerTransform).animation) { … }`.
+3. **TabView ↔ Navigation contract.** Each `Tab` hosts one `CosmosNavigation`; nav state is
+   tab-scoped. Do not double-adapt: inside a `.sidebarAdaptable` `CosmosTabView` tab, use the
+   single-`NavigationSplitView`-root form and let the tab style own compact/regular chrome. No
+   nav-side tab-switch haptic (the tab atom already fires `.selection`). Tracking anchor = per-tab
+   `accessibilityIdentifier`.
+4. **Custom-style atoms reuse the GroupBox-proven sub-pattern** (`CosmosGroupBoxChrome:
+   GroupBoxStyle` in `Sources/Cosmos/Atoms/CosmosGroupBox.swift`): selector enum + pure availability
+   table + applier + a `public struct: StyleProtocol` with `makeBody(configuration:)` using theme
+   tokens and re-applying `applyCosmosAccessibility`. Applies to `FormStyle` / `ControlGroupStyle`.
+   No new sub-pattern. (Difference from opaque styles: `PickerStyle` / `ListStyle` / `TabViewStyle`
+   are non-conformable → selector-enum + applier only; `FormStyle` / `ControlGroupStyle` /
+   `GroupBoxStyle` ARE conformable → custom `makeBody` is genuinely possible.)
+
+**Waves (low-risk-first):**
+
+- [ ] **Wave F — `CosmosScrollView`** (`Sources/Cosmos/Atoms/CosmosScrollView.swift`) — wrap-View +
+      feature-ergonomics: scroll-to-top/bottom helpers via `ScrollViewReader`, position/visibility
+      tracking (`scrollPosition(id:)`), `scrollDismissesKeyboard`, refresh; `AnyLayout` axis reflow.
+- [ ] **Wave G — `CosmosAsyncImage`** (`Sources/Cosmos/Atoms/CosmosAsyncImage.swift`) — wrap-View +
+      feature-ergonomics: explicit state machine over `AsyncImagePhase`
+      (empty / loading / loaded / error), placeholder / error / retry slots, phase transitions via
+      `.cosmosContentTransition` / `.cosmosTransition` gated by `CosmosMotionPolicy`, retry haptic
+      gated by `CosmosHapticsPolicy`. No custom network code — native `AsyncImage` fetches.
+- [ ] **Wave H — `CosmosForm`** (`Sources/Cosmos/Atoms/CosmosForm.swift`) — custom-style
+      (`CosmosFormStyle` / `CosmosFormChrome: FormStyle` `makeBody` with tokens + a11y re-apply) +
+      wrap-View container; coherent loading / disabled / read-only via
+      `CosmosEnableConfiguration` / `CosmosLoadingConfiguration`; composes with `CosmosSection`.
+      Sibling `CosmosControlGroupStyle` / `CosmosControlGroupChrome` (style-only; no standalone
+      `CosmosControlGroup` atom in PHASE4 — that wrapper stays PHASE5+).
+- [ ] **Wave I — `CosmosNavigation`** (`Sources/Cosmos/Atoms/CosmosNavigation.swift`) — wrap-View +
+      AnyView-in-init (Stack vs SplitView roots differ, cf. `CosmosTabView`); typed route +
+      programmatic nav via `navigationDestination(for:)` + `path` binding; `columnVisibility`
+      binding; size-class-adaptive root per principle 2; `CosmosTabView` composition per principle 3.
+
+### Other next (unchanged)
+
 - [ ] **Modifiers module** — consolidate typography / spacing / surface / motion modifiers into a coherent module surface
 - [ ] **Molecules** — compositions of atoms (to be scoped; the pre-reset molecule list is not assumed)
 - [ ] **Organisms** — higher-level compositions
@@ -62,13 +132,37 @@
 - [ ] **Per-platform CI matrix** — extend CI to build iOS/macOS/tvOS/watchOS/visionOS + `swift build -c release` to exercise `#if os()` coverage
 - [ ] **DocC generation** via `swift-docc-plugin` in CI
 
-## Later
+## Later (PHASE5+)
 
 - [ ] Runtime theming engine (expand on `CosmosThemeObservable`)
 - [ ] Accessibility audit tooling
 - [ ] Component gallery website
-- [ ] **Deferred from Wave E** (recorded decisions, not lost work):
-  - `CosmosSelectableList` — selectable `List` variant (selection inits fragment too far across platforms for one clean API)
-  - OS-27 surfaces (above the Cosmos 26 floor): `TabRole.prominent`, `TabsPickerStyle` (`.tabs`)
-  - iOS 26 `Slider` cluster (ticks / `neutralValue` / `enabledBounds` / current-value label)
-  - `.cosmosTabViewBottomAccessory(isEnabled:)` (iOS 26.1, above floor)
+- [ ] **Remaining missing atoms (future PHASE5+ — NOT in PHASE4 scope):**
+  - Grids / Lazy (`LazyVStack` / `LazyHStack` / `LazyVGrid` / `LazyHGrid`)
+  - `Table` (macOS / iOS) — `TableStyle` conformable
+  - `OutlineGroup` / `DisclosureGroup` — `OutlineGroupStyle` / `DisclosureGroupStyle` where conformable
+  - `ShareLink` / `ColorPicker`
+  - `ControlGroup` as a standalone atom (the style ships in Wave H; the atom wrapper is deferred)
+  - `Spacer` / `Badge`
+  - Presentation (sheets / popovers / full-screen cover / alerts / confirmationDialog) — `presentationDetents` etc.
+  - Drawing (`Canvas` / `Path` / `Shape` / `TimelineView`)
+- [ ] **Deferred from Wave E** (recorded decisions, not lost work) — beyond what PHASE3 already covers:
+  - Further OS-27 surface follow-ups as the floor lowers.
+
+### Open risks / verification TODOs (PHASE4 — verified at blueprint time, NOT now)
+
+- `NavigationSplitView` three-column + `columnVisibility` behavior on tvOS / watchOS at `.v26`; any
+  above-floor new SplitView transition API.
+- watchOS `Form` rendering under custom `CosmosFormChrome` (watchOS `Form` is `List`-like); built-in
+  `FormStyle` cases available per platform.
+- watchOS `ScrollView` surface: `ScrollViewReader`, `scrollPosition(id:)`,
+  `onScrollGeometryChange` / `onScrollVisibilityChange` — which are OS-27 vs floor.
+- `AsyncImage` watchOS cache / phase limits at floor.
+- `FormStyle` / `ControlGroupStyle` built-in case availability per platform
+  (`.grouped` / `.insetGrouped` / `.columns` / …).
+- OS-27 surfaces inside PHASE4 scope (scroll geometry / visibility APIs, new nav transitions) —
+  flag any that need the runtime `if #available` gate (PHASE3 introduces the mechanic; PHASE4 may
+  extend it).
+- Haptic kind for AsyncImage retry / error (confirm a `.error` / `.warning` kind exists or reuse).
+- `@preconformance @MainActor` conformance for `FormStyle` / `ControlGroupStyle` under Swift 6 mode
+  v6 (match the `CosmosGroupBoxChrome` precedent).
