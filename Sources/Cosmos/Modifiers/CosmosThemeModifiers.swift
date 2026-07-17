@@ -16,6 +16,24 @@ private struct CosmosControlSizeModifier: ViewModifier {
     func body(content: Content) -> some View { content.environment(\.cosmosTheme, theme.withControlSize(size)) }
 }
 
+private struct CosmosToggleStyleModifier: ViewModifier {
+    let style: CosmosToggleStyle
+    @Environment(\.cosmosTheme) private var theme
+    func body(content: Content) -> some View { content.environment(\.cosmosTheme, theme.withToggleStyle(style)) }
+}
+
+private struct CosmosLabelStyleModifier: ViewModifier {
+    let style: CosmosLabelStyle
+    @Environment(\.cosmosTheme) private var theme
+    func body(content: Content) -> some View { content.environment(\.cosmosTheme, theme.withLabelStyle(style)) }
+}
+
+private struct CosmosProgressStyleModifier: ViewModifier {
+    let style: CosmosProgressStyle
+    @Environment(\.cosmosTheme) private var theme
+    func body(content: Content) -> some View { content.environment(\.cosmosTheme, theme.withProgressStyle(style)) }
+}
+
 private struct CosmosTextStyleModifier: ViewModifier {
     let style: CosmosTextStyle
     @Environment(\.cosmosTheme) private var theme
@@ -51,6 +69,12 @@ extension View {
     public func cosmosButtonStyle(_ style: CosmosButtonStyle) -> some View { modifier(CosmosButtonStyleModifier(style: style)) }
     /// Overrides the default control size for descendant components.
     public func cosmosControlSize(_ size: CosmosControlSize) -> some View { modifier(CosmosControlSizeModifier(size: size)) }
+    /// Overrides the default toggle style variant for descendant components.
+    public func cosmosToggleStyle(_ style: CosmosToggleStyle) -> some View { modifier(CosmosToggleStyleModifier(style: style)) }
+    /// Overrides the default label style variant for descendant components.
+    public func cosmosLabelStyle(_ style: CosmosLabelStyle) -> some View { modifier(CosmosLabelStyleModifier(style: style)) }
+    /// Overrides the default progress style variant for descendant components.
+    public func cosmosProgressStyle(_ style: CosmosProgressStyle) -> some View { modifier(CosmosProgressStyleModifier(style: style)) }
     /// Overrides the default text style for descendant components.
     public func cosmosTextStyle(_ style: CosmosTextStyle) -> some View { modifier(CosmosTextStyleModifier(style: style)) }
     /// Overrides the default padding selector for descendant components.
