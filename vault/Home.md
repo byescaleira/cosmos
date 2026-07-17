@@ -16,6 +16,10 @@ Synthesis/navigation layer for the [[Cosmos]] SwiftUI design-system library. The
 - `07-metodologia/` — workflows / methods
 - `08-riscos/` — open risks / refuted specs
 
+## Methodology index
+
+- [[phase4-core-navigation-atoms]] — PHASE4 roadmap restructure: core navigation/layout atoms (Scroll / AsyncImage / Form / Navigation), standing design principles (AnyLayout reflow, Stack↔SplitView identity crux, TabView↔Navigation contract, GroupBox-proven custom-style sub-pattern), waves F–I.
+
 ## Component index
 
 - [[cosmos-section]] — `CosmosSection` (Wave E): `Section` wrap-view, container-modifier platform matrix.
