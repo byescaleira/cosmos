@@ -24,11 +24,4 @@ struct CosmosEnvironmentTests {
         #expect(values.cosmosConfiguration.tracking.isEnabled == CosmosConfiguration.default.tracking.isEnabled)
         #expect(values.cosmosConfiguration.enable.isEnabled == true)
     }
-
-    @Test func fontRegistrationIsIdempotent() {
-        // Calling repeatedly from the test (any thread) must not crash and must stay a no-op.
-        CosmosFont.registerIfNeeded()
-        CosmosFont.registerIfNeeded()
-        #expect(CosmosFont.bundledFontURLs().count >= 1, "expected bundled .ttf fonts")
-    }
 }

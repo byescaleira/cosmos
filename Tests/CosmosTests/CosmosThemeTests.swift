@@ -23,8 +23,10 @@ struct CosmosThemeTests {
         #expect(base.withControlSize(.small).controlSize == .small)
         #expect(base.withVersion(.cosmos26).version == .cosmos26)
 
-        let preset = base.withPreset(.dmSans)
-        #expect(preset.typography.preset == .dmSans)
+        let customFont = base.withCustomFont("DMSans-Regular")
+        #expect(customFont.typography.customFontName == "DMSans-Regular")
+        let systemAgain = customFont.withCustomFont(nil)
+        #expect(systemAgain.typography.customFontName == nil)
     }
 
     @Test func fluentBuildersDoNotMutateOriginal() {

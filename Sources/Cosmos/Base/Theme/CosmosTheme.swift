@@ -131,7 +131,10 @@ public struct CosmosTheme: Sendable {
     public func withVersion(_ version: CosmosVersion) -> CosmosTheme { var c = self; c.version = version; return c }
     public func withColors(_ colors: CosmosColorTokens) -> CosmosTheme { var c = self; c.colors = colors; return c }
     public func withTypography(_ typography: CosmosTypographyTokens) -> CosmosTheme { var c = self; c.typography = typography; return c }
-    public func withPreset(_ preset: CosmosFontPreset) -> CosmosTheme { var c = self; c.typography.preset = preset; return c }
+    /// Sets a custom font (PostScript name) for descendant components. Pass `nil` to return to the
+    /// system font. The font must be registered in your app; resolution uses
+    /// `Font.custom(_:size:relativeTo:)` so Dynamic Type still scales.
+    public func withCustomFont(_ name: String?) -> CosmosTheme { var c = self; c.typography.customFontName = name; return c }
     public func withTextStyle(_ textStyle: CosmosTextStyle) -> CosmosTheme { var c = self; c.textStyle = textStyle; return c }
     public func withPadding(_ padding: CosmosPadding) -> CosmosTheme { var c = self; c.padding = padding; return c }
     public func withButtonStyle(_ buttonStyle: CosmosButtonStyle) -> CosmosTheme { var c = self; c.buttonStyle = buttonStyle; return c }

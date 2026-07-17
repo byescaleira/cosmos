@@ -94,10 +94,10 @@ private struct CosmosPaddingModifier: ViewModifier {
     func body(content: Content) -> some View { content.environment(\.cosmosTheme, theme.withPadding(padding)) }
 }
 
-private struct CosmosFontPresetModifier: ViewModifier {
-    let preset: CosmosFontPreset
+private struct CosmosCustomFontModifier: ViewModifier {
+    let name: String?
     @Environment(\.cosmosTheme) private var theme
-    func body(content: Content) -> some View { content.environment(\.cosmosTheme, theme.withPreset(preset)) }
+    func body(content: Content) -> some View { content.environment(\.cosmosTheme, theme.withCustomFont(name)) }
 }
 
 private struct CosmosMotionTokensModifier: ViewModifier {
@@ -147,8 +147,10 @@ extension View {
     public func cosmosTextStyle(_ style: CosmosTextStyle) -> some View { modifier(CosmosTextStyleModifier(style: style)) }
     /// Overrides the default padding selector for descendant components.
     public func cosmosPadding(_ padding: CosmosPadding) -> some View { modifier(CosmosPaddingModifier(padding: padding)) }
-    /// Overrides the font preset for descendant components (registers fonts if needed).
-    public func cosmosFontPreset(_ preset: CosmosFontPreset) -> some View { CosmosFont.registerIfNeeded(); return modifier(CosmosFontPresetModifier(preset: preset)) }
+    /// Overrides the font for descendant components with a custom font's PostScript name, or `nil`
+    /// to return to the system font. The font must be registered in your app; resolution uses
+    /// `Font.custom(_:size:relativeTo:)` so Dynamic Type still scales.
+    public func cosmosCustomFont(_ name: String?) -> some View { modifier(CosmosCustomFontModifier(name: name)) }
     /// Overrides the motion tokens (visual) for descendant components.
     public func cosmosMotionTokens(_ tokens: CosmosMotionTokens) -> some View { modifier(CosmosMotionTokensModifier(tokens: tokens)) }
     /// Overrides the default spring style for descendant components.

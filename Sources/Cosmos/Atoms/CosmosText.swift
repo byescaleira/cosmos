@@ -80,7 +80,7 @@ public struct CosmosText: View {
     VStack(alignment: .leading, spacing: 8) {
         CosmosText("preview.title").cosmosTextStyle(.largeTitle)
         CosmosText("preview.description").cosmosTextStyle(.body)
-        CosmosText(verbatim: "JetBrains Mono").cosmosTextStyle(.body).cosmosFontPreset(.jetBrainsMono)
+        CosmosText(verbatim: "JetBrains Mono").cosmosTextStyle(.body).cosmosCustomFont("JetBrainsMono-Regular")
     }
     .padding()
 }
