@@ -155,7 +155,10 @@ public enum CosmosListAvailability {
 /// Resolves a ``CosmosListStyle`` to a concrete `ListStyle`, guarding each case with `#if os()` for
 /// its per-platform availability and falling back to `.automatic` where the requested style is
 /// unavailable on the current platform (never blanket-applies).
-private struct CosmosListStyleApplier: ViewModifier {
+///
+/// `internal` (not `private`) so the selectable sibling ``CosmosSelectableList`` reuses the same
+/// per-platform style resolution — one source of truth for the `ListStyle` × platform matrix.
+struct CosmosListStyleApplier: ViewModifier {
     let style: CosmosListStyle
     func body(content: Content) -> some View {
         switch style {
