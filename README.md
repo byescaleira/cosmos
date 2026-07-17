@@ -1,41 +1,36 @@
 # Cosmos
 
-> A single-target SwiftUI design system for iOS, macOS, and tvOS 27.
+> A clean-room SwiftUI design system for iOS, macOS, tvOS, watchOS, and visionOS 26.
 
-## What is Cosmos?
+## Overview
 
-Cosmos is a clean-room SwiftUI design system distributed as an SPM package. It is intentionally small: one module, one import, and a single source of truth for behavior and appearance.
+Cosmos is a SwiftUI design system distributed as a single SwiftPM module — one
+`import`, one target, no third-party dependencies. It wraps the native SwiftUI
+control set so every component reads the same global behavior and appearance
+contracts from the SwiftUI environment, instead of carrying per-component state
+and theme structs.
 
-Two shared, mutable-by-replacement value types flow through the SwiftUI environment:
+Two `Sendable` value types flow through the environment as `@Entry` values:
 
-- `CosmosConfiguration` carries cross-cutting behavior:
-  - **Accessibility** — labels, hints, traits, hidden state
-  - **Localization** — locale-aware string resolution
-  - **Log** — structured logging events
-  - **Error** — centralized error reporting
-  - **Loading** — loading state
-  - **Enable** — enabled / visible / read-only flags
-- `CosmosTheme` carries visual tokens: colors, typography, spacing, radii, and component style selectors.
+- **`CosmosConfiguration`** — nine cross-cutting behavior contracts:
+  accessibility, localization, log, error, loading, enable, haptics, motion,
+  and tracking.
+- **`CosmosTheme`** — visual tokens: colors, typography, padding, radii, and
+  the default selector for each component family (`buttonStyle`,
+  `toggleStyle`, `pickerStyle`, …) plus motion tokens.
 
-## Structure
+Both default to sensible values, so every atom renders correctly **without any
+explicit injection**. Override a contract for a subtree and the change
+propagates to every descendant atom.
 
-```
-Sources/Cosmos/
-├── Base/          # Configuration, theme tokens, environment values
-├── Atoms/         # Button, Text, Icon, Image, TextField, Toggle, etc.
-├── Molecules/     # InputRow, ListRow, FormRow, Card, AlertBanner, etc.
-└── Screen/        # Data-driven screen assembly from serializable models
-```
+## Requirements
 
-Everything is exported from the single `Cosmos` module.
+- Swift 6.4 toolchain, Swift language mode v6, Xcode 26.
+- Platforms, all at `.v26`: iOS 26, macOS 26, tvOS 26, watchOS 26, visionOS 26.
 
-## Platform Support
-
-- iOS 27
-- macOS 27
-- tvOS 27
-
-Cosmos is SwiftUI-native and contains no explicit UIKit references.
+Cosmos is SwiftUI-native. It contains no `UIKit` symbols — haptics use
+`.sensoryFeedback`, fonts register through CoreText, and colors resolve through
+ SwiftUI `Color`. It builds with zero concurrency warnings under Swift 6.
 
 ## Installation
 
@@ -47,132 +42,260 @@ dependencies: [
 ]
 ```
 
-Then add `Cosmos` to your target dependencies.
+Then add `Cosmos` to your target dependencies:
 
-## Usage
+```swift
+.target(
+    name: "YourApp",
+    dependencies: [
+        .product(name: "Cosmos", package: "cosmos")
+    ]
+)
+```
+
+## Getting started
+
+Import the module and use the atoms directly. No environment setup is required
+— defaults are already present:
 
 ```swift
 import Cosmos
 import SwiftUI
 
-struct MyView: View {
-    @State private var configuration = CosmosConfiguration.default
-    @State private var theme = CosmosTheme.default
-
+struct WelcomeView: View {
     var body: some View {
-        VStack {
-            CosmosText("Hello, Cosmos")
-            CosmosButton("Continue") { }
-            CosmosButton(action: { }) {
-                Label("Delete", systemImage: "trash")
+        VStack(spacing: 16) {
+            CosmosText("Welcome to Cosmos")
+            CosmosButton("Continue") {
+                // handle tap
             }
-            .cosmosEnabled(false)
-            CosmosIcon("checkmark")
             CosmosDivider()
         }
-        .cosmosConfiguration(configuration)
-        .cosmosTheme(theme)
+        .padding()
     }
 }
 ```
 
-Override state and accessibility per component or subtree:
+## Atoms
 
-```swift
-CosmosButton("Save") { }
-    .cosmosLoading(true)
-    .cosmosAccessibilityLabel("Save changes")
-```
+Every component is prefixed `Cosmos`. Components with a conformable style
+protocol (`ButtonStyle`, `ToggleStyle`, `LabelStyle`, `ProgressViewStyle`,
+`GroupBoxStyle`, `MenuStyle`) adopt it and support SE-0299 dot-syntax; the rest
+wrap a `View`.
 
-## Data-driven screens
-
-`CosmosScreen` renders a serializable model into the same atoms. The model is `Codable`, so a screen can come from Swift code, a local JSON file, or an API response.
-
-### From Swift
-
-```swift
-import Cosmos
-
-let screen = CosmosScreen(
-    id: "welcome",
-    components: [
-        .text(.init(contentKey: "welcome.headline")),
-        .spacer,
-        .button(.init(titleKey: "welcome.continue", action: .init(id: "continue")))
-    ]
-)
-
-CosmosScreenRenderer(screen: screen, registry: .init(
-    handlers: ["continue": { print("tapped") }]
-))
-```
-
-### From JSON
-
-```swift
-import Cosmos
-
-let json = """
-{
-    "id": "welcome",
-    "title_key": "welcome.title",
-    "layout": {
-        "root": "vStack",
-        "spacing": "medium",
-        "padding": "large",
-        "alignment": "center"
-    },
-    "components": [
-        { "text": { "content_key": "welcome.headline" } },
-        { "text": { "content_key": "welcome.body" } },
-        { "spacer": {} },
-        {
-            "button": {
-                "title_key": "welcome.continue",
-                "action": { "id": "continue" }
-            }
-        }
-    ]
-}
-"""
-
-let screen = try CosmosScreenLoader().screen(from: json)
-CosmosScreenRenderer(screen: screen, registry: .init(
-    handlers: ["continue": { print("tapped") }]
-))
-```
-
-JSON components are keyed by case name:
-
-| Component | JSON shape |
+| Atom | Notes |
 |---|---|
-| Text | `{ "text": { "content_key": "..." } }` |
-| Button | `{ "button": { "title_key": "...", "action": { "id": "..." } } }` |
-| Icon | `{ "icon": { "system_name": "..." } }` |
-| Image | `{ "image": { "source": { "system": { "name": "..." } } } }` |
-| Divider | `{ "divider": {} }` |
-| Spacer | `{ "spacer": {} }` |
-| VStack | `{ "v_stack": { "components": [...], "spacing": "medium", "alignment": "center" } }` |
-| HStack | `{ "h_stack": { "components": [...], "spacing": "medium", "alignment": "center" } }` |
-| ZStack | `{ "z_stack": { "components": [...], "spacing": "medium", "alignment": "center" } }` |
-| List Row | `{ "list_row": { "title_key": "..." } }` |
-| Empty State | `{ "empty_state": { "title_key": "..." } }` |
+| `CosmosButton` | `ButtonStyle`-based; glass variant available on iOS 26. |
+| `CosmosCard` | Header / body / footer slots. |
+| `CosmosDatePicker` | `DatePicker` wrapper; gated on platforms where it exists. |
+| `CosmosDivider` | Theme-tinted divider. |
+| `CosmosGroupBox` | Custom `GroupBoxStyle` chrome via theme tokens. |
+| `CosmosIcon` | SF Symbol wrapper. |
+| `CosmosLabel` | `LabelStyle`-based. |
+| `CosmosLink` | `Link` wrapper. |
+| `CosmosList` | `List` wrapper with theme list style. |
+| `CosmosSelectableList` | `List(selection:)` wrapper (single or multi). |
+| `CosmosLocalizedText` | Resolves a `LocalizedStringResource`. |
+| `CosmosMenu` | `MenuStyle`-based. |
+| `CosmosPicker` | `PickerStyle`-based; `.tabs` available since Cosmos 27. |
+| `CosmosProgress` | `ProgressViewStyle`-based. |
+| `CosmosSection` | `Section` wrapper with parent / content / footer. |
+| `CosmosSecureField` | `SecureField` wrapper. |
+| `CosmosSlider` | `Slider` wrapper (not available on tvOS). |
+| `CosmosStepper` | `Stepper` wrapper (not available on tvOS). |
+| `CosmosTabView` | `TabView` wrapper with theme style and roles. |
+| `CosmosText` | Localized or verbatim text. |
+| `CosmosTextField` | `TextFieldStyle`-based. |
+| `CosmosTextEditor` | `TextEditor` wrapper (not on tvOS/watchOS). |
+| `CosmosToggle` | `ToggleStyle`-based. |
 
-The default `JSONDecoder` uses `convertFromSnakeCase`, matching the Swift-style keys shown above.
+## Behavior and appearance
+
+### Inject a configuration or theme
+
+Inject an environment value to override a contract for an entire subtree:
+
+```swift
+struct RootView: View {
+    var body: some View {
+        ContentView()
+            // Disable interaction and opt into tracking for the whole tree:
+            .environment(\.cosmosConfiguration, .default
+                .withEnable(.init(isEnabled: false))
+                .withTracking(.init(isEnabled: true)))
+    }
+}
+```
+
+### Override a single selector
+
+The `.cosmos*` modifiers read the current theme, mutate a copy, and re-inject
+it — so the change applies to descendants only:
+
+```swift
+VStack {
+    CosmosButton("Save") { save() }
+    CosmosButton("Cancel") { dismiss() }
+}
+.cosmosButtonStyle(.glass)      // visual token
+.cosmosControlSize(.large)
+.cosmosTextStyle(.headline)
+.cosmosPadding(.large)
+```
+
+Available selectors include `.cosmosButtonStyle`, `.cosmosToggleStyle`,
+`.cosmosPickerStyle`, `.cosmosListStyle`, `.cosmosTabViewStyle`,
+`.cosmosDatePickerStyle`, `.cosmosMenuStyle`, `.cosmosGroupBoxStyle`,
+`.cosmosLabelStyle`, `.cosmosProgressStyle`, `.cosmosTextFieldStyle`,
+`.cosmosTextEditorStyle`, `.cosmosControlSize`, `.cosmosTextStyle`, and
+`.cosmosPadding`.
+
+### Cross-cutting features
+
+Each atom integrates accessibility, haptics, motion, localization, and
+tracking where relevant.
+
+```swift
+CosmosButton("Delete") { delete() }
+    .cosmosLoading(true)
+    .cosmosAccessibilityLabel("Delete item")
+    .cosmosAccessibilityHint("Removes the item permanently")
+    .cosmosAccessibilityIdentifier("delete-button")
+    .cosmosTrackingId("delete")   // analytics id; falls back to a11y id
+```
+
+Condition modifiers — `.cosmosEnabled`, `.cosmosVisible`, `.cosmosReadOnly`,
+`.cosmosLoading` — gate atoms consistently across every component family.
+
+### Motion
+
+Atoms never write raw `Animation.spring(...)` or `.transition(.move...)`.
+They call the motion primitives, which resolve springs and transition presets
+through `CosmosMotionTokens` and respect Reduce Motion through
+`CosmosMotionPolicy` (config-aware, not the bare environment value):
+
+```swift
+someView
+    .cosmosAnimation(.press, value: isPressed)
+    .cosmosTransition(.sheet)
+    .cosmosContentTransition(.numericText())
+```
+
+Per-instance motion overrides: `.cosmosMotion(_:)` (behavior) and
+`.cosmosMotionTokens(_:)` / `.cosmosSpringStyle(_:)` (visual).
+
+### Runtime-mutable theming
+
+For live-switched theming, use `CosmosThemeObservable` — an
+`@Observable @MainActor` holder injected through `.environment(_:)` and read
+with `@Environment(CosmosThemeObservable.self)`:
+
+```swift
+import Cosmos
+import SwiftUI
+
+@main
+struct MyApp: App {
+    @State private var theme = CosmosThemeObservable()
+
+    var body: some Scene {
+        WindowGroup {
+            ContentView()
+                .environment(theme)
+        }
+    }
+}
+
+struct ContentView: View {
+    @Environment(CosmosThemeObservable.self) private var theme
+
+    var body: some View {
+        CosmosButton("Toggle style") {
+            theme.theme = theme.theme.withButtonStyle(.glass)
+        }
+    }
+}
+```
+
+## Custom fonts
+
+Cosmos ships no bundled fonts — it defaults to the system font. To use a custom
+font, register it in your app and pass its PostScript name to the theme. The
+font is resolved through `Font.custom(_:size:relativeTo:)`, so Dynamic Type
+still scales it (including accessibility sizes).
+
+Register the font in your app's `Info.plist` (iOS / tvOS / watchOS / visionOS)
+under `UIAppFonts`, or register it programmatically with CoreText:
+
+```swift
+import CoreText
+
+func registerFont(named name: String, in bundle: Bundle) {
+    guard let url = bundle.url(forResource: name, withExtension: "ttf") else { return }
+    CTFontManagerRegisterFontsForURL(url, .process, nil)
+}
+```
+
+Then opt in at the theme level. Pass `nil` to return to the system font:
+
+```swift
+// At the root of your view tree:
+ContentView()
+    .cosmosCustomFont("DMSans-Regular")
+
+// Or on a subtree:
+VStack { CosmosText("Headline") }
+    .cosmosCustomFont("DMSans-Regular")
+
+// Programmatically on the theme value:
+let theme = CosmosTheme.default.withCustomFont("DMSans-Regular")
+```
+
+## Localization
+
+Cosmos uses String Catalogs (`.xcstrings`) compiled through `.process("Resources")`
+in `Package.swift`. Resolve strings with `LocalizedStringResource`,
+`String(localized:)`, and the public string-constant symbols. `CosmosText(_:)`
+takes a localization key; `CosmosText(verbatim:)` bypasses localization. The
+baseline covers `en` and `pt-BR` and is extensible.
+
+## Platform adaptation
+
+Cosmos targets all five platforms at `.v26` and gates platform-absent
+components with `#if os()`. For layout that survives portrait ↔ landscape
+reflow, prefer `AnyLayout` and `ViewThatFits` switched by `horizontalSizeClass`,
+`verticalSizeClass`, and `dynamicTypeSize` — this preserves view identity
+(focus, scroll position, animation state) across rotation. Every atom honors
+Dynamic Type, Reduce Motion, Reduce Transparency, increased contrast, and
+Differentiate Without Color through the configuration's accessibility contract.
 
 ## Development
 
 ```bash
 swift build
 swift test
+swift build -c release
 ```
 
-Tests run with Swift Testing. Cosmos has no third-party dependencies. Visual validation is done through Xcode Previews and the planned `CosmosPreview` catalog app.
+Tests use Swift Testing (no UI snapshots, no ViewInspector). Cosmos has no
+third-party dependencies. Visual verification runs through co-located
+`#Preview(_:traits:)` blocks at the bottom of each atom file (default, dark,
+Dynamic Type accessibility, landscape, RTL, and per-platform variants).
+
+## Versioning
+
+A Cosmos major version equals the OS major it targets — the current baseline is
+**Cosmos 26**. API availability is Cosmos API versioning: "available since
+Cosmos 26" corresponds to `@available(iOS 26, *)`. `CosmosTheme.version` is a
+runtime design-language pin that lets an app keep an older look on a newer OS.
+See [VERSIONING.md](VERSIONING.md) for the policy and
+[CHANGELOG.md](CHANGELOG.md) for release history.
 
 ## Governance
 
 - [ARCHITECTURE.md](ARCHITECTURE.md) — design goals and conventions
 - [DECISIONS.md](DECISIONS.md) — architectural decisions
+- [VERSIONING.md](VERSIONING.md) — versioning policy
 - [ROADMAP.md](ROADMAP.md) — current and future work
 - [CHANGELOG.md](CHANGELOG.md) — release history
 - [CONTRIBUTING.md](CONTRIBUTING.md) — contribution guidelines
