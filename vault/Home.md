@@ -19,6 +19,7 @@ Synthesis/navigation layer for the [[Cosmos]] SwiftUI design-system library. The
 ## Component index
 
 - [[cosmos-section]] — `CosmosSection` (Wave E): `Section` wrap-view, container-modifier platform matrix.
+- [[cosmos-picker]] — `CosmosPicker` (Wave E): `Picker` wrap-view, `PickerStyle` × platform matrix, `Sendable` selection + `Label`-shadowing gotcha.
 
 ## Risks index
 
