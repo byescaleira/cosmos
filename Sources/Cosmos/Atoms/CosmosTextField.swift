@@ -194,13 +194,19 @@ private struct CosmosTextFieldStyleApplier: ViewModifier {
         case .bordered:
             // `.bordered` (`BorderedTextFieldStyle`) + `.textInputBorderShape` are
             // `@available(anyAppleOS 27.0)` — the **next** OS above the Cosmos 26 floor (unlike
-            // `glassProminent`, which is real OS 26). Gated to 27; falls back to `.automatic` on
-            // OS 26 (the floor) and renders on OS 27+ devices.
+            // `glassProminent`, which is real OS 26). Compile + runtime gate: the symbol is
+            // OS-27 SDK only, so `#if swift(>=6.4)` compiles it in under Xcode 27 / Swift 6.4
+            // and out (→ .automatic) on Xcode 26 / Swift 6.3; under Xcode 27, `if #available`
+            // degrades to .automatic on an OS-26 device.
+            #if swift(>=6.4)
             if #available(iOS 27, macOS 27, watchOS 27, tvOS 27, visionOS 27, *) {
                 content.textFieldStyle(.bordered).textInputBorderShape(.roundedRectangle)
             } else {
                 content.textFieldStyle(.automatic)
             }
+            #else
+            content.textFieldStyle(.automatic) // OS-27 SDK unavailable on this toolchain (Swift < 6.4)
+            #endif
         case .cosmos:
             content.textFieldStyle(.plain)
         }

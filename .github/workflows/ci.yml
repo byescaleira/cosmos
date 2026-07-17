@@ -12,25 +12,13 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      # The package declares `swift-tools-version: 6.4` (Xcode 27 / Swift 6.4) and the
-      # source references OS-27 SDK symbols (`.tabs` PickerStyle, `TabRole.prominent`,
-      # gated with `if #available(iOS 27, ...)`). These only exist in the Xcode 27 SDK,
-      # so Xcode 26.x (Swift 6.3) cannot build it. Select the newest installed Xcode —
-      # during the Xcode 27 beta season that is the 27 beta, which ships Swift 6.4 and
-      # the OS-27 SDKs that satisfy the .v26 deployment targets and the above-floor gates.
-      - name: Select latest Xcode
-        uses: maxim-lobanov/setup-xcode@v1
-        with:
-          xcode-version: 'latest'
-
-      - name: Diagnostics
-        run: |
-          echo "=== Installed Xcodes ==="
-          ls /Applications | grep -i xcode || true
-          echo "=== Selected swift ==="
-          xcrun --find swift
-          swift --version
-
+      # The package declares `swift-tools-version: 6.3` so it builds on both Xcode 26
+      # (the default on this hosted runner, Swift 6.3) and Xcode 27 (dev baseline, Swift 6.4).
+      # OS-27-only SDK symbols (`.tabs` PickerStyle, `TabRole.prominent`,
+      # `BorderedTextFieldStyle`) are compile-gated with `#if swift(>=6.4)`: they compile to a
+      # graceful fallback on Xcode 26 / Swift 6.3 and turn on under Xcode 27 / Swift 6.4. No
+      # explicit Xcode selection is needed — the runner default (Swift 6.3.x) satisfies the
+      # tools-version and exercises the Xcode-26 build path.
       - name: Build
         run: swift build
 

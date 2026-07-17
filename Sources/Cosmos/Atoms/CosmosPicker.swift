@@ -265,17 +265,21 @@ private struct CosmosPickerStyleApplier: ViewModifier {
             #endif
         case .tabs:
             // iOS/macOS/tvOS/visionOS at OS 27 (above the Cosmos 26 floor); unavailable watchOS.
-            // Combined compile + runtime gate: the TabsPickerStyle symbol is @available(watchOS,
-            // unavailable) → #if !os(watchOS) excludes the reference on watchOS; the style is
-            // OS-27-introduced → if #available(...27...) degrades to .automatic on a floor-26 device.
+            // Three-way compile + runtime gate: watchOS never references the symbol
+            // (`TabsPickerStyle` is @available(watchOS, unavailable)); the symbol is OS-27 SDK
+            // only, so `#elseif swift(>=6.4)` compiles it in under Xcode 27 / Swift 6.4 and out
+            // (→ .automatic) on Xcode 26 / Swift 6.3; under Xcode 27, `if #available(...27...)`
+            // further degrades to .automatic on an OS-26 device.
             #if os(watchOS)
             content.pickerStyle(.automatic)
-            #else
+            #elseif swift(>=6.4)
             if #available(iOS 27, macOS 27, tvOS 27, visionOS 27, *) {
                 content.pickerStyle(.tabs)
             } else {
                 content.pickerStyle(.automatic)
             }
+            #else
+            content.pickerStyle(.automatic) // OS-27 SDK unavailable on this toolchain (Swift < 6.4)
             #endif
         }
     }
