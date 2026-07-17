@@ -1,58 +1,74 @@
 # Roadmap
 
 > Last updated: 2026-07-17
+>
+> This roadmap reflects the project state **after the from-scratch reset** that produced PHASE2.
+> The earlier pre-reset cycle (molecules, `CosmosScreen` data-driven renderer, `CosmosImage`/
+> `CosmosBadge`/`CosmosSpacer`, JSON loader) was discarded and is **not** carried forward here —
+> those layers are to be (re)introduced as explicit next steps, not assumed done.
 
-## Now (current cycle)
-- [x] Bootstrap SPM package `Cosmos` for Apple v26 platforms
-- [x] Define `CosmosBase` target with shared configuration object
-- [x] Implement base contracts: Accessibility, Localization, Log, Error, Loading, Enable
-- [x] Adopt `@Entry` for `cosmosConfiguration` and `cosmosTheme`
-- [x] Split behavior configuration from visual theme
-- [x] Add semantic token layer: colors, typography, spacing, radii
-- [x] Refactor existing atoms to consume the new base
-- [x] Reduce atom APIs to content-only initializers
-- [x] Add environment modifiers for state, accessibility, and theme overrides
-- [x] Flatten atom folder structure into `Sources/Cosmos/Atoms/`
-- [x] Build `CosmosScreen` data-driven renderer, action registry, and JSON loader
-- [x] Add Swift Testing unit tests for base contracts, models, and JSON round-trips
-- [x] Build + test passing on macOS, iOS, and tvOS via `swift build`/`swift test`
-- [x] Wire localization into atoms so JSON keys resolve through configured bundle/locale
-- [x] Fix empty accessibility label/hint overrides that silenced VoiceOver
-- [x] Decouple `CosmosScreen` models from `Cosmos` target
-- [x] Harden existing atoms (`CosmosText`, `CosmosButton`, `CosmosIcon`, `CosmosDivider`) with native controls
-- [x] Add `CosmosControlSize` and loading placeholder support across atoms
-- [x] Add `CosmosImage` atom supporting resource, SF Symbol, URL (URL and String), placeholder, and loading placeholders
-- [x] Add `CosmosLabel` and `CosmosSpacer` atoms
-- [x] Add `CosmosLink`, `CosmosTextField`, `CosmosToggle`, `CosmosProgress`, `CosmosSlider`, `CosmosPicker`, and `CosmosBadge` atoms
-- [x] Add `CosmosStepper`, `CosmosDatePicker`, and `CosmosMenu` atoms
-- [x] Add `CosmosSection`, `CosmosList`, and `CosmosTabView` container atoms
-- [x] Implement adaptive `CosmosTabView` for compact/regular size classes
-- [x] Wire all atoms into `CosmosScreen` JSON models and renderer
-- [x] Add molecule: `CosmosInputRow` (label + text field)
-- [x] Add molecule: `CosmosListRow` (icon + text + divider)
-- [x] Add molecule: `CosmosFormRow` (label + control)
-- [x] Add molecule: `CosmosEmptyState` (image + title + subtitle + button)
-- [x] Add molecule: `CosmosButtonRow` (full-width icon + text button)
-- [x] Add molecule: `CosmosSearchBar` (search icon + text field + clear button)
+## Done (post-reset baseline)
 
-## Now (current cycle)
-- [x] Add molecule: `CosmosStatusRow` (icon + text + badge)
-- [x] Add molecule: `CosmosCard` (image + title + subtitle + badge/button)
-- [x] Add molecule: `CosmosAlertBanner` (icon + text + action)
-- [x] Add molecule: `CosmosLoadingState` (progress + text)
+### Package & platform
+- [x] Bootstrap SPM package `Cosmos` for Apple v26 platforms (iOS / macOS / tvOS / watchOS / visionOS, all `.v26`)
+- [x] Swift 6.4 toolchain, language mode v6, Xcode 26 — zero concurrency warnings
+- [x] UIKit-free (CoreText font registration, `.sensoryFeedback` haptics, `Color(.systemBackground)`); no `#if canImport(UIKit)`
+- [x] Single `Cosmos` target, no third-party dependencies; `CosmosTests` via Swift Testing
+
+### Cross-cutting base (global, via `@Entry`)
+- [x] `cosmosConfiguration` (enable, loading, accessibility, haptics, **motion**, tracking, localization, log, error) + `cosmosTheme` + `cosmosTrackingId`
+- [x] Split behavior configuration (`CosmosConfiguration`) from visual theme (`CosmosTheme`); both `Sendable`
+- [x] Runtime-mutable theming via `CosmosThemeObservable` (`@Observable @MainActor`)
+- [x] Semantic token layer: `CosmosColorTokens`, `CosmosTypographyTokens`, `CosmosSpacingTokens`, `CosmosRadiusTokens`, `CosmosMotionTokens`
+- [x] Versioning: Cosmos N ↔ OS N (baseline Cosmos 26); `@available(iOS 26,*)` == "since Cosmos 26"; `CosmosTheme.version` design pin
+
+### Motion subsystem (9th cross-cutting contract)
+- [x] `CosmosMotionConfiguration` (behavior/policy) + `CosmosMotionTokens` (visual: springs, durations, transition presets) + `CosmosMotionPolicy` (config-aware reduce-motion, not bare env)
+- [x] `.cosmosAnimation` / `.cosmosTransition` / `.cosmosContentTransition` / `.cosmosMotion` / `.cosmosMotionTokens` / `.cosmosSpringStyle` modifiers; single source of truth via `CosmosMotionTokens.animation(for:)`
+
+### Preview + mock infrastructure
+- [x] `CosmosPreviewRNG` (SplitMix64 seeded; shared state via `Mutex`, never a raw `static var`)
+- [x] `CosmosPreview` / `CosmosPreviewContainer` / `CosmosPreviewVariant` + `CosmosPreviewModifier` (`PreviewModifier` shared context)
+- [x] `.cosmosPreviewEnv` / `.cosmosPreviewVariant` modifiers; `#Preview(_:traits:)` (no deprecated `.previewDevice`/`.previewLayout`)
+- [x] `CosmosMock` deterministic generators (string/number/date/color/email/name/uuid/lorem/currency/percentage) + wordlists
+
+### Atoms — PHASE2 §2.1–2.16 (Waves A–E)
+- [x] Wave A (style-protocol, no guard): `CosmosLabel`, `CosmosProgress`, `CosmosToggle` (+ base `CosmosText`, `CosmosButton`, `CosmosCard`)
+- [x] Wave B (wrap-view, no guard): `CosmosDivider`, `CosmosIcon`, `CosmosLink`
+- [x] Wave C (style-protocol with guards): `CosmosGroupBox`, `CosmosMenu`, `CosmosDatePicker`
+- [x] Wave D (opaque style / wrap-view with guards): `CosmosTextField` + `CosmosSecureField` + `CosmosTextEditor`, `CosmosSlider`, `CosmosStepper`
+- [x] Wave E (wrap-view, style fragmentation): `CosmosSection`, `CosmosPicker`, `CosmosList`, `CosmosTabView`
+- [x] Style-enum + pure availability-table + applier pattern for opaque styles (`PickerStyle`/`ListStyle`/`TabViewStyle`/`DatePickerStyle`), each case `#if os()`-guarded with `.automatic` fallback
+- [x] Haptics via `.cosmosHaptic(_:trigger:)` gated by `CosmosHapticsPolicy` + reduce-motion
+- [x] Tracking via `CosmosTrackingConfiguration.track(_:)` (passive, opt-in, no network/PII)
+- [x] Localization via String Catalogs (`.xcstrings`), `LocalizedStringResource`, `CosmosLocalizedText`; baseline `en` + `pt-BR`
+
+### Research vault
+- [x] Obsidian knowledge vault at `vault/` (research → vault binding); root docs remain source of truth
+
+### CI
+- [x] GitHub CI (`.github/workflows/ci.yml`) — single-platform `macos-latest` `swift build` + `swift test`
+
+### Verification
+- [x] 5-platform build (iOS/macOS/tvOS/watchOS/visionOS) + `swift build -c release`, zero warnings
+- [x] 178 Swift Testing tests passing
 
 ## Next
-- [x] **Motion subsystem** — `CosmosMotionConfiguration` (9th cross-cutting contract) + `CosmosMotionTokens` (`CosmosSpring`/`CosmosDuration`/`CosmosTransition`/`CosmosContentTransitionPreset` + `CosmosMotionTokens.animation(for:)` resolver) + `CosmosMotionPolicy` + `.cosmosMotion`/`.cosmosMotionTokens`/`.cosmosSpringStyle`/`.cosmosAnimation`/`.cosmosTransition`/`.cosmosContentTransition`/`.cosmosStagger` modifiers; integrate into `CosmosButton`/`CosmosButtonChrome`/`CosmosText`/`CosmosCard` (replace hardcoded easing, route reduce-motion through the policy).
-- [x] **Preview + mock-data infrastructure** — `CosmosPreviewRNG` (SplitMix64 seeded RNG) + `CosmosPreview` namespace (`CosmosPreviewVariant` + `CosmosPreviewContainer`) + `CosmosPreviewModifier` (`PreviewModifier` shared-context path) + `.cosmosPreviewEnv`/`.cosmosPreviewVariant` modifiers + `CosmosMock` deterministic generators (string/number/date/color/email/name/uuid/lorem/currency/percentage) + `CosmosMockWordlists`.
-- [ ] Modifiers module: typography, spacing, surface, **motion**
-- [ ] Organisms
-- [ ] Preview catalog app
-- [x] GitHub CI
-- [ ] DocC generation via swift-docc-plugin in CI
+
+- [ ] **Modifiers module** — consolidate typography / spacing / surface / motion modifiers into a coherent module surface
+- [ ] **Molecules** — compositions of atoms (to be scoped; the pre-reset molecule list is not assumed)
+- [ ] **Organisms** — higher-level compositions
+- [ ] **Preview catalog app** — a standalone app surfacing every atom/molecule/organism with variant previews
+- [ ] **Per-platform CI matrix** — extend CI to build iOS/macOS/tvOS/watchOS/visionOS + `swift build -c release` to exercise `#if os()` coverage
+- [ ] **DocC generation** via `swift-docc-plugin` in CI
 
 ## Later
-- [ ] **Reconcile doc baseline** — `CHANGELOG.md`/`ARCHITECTURE.md` previously said "tvOS 27 / dropped watchOS+visionOS / Swift 6.2", contradicting `Package.swift` + `CLAUDE.md` (5 platforms at `.v26`, Swift 6.4). Reconciled 2026-07-17 — verify on each doc edit.
-- [ ] **Per-platform CI matrix** — CI (`.github/workflows/ci.yml`) runs only a single `macos-latest` `swift build`+`swift test`; add a per-platform build matrix (iOS/macOS/tvOS/watchOS/visionOS) + `swift build -c release` to exercise `#if os()` coverage per CLAUDE.md (motion needs no `#if os()`, but the matrix should exist).
-- [ ] Runtime theming engine
+
+- [ ] Runtime theming engine (expand on `CosmosThemeObservable`)
 - [ ] Accessibility audit tooling
 - [ ] Component gallery website
+- [ ] **Deferred from Wave E** (recorded decisions, not lost work):
+  - `CosmosSelectableList` — selectable `List` variant (selection inits fragment too far across platforms for one clean API)
+  - OS-27 surfaces (above the Cosmos 26 floor): `TabRole.prominent`, `TabsPickerStyle` (`.tabs`)
+  - iOS 26 `Slider` cluster (ticks / `neutralValue` / `enabledBounds` / current-value label)
+  - `.cosmosTabViewBottomAccessory(isEnabled:)` (iOS 26.1, above floor)
