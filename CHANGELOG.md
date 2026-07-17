@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.0] - 2026-07-17
+
+First tagged release. Pre-1.0 alpha: the core control set (23 atoms) is complete and
+builds clean on all 5 platforms at `.v26` (iOS/macOS/tvOS/watchOS/visionOS) under Swift
+language mode v6 with zero concurrency warnings (188 tests passing). The navigation/
+layout core (`CosmosScrollView`/`CosmosAsyncImage`/`CosmosForm`/`CosmosNavigation`) is
+deferred to PHASE4 — see `ROADMAP.md`.
+
+### Changed
+- **Button shape** — `CosmosButtonChrome` (the fallback chrome for `primary`/`secondary`/`danger` and the non-iOS/macOS platforms) now clips filled variants to `Capsule()` instead of `RoundedRectangle(cornerRadius: 8)`, matching Apple's Liquid Glass default (WWDC25-323: "Bordered buttons now have a capsule shape by default") and the native `.glassProminent` capsule. A discrete `RoundedRectangle` radius remains correct for grouped / card-nested content (concentricity), not for standalone prominent buttons.
+
 ### Removed
 - **Bundled fonts** — the `.ttf` files (DM Sans, Space Grotesk, JetBrains Mono) under `Sources/Cosmos/Resources/Fonts/` were removed; the library no longer ships font files. Cosmos is font-agnostic by design and uses the **system font by default** (full Dynamic Type support with no setup).
 
