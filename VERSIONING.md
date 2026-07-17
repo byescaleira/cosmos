@@ -24,6 +24,8 @@ Feature → OS gate reference:
 | `Tab`, `.sectionActions`, `TabViewStyle.sidebarAdaptable` | iOS 18 |
 | Liquid Glass (`.glassEffect`, `.glassProminent`), `listSectionMargins` | iOS 26 |
 
+Motion primitives (`Spring`, `PhaseAnimator`, `KeyframeAnimator`, `BlurReplaceTransition`, `withAnimation(completion)`, the generic `.transition<T>(_:)`, `matchedGeometryEffect`, and the `CosmosMotion*` tokens/modifiers) are all iOS 17/18 ≤ 26 and available on all 5 platforms — **no `if #available` gating is needed** at the Cosmos 26 baseline. `GlassEffectTransition.matchedGeometry` (iOS 26) is the only motion-adjacent API that would need a gate if the floor ever lowers.
+
 ## Runtime design-language pin
 
 `CosmosTheme.version: CosmosVersion` lets an app render an **older Cosmos design language** on a newer OS, mirroring how SwiftUI's appearance adapts per OS but can be pinned. Default is `CosmosVersion.current` (the build's target = `.cosmos26`). New cases are added as the OS evolves; old cases remain supported within the deprecation runway.

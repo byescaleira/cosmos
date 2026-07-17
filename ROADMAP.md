@@ -1,6 +1,6 @@
 # Roadmap
 
-> Last updated: 2026-06-22
+> Last updated: 2026-07-17
 
 ## Now (current cycle)
 - [x] Bootstrap SPM package `Cosmos` for Apple v26 platforms
@@ -42,13 +42,17 @@
 - [x] Add molecule: `CosmosLoadingState` (progress + text)
 
 ## Next
-- [ ] Modifiers module: typography, spacing, surface
+- [x] **Motion subsystem** — `CosmosMotionConfiguration` (9th cross-cutting contract) + `CosmosMotionTokens` (`CosmosSpring`/`CosmosDuration`/`CosmosTransition`/`CosmosContentTransitionPreset` + `CosmosMotionTokens.animation(for:)` resolver) + `CosmosMotionPolicy` + `.cosmosMotion`/`.cosmosMotionTokens`/`.cosmosSpringStyle`/`.cosmosAnimation`/`.cosmosTransition`/`.cosmosContentTransition`/`.cosmosStagger` modifiers; integrate into `CosmosButton`/`CosmosButtonChrome`/`CosmosText`/`CosmosCard` (replace hardcoded easing, route reduce-motion through the policy).
+- [x] **Preview + mock-data infrastructure** — `CosmosPreviewRNG` (SplitMix64 seeded RNG) + `CosmosPreview` namespace (`CosmosPreviewVariant` + `CosmosPreviewContainer`) + `CosmosPreviewModifier` (`PreviewModifier` shared-context path) + `.cosmosPreviewEnv`/`.cosmosPreviewVariant` modifiers + `CosmosMock` deterministic generators (string/number/date/color/email/name/uuid/lorem/currency/percentage) + `CosmosMockWordlists`.
+- [ ] Modifiers module: typography, spacing, surface, **motion**
 - [ ] Organisms
 - [ ] Preview catalog app
 - [x] GitHub CI
 - [ ] DocC generation via swift-docc-plugin in CI
 
 ## Later
+- [ ] **Reconcile doc baseline** — `CHANGELOG.md`/`ARCHITECTURE.md` previously said "tvOS 27 / dropped watchOS+visionOS / Swift 6.2", contradicting `Package.swift` + `CLAUDE.md` (5 platforms at `.v26`, Swift 6.4). Reconciled 2026-07-17 — verify on each doc edit.
+- [ ] **Per-platform CI matrix** — CI (`.github/workflows/ci.yml`) runs only a single `macos-latest` `swift build`+`swift test`; add a per-platform build matrix (iOS/macOS/tvOS/watchOS/visionOS) + `swift build -c release` to exercise `#if os()` coverage per CLAUDE.md (motion needs no `#if os()`, but the matrix should exist).
 - [ ] Runtime theming engine
 - [ ] Accessibility audit tooling
 - [ ] Component gallery website
