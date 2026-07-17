@@ -30,9 +30,10 @@ import SwiftUI
 /// referenced — `.verticalPage` is its replacement.
 ///
 /// **Selecting content.** Inside the `@TabContentBuilder` content closure, callers use the native
-/// `Tab` / `TabSection` primitives directly (Cosmos does not wrap `Tab`). `TabRole.search` is at the
-/// iOS 18 floor and safe; `TabRole.prominent` is `@available(anyAppleOS 27.0, *)` — **above** the
-/// Cosmos 26 floor — and is deliberately not surfaced (callers who need it gate it themselves).
+/// `Tab` / `TabSection` primitives directly (Cosmos does not wrap `Tab`). `TabRole` is passed to
+/// `Tab(role:)` via ``CosmosTabRole`` — `.search` (floor, all 5) and `.prominent` (OS 27 / Cosmos 27,
+/// all 5, runtime-gated to `nil` below OS 27). There is no native `.tabRole(_:)` modifier, so
+/// ``CosmosTabRole/nativeRole()`` returns the `TabRole?` to pass into `Tab(role:)`.
 ///
 /// **Generic shape.** `CosmosTabView<SelectionValue, Content>`: `SelectionValue` is constrained
 /// **`Hashable & Sendable`** (matching native `TabView`'s `Hashable`, plus `Sendable` to drive
@@ -245,8 +246,8 @@ extension View {
     }
 
     /// A bottom accessory view pinned to the tab bar. Available **iOS 26 only** — no-op on other
-    /// platforms. (The `isEnabled:` overload is iOS 26.1, above the floor — not wrapped, to avoid a
-    /// runtime gate.)
+    /// platforms. The `isEnabled:`-bearing overload (``cosmosTabViewBottomAccessory(isEnabled:content:)``)
+    /// is iOS 26.1, above the floor, and degrades to this form below 26.1.
     @ViewBuilder
     public func cosmosTabViewBottomAccessory<C: View>(@ViewBuilder content: @escaping () -> C) -> some View {
         #if os(iOS)
@@ -254,6 +255,40 @@ extension View {
         #else
         self
         #endif
+    }
+
+    /// A bottom accessory view pinned to the tab bar, with an explicit enabled flag. Available
+    /// **iOS 26.1** (above the Cosmos 26 floor) — the shallowest runtime `if #available` gate in
+    /// the library, and the mechanical warm-up for PHASE3 §2.3's combined guard. Below iOS 26.1 it
+    /// degrades to the iOS 26.0 ``cosmosTabViewBottomAccessory(content:)`` form (forwarding
+    /// `content` without the enabled flag); no-op on other platforms. "Available since Cosmos 26.1".
+    @ViewBuilder
+    public func cosmosTabViewBottomAccessory<C: View>(
+        isEnabled: Bool,
+        @ViewBuilder content: @escaping () -> C
+    ) -> some View {
+        #if os(iOS)
+        if #available(iOS 26.1, *) {
+            self.tabViewBottomAccessory(isEnabled: isEnabled, content: content)
+        } else {
+            self.tabViewBottomAccessory(content: content)
+        }
+        #else
+        self
+        #endif
+    }
+}
+
+// MARK: - bottomAccessory(isEnabled:) availability (pure, host-agnostic)
+
+/// Pure availability for the `.cosmosTabViewBottomAccessory(isEnabled:)` overload. The native
+/// `isEnabled:`-bearing `tabViewBottomAccessory` is `@available(iOS 26.1, *)` and unavailable on
+/// macOS/tvOS/watchOS/visionOS — so the Cosmos overload is meaningful (renders the enabled flag)
+/// only on iOS; elsewhere the modifier is a no-op pass-through.
+public enum CosmosTabViewBottomAccessoryEnabledAvailability {
+    /// `true` only on iOS (the `isEnabled:` overload is iOS 26.1).
+    public static func isAvailable(on platform: CosmosPlatform) -> Bool {
+        platform == .ios
     }
 }
 
@@ -299,3 +334,17 @@ extension View {
         .cosmosPreviewEnv(dynamicTypeSize: .accessibility3)
     }
 }
+
+#if os(iOS)
+#Preview("TabView – bottom accessory (isEnabled)", traits: .sizeThatFitsLayout) {
+    @Previewable @State var selected = 0
+    CosmosTabView(selection: $selected) {
+        Tab("preview.tab.one", systemImage: "1.circle", value: 0) { CosmosText("preview.tab.one") }
+        Tab("preview.tab.two", systemImage: "2.circle", value: 1) { CosmosText("preview.tab.two") }
+    }
+    .cosmosTabViewBottomAccessory(isEnabled: true) {
+        HStack { Text("preview.title"); Spacer(); CosmosProgress() }
+            .padding(.horizontal)
+    }
+}
+#endif

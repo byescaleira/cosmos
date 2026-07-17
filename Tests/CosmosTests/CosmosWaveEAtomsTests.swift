@@ -8,8 +8,9 @@ struct CosmosWaveEAtomsTests {
     // MARK: - CosmosPickerStyle selector enum
 
     @Test func pickerStyleAllCases() {
+        // .tabs (TabsPickerStyle, OS 27) is the 9th case — the first above-floor (Cosmos-27) surface.
         #expect(CosmosPickerStyle.allCases == [
-            .automatic, .menu, .segmented, .wheel, .inline, .palette, .navigationLink, .radioGroup
+            .automatic, .menu, .segmented, .wheel, .inline, .palette, .navigationLink, .radioGroup, .tabs
         ])
     }
 
