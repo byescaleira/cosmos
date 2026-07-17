@@ -34,6 +34,9 @@ public struct CosmosTheme: Sendable {
     /// Default control size.
     public var controlSize: CosmosControlSize
 
+    /// Motion visual tokens (spring presets, duration scale, transition presets, shadow).
+    public var motion: CosmosMotionTokens
+
     public init(
         version: CosmosVersion = .current,
         colors: CosmosColorTokens = .default,
@@ -41,7 +44,8 @@ public struct CosmosTheme: Sendable {
         textStyle: CosmosTextStyle = .body,
         padding: CosmosPadding = .medium,
         buttonStyle: CosmosButtonStyle = .primary,
-        controlSize: CosmosControlSize = .medium
+        controlSize: CosmosControlSize = .medium,
+        motion: CosmosMotionTokens = .default
     ) {
         self.version = version
         self.colors = colors
@@ -50,6 +54,7 @@ public struct CosmosTheme: Sendable {
         self.padding = padding
         self.buttonStyle = buttonStyle
         self.controlSize = controlSize
+        self.motion = motion
     }
 
     public static let `default` = CosmosTheme()
@@ -64,4 +69,6 @@ public struct CosmosTheme: Sendable {
     public func withPadding(_ padding: CosmosPadding) -> CosmosTheme { var c = self; c.padding = padding; return c }
     public func withButtonStyle(_ buttonStyle: CosmosButtonStyle) -> CosmosTheme { var c = self; c.buttonStyle = buttonStyle; return c }
     public func withControlSize(_ controlSize: CosmosControlSize) -> CosmosTheme { var c = self; c.controlSize = controlSize; return c }
+    public func withMotion(_ motion: CosmosMotionTokens) -> CosmosTheme { var c = self; c.motion = motion; return c }
+    public func withSpringStyle(_ style: CosmosSpringStyle) -> CosmosTheme { var c = self; c.motion.defaultSpringStyle = style; return c }
 }

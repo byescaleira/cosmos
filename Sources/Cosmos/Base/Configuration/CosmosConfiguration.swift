@@ -1,6 +1,6 @@
 import Foundation
 
-/// Aggregate of all 8 cross-cutting behavior contracts.
+/// Aggregate of all 9 cross-cutting behavior contracts.
 ///
 /// Injected via `@Environment(\.cosmosConfiguration)` (an `@Entry` value). Because every
 /// sub-configuration is a `Sendable` value type with a nonisolated default initializer,
@@ -15,6 +15,7 @@ public struct CosmosConfiguration: Sendable {
     public var loading: CosmosLoadingConfiguration
     public var enable: CosmosEnableConfiguration
     public var haptics: CosmosHapticsConfiguration
+    public var motion: CosmosMotionConfiguration
     public var tracking: CosmosTrackingConfiguration
 
     public init(
@@ -25,6 +26,7 @@ public struct CosmosConfiguration: Sendable {
         loading: CosmosLoadingConfiguration = .default,
         enable: CosmosEnableConfiguration = .default,
         haptics: CosmosHapticsConfiguration = .default,
+        motion: CosmosMotionConfiguration = .default,
         tracking: CosmosTrackingConfiguration = .default
     ) {
         self.accessibility = accessibility
@@ -34,6 +36,7 @@ public struct CosmosConfiguration: Sendable {
         self.loading = loading
         self.enable = enable
         self.haptics = haptics
+        self.motion = motion
         self.tracking = tracking
     }
 
@@ -48,5 +51,6 @@ public struct CosmosConfiguration: Sendable {
     public func withLoading(_ loading: CosmosLoadingConfiguration) -> CosmosConfiguration { var c = self; c.loading = loading; return c }
     public func withEnable(_ enable: CosmosEnableConfiguration) -> CosmosConfiguration { var c = self; c.enable = enable; return c }
     public func withHaptics(_ haptics: CosmosHapticsConfiguration) -> CosmosConfiguration { var c = self; c.haptics = haptics; return c }
+    public func withMotion(_ motion: CosmosMotionConfiguration) -> CosmosConfiguration { var c = self; c.motion = motion; return c }
     public func withTracking(_ tracking: CosmosTrackingConfiguration) -> CosmosConfiguration { var c = self; c.tracking = tracking; return c }
 }
