@@ -68,10 +68,14 @@ struct CosmosTokensTests {
         #expect(CosmosVersion.cosmos26.osMajor == 26)
     }
 
-    @Test func fontPresetRegularNames() {
-        #expect(CosmosFontPreset.default.regularName == nil)
-        #expect(CosmosFontPreset.dmSans.regularName == "DMSans-Regular")
-        #expect(CosmosFontPreset.spaceGrotesk.regularName == "SpaceGrotesk-Regular")
-        #expect(CosmosFontPreset.jetBrainsMono.regularName == "JetBrainsMono-Regular")
+    @Test func fontPresetAndCustomFont() {
+        // Cosmos ships no bundled fonts: the only preset is `.default` (system → nil name).
+        #expect(CosmosFontPreset.allCases == [.default])
+        #expect(CosmosFontPreset.default.fontName == nil)
+        // Default typography uses the system font (nil custom name).
+        #expect(CosmosTypographyTokens.default.customFontName == nil)
+        // A custom font is carried as the PostScript name and resolved via Font.custom(_:relativeTo:).
+        #expect(CosmosTypographyTokens(customFont: "DMSans-Regular").customFontName == "DMSans-Regular")
+        #expect(CosmosTypographyTokens(preset: .default).customFontName == nil)
     }
 }
