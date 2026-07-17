@@ -46,11 +46,19 @@ public enum CosmosTabRole: String, Sendable, Codable, CaseIterable {
         case .search:
             return .search
         case .prominent:
+            // Compile + runtime gate. `TabRole.prominent` is an OS-27 SDK symbol, so the
+            // reference itself only exists under Xcode 27 / Swift 6.4 — `#if swift(>=6.4)`
+            // compiles it out (→ nil) on Xcode 26 / Swift 6.3, and the `if #available` degrades
+            // to nil at runtime on an OS-26 device under Xcode 27.
+            #if swift(>=6.4)
             if #available(iOS 27, macOS 27, tvOS 27, watchOS 27, visionOS 27, *) {
                 return .prominent
             } else {
                 return nil // degrade: no prominent role below OS 27
             }
+            #else
+            return nil // OS-27 SDK unavailable on this toolchain (Swift < 6.4 / Xcode 26)
+            #endif
         }
     }
 }
