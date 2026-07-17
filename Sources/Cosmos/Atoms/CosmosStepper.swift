@@ -29,11 +29,14 @@ import SwiftUI
 /// double. Cosmos does not layer an extra `.cosmosHaptic(.selection)` to keep the source of
 /// haptic truth in `CosmosButton`.
 ///
-/// **Motion:** `valueChange` — `.cosmosAnimation(.valueChange, value:)` animates each step
-/// (discrete, not a drag — so it does not fight a gesture). Applied to the value forms (which have
-/// an observable `value.wrappedValue`); the closures form has no observable value and relies on
-/// the native `Stepper`'s own display animation. `onEditingChanged(true→false)` brackets a
-/// session; do not use `appear`/`disappear`/`sheet`.
+/// **Motion:** `none` — Cosmos applies **no** `.cosmosAnimation` here. The native `Stepper`
+/// animates its own value changes and respects Reduce Motion natively (via SwiftUI's environment);
+/// layering a token-driven `.cosmosAnimation(.valueChange, value:)` on top would animate the
+/// same property with a differing curve and desync (CLAUDE.md: "avoid per-view `.animation(_:value:)`
+/// with differing curves"). The value-form inits synthesize increment/decrement closures (so
+/// there is no observable binding on the atom to drive a Cosmos animation against in any case).
+/// `onEditingChanged(true→false)` brackets an edit session (fired by the native `Stepper`, or by
+/// the tvOS fallback's `bracket(_:)`); do not use `appear`/`disappear`/`sheet`.
 public struct CosmosStepper<Label: View>: View {
     private let onIncrement: () -> Void
     private let onDecrement: () -> Void
@@ -66,8 +69,8 @@ public struct CosmosStepper<Label: View>: View {
     ) where V: Sendable, V.Stride: Sendable {
         self.label = label
         self.onEditingChanged = onEditingChanged
-        self.onIncrement = { CosmosStepper.step(value, by: step, bounds: nil, onEditingChanged: onEditingChanged) }
-        self.onDecrement = { CosmosStepper.step(value, by: -step, bounds: nil, onEditingChanged: onEditingChanged) }
+        self.onIncrement = { CosmosStepper.step(value, by: step, bounds: nil) }
+        self.onDecrement = { CosmosStepper.step(value, by: -step, bounds: nil) }
     }
 
     /// Creates a stepper bound to a `Strideable` value constrained to `bounds`, mutating by `step`.
@@ -80,8 +83,8 @@ public struct CosmosStepper<Label: View>: View {
     ) where V: Sendable, V.Stride: Sendable {
         self.label = label
         self.onEditingChanged = onEditingChanged
-        self.onIncrement = { CosmosStepper.step(value, by: step, bounds: bounds, onEditingChanged: onEditingChanged) }
-        self.onDecrement = { CosmosStepper.step(value, by: -step, bounds: bounds, onEditingChanged: onEditingChanged) }
+        self.onIncrement = { CosmosStepper.step(value, by: step, bounds: bounds) }
+        self.onDecrement = { CosmosStepper.step(value, by: -step, bounds: bounds) }
     }
 
     public var body: some View {
@@ -112,15 +115,34 @@ public struct CosmosStepper<Label: View>: View {
     #if os(tvOS)
     @ViewBuilder private var tvOSFallback: some View {
         HStack(spacing: CosmosSpacingTokens.small) {
-            CosmosButton(action: onDecrement) { Text("−").font(theme.typography.font(for: theme.textStyle)) }
+            CosmosButton(action: { bracket(onDecrement) }) {
+                Text("−").font(theme.typography.font(for: theme.textStyle))
+            }
             label().font(theme.typography.font(for: theme.textStyle))
-            CosmosButton(action: onIncrement) { Text("+").font(theme.typography.font(for: theme.textStyle)) }
+            CosmosButton(action: { bracket(onIncrement) }) {
+                Text("+").font(theme.typography.font(for: theme.textStyle))
+            }
         }
         .tint(theme.colors.accent)
         .disabled(!effectiveEnabled)
         .opacity(configuration.loading.isLoading ? 0.6 : 1.0)
-        .applyCosmosAccessibility(configuration.accessibility, extraTraits: .isButton)
+        // tvOS has no `Stepper` and no `.isAdjustable` trait (that trait is iOS-only), so the
+        // +/- `CosmosButton`s are the operable controls — each its own focusable button, which is
+        // the tvOS idiom (Siri Remote moves focus between them). Do NOT mark the HStack itself as
+        // a button (that produced a button-containing-buttons accessibility tree). The caller's
+        // label/hint apply to the grouping; `bracket(_:)` fires `onEditingChanged` per press
+        // (which the native `Stepper` would fire itself, but there is none on tvOS).
+        .applyCosmosAccessibility(configuration.accessibility)
         .onAppear { trackAppear() }
+    }
+
+    /// Wraps a +/- action in an edit-session bracket (`onEditingChanged` true→false), mirroring
+    /// what the native `Stepper` fires itself (which the tvOS fallback must do manually since
+    /// there is no native `Stepper` on tvOS).
+    private func bracket(_ action: () -> Void) {
+        onEditingChanged(true)
+        action()
+        onEditingChanged(false)
     }
     #endif
 
@@ -128,19 +150,19 @@ public struct CosmosStepper<Label: View>: View {
         configuration.enable.isEnabled && !configuration.enable.isReadOnly && !configuration.loading.isLoading
     }
 
-    /// Mutates `value` by `stride`, clamping to `bounds` when present, and brackets the session
-    /// with `onEditingChanged` (true on begin, false on end). A static free function so the
-    /// synthesized closures capture only init parameters (the `Binding` and `V.Stride`), never
-    /// `self` — keeping the closures `Sendable`-clean and avoiding self-capture-before-init.
+    /// Mutates `value` by `stride`, clamping to `bounds` when present. A static free function so
+    /// the synthesized value-form closures capture only init parameters (the `Binding` and
+    /// `V.Stride`), never `self` — keeping the closures `Sendable`-clean and avoiding
+    /// self-capture-before-init. Does **not** call `onEditingChanged`: on the native branch the
+    /// `Stepper(label:onIncrement:onDecrement:onEditingChanged:)` fires `onEditingChanged` itself
+    /// (once per session), so synthesizing it here would double-fire (`true,true,false,false`);
+    /// on the tvOS branch the fallback brackets each press separately.
     private static func step<V: Strideable>(
         _ value: Binding<V>,
         by stride: V.Stride,
-        bounds: ClosedRange<V>?,
-        onEditingChanged: (Bool) -> Void
+        bounds: ClosedRange<V>?
     ) where V: Strideable, V.Stride: Sendable {
-        onEditingChanged(true)
         value.wrappedValue = CosmosStepperMath.advance(value.wrappedValue, by: stride, in: bounds)
-        onEditingChanged(false)
     }
 
     private func trackAppear() {
@@ -155,21 +177,27 @@ public struct CosmosStepper<Label: View>: View {
 
 // MARK: - Stepping math (pure, testable without rendering)
 
-/// Pure advance/clamp for ``CosmosStepper``: returns `value.advanced(by: stride)` clamped to
-/// `bounds` when present. `Sendable`-clean (no `self` capture) so the synthesized init closures
-/// stay nonisolated.
+/// Pure advance/clamp for ``CosmosStepper``. When `bounds` is present, the stride is clamped to
+/// the remaining in-bounds distance **before** `advanced(by:)` — so fixed-width `Strideable`
+/// types (e.g. `Int`) do not trap on overflow/underflow before the post-clamp could catch it
+/// (e.g. `value = Int.max - 1`, `stride = 2`, `bounds = 0...Int.max` clamps the stride to `1`,
+/// yielding `Int.max` with no trap). `Sendable`-clean (no `self` capture) so the synthesized init
+/// closures stay nonisolated.
 public enum CosmosStepperMath {
     public static func advance<V: Strideable>(
         _ value: V,
         by stride: V.Stride,
         in bounds: ClosedRange<V>?
     ) -> V where V: Strideable {
-        var next = value.advanced(by: stride)
         if let bounds {
-            if next < bounds.lowerBound { next = bounds.lowerBound }
-            if next > bounds.upperBound { next = bounds.upperBound }
+            // Clamp the stride into [distance(to: lower), distance(to: upper)] so the result stays
+            // within `bounds` and `advanced(by:)` cannot overflow for fixed-width types.
+            let toLower = value.distance(to: bounds.lowerBound)
+            let toUpper = value.distance(to: bounds.upperBound)
+            let clampedStride = min(max(stride, toLower), toUpper)
+            return value.advanced(by: clampedStride)
         }
-        return next
+        return value.advanced(by: stride)
     }
 }
 
@@ -198,8 +226,8 @@ extension CosmosStepper where Label == CosmosLocalizedText {
     ) where V: Sendable, V.Stride: Sendable {
         self.label = { CosmosLocalizedText(key: titleKey) }
         self.onEditingChanged = onEditingChanged
-        self.onIncrement = { CosmosStepper.step(value, by: step, bounds: nil, onEditingChanged: onEditingChanged) }
-        self.onDecrement = { CosmosStepper.step(value, by: -step, bounds: nil, onEditingChanged: onEditingChanged) }
+        self.onIncrement = { CosmosStepper.step(value, by: step, bounds: nil) }
+        self.onDecrement = { CosmosStepper.step(value, by: -step, bounds: nil) }
     }
 
     /// Creates a stepper from a localized String Catalog key bound to a bounded `Strideable` value.
@@ -212,8 +240,8 @@ extension CosmosStepper where Label == CosmosLocalizedText {
     ) where V: Sendable, V.Stride: Sendable {
         self.label = { CosmosLocalizedText(key: titleKey) }
         self.onEditingChanged = onEditingChanged
-        self.onIncrement = { CosmosStepper.step(value, by: step, bounds: bounds, onEditingChanged: onEditingChanged) }
-        self.onDecrement = { CosmosStepper.step(value, by: -step, bounds: bounds, onEditingChanged: onEditingChanged) }
+        self.onIncrement = { CosmosStepper.step(value, by: step, bounds: bounds) }
+        self.onDecrement = { CosmosStepper.step(value, by: -step, bounds: bounds) }
     }
 }
 
@@ -227,8 +255,8 @@ extension CosmosStepper where Label == Text {
     ) where V: Sendable, V.Stride: Sendable {
         self.label = { Text(verbatim: title) }
         self.onEditingChanged = onEditingChanged
-        self.onIncrement = { CosmosStepper.step(value, by: step, bounds: nil, onEditingChanged: onEditingChanged) }
-        self.onDecrement = { CosmosStepper.step(value, by: -step, bounds: nil, onEditingChanged: onEditingChanged) }
+        self.onIncrement = { CosmosStepper.step(value, by: step, bounds: nil) }
+        self.onDecrement = { CosmosStepper.step(value, by: -step, bounds: nil) }
     }
 }
 

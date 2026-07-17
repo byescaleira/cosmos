@@ -11,7 +11,8 @@ import SwiftUI
 /// (visionOS intentionally **not** guarded — it has `TextField` at 1.0). The keyboard modifiers
 /// (`.keyboardType`/`.textInputAutocapitalization`) are absent from the macOS/watchOS SDKs and
 /// are forwarded only on iOS/tvOS via `#if os(iOS) || os(tvOS)`. `.submitLabel` is available on
-/// all 5 (a no-op without a submit keyboard) and needs no guard.
+/// all 5 (verified: it typechecks on the visionOS SDK; it is a no-op without a submit keyboard)
+/// and is applied unguarded.
 ///
 /// **Runtime `#available`.** `.bordered` (`BorderedTextFieldStyle`) + `.textInputBorderShape` are
 /// `@available(anyAppleOS 27.0)` — the **next** OS above the Cosmos 26 floor (unlike
@@ -33,7 +34,9 @@ import SwiftUI
 ///
 /// **Haptics:** no native haptic for typing; an optional `.selection`-style `.impact(.light)`
 /// fires on `.onSubmit` (gated by config + reduce-motion via `.cosmosHaptic`). Default off unless
-/// a submit handler is installed.
+/// a submit handler is installed — the physical feedback is driven through the
+/// `.cosmosHaptic(_:trigger:)` chokepoint (the single path that attaches `.sensoryFeedback` and
+/// gates through ``CosmosHapticsPolicy``), not by calling the tracking `handler` directly.
 ///
 /// **Motion:** `focus` — the focus border emphasis animates through the single chokepoint
 /// `.cosmosAnimation(.focus, value: isFocused)` (one `withAnimation` per focus flip). Under
@@ -50,6 +53,7 @@ public struct CosmosTextField<Label: View>: View {
     @Environment(\.cosmosTheme) private var theme
     @Environment(\.cosmosTrackingId) private var trackingId
     @FocusState private var isFocused: Bool
+    @State private var submitCounter = 0
 
     /// Creates a text field with a custom label view.
     public init(
@@ -91,9 +95,8 @@ public struct CosmosTextField<Label: View>: View {
                 .focused($isFocused)
                 .applyCosmosAccessibility(configuration.accessibility)
                 .onSubmit { handleSubmit() }
-                #if os(iOS) || os(tvOS)
                 .submitLabel(.done)
-                #endif
+                .cosmosHaptic(.impact(weight: .light), trigger: submitCounter)
                 .modifier(CosmosTextFieldFocusBorderModifier(
                     style: theme.textFieldStyle,
                     isFocused: isFocused
@@ -113,9 +116,14 @@ public struct CosmosTextField<Label: View>: View {
     }
 
     private func handleSubmit() {
-        if let submitHandler { submitHandler() }
-        // Submit haptic: additive (TextField emits no native haptic on submit).
-        configuration.haptics.handler(.impact(weight: .light, intensity: nil))
+        // Default off unless a submit handler is installed: with no handler this is a no-op
+        // (no haptic, no tracking). The physical submit haptic is driven through the
+        // `.cosmosHaptic(_:trigger:)` chokepoint (attached in `body` on `submitCounter`), which
+        // attaches `.sensoryFeedback` and gates through `CosmosHapticsPolicy` — the tracking
+        // `handler` alone emits nothing physical, so it must not be called directly here.
+        guard let submitHandler else { return }
+        submitHandler()
+        submitCounter &+= 1
         configuration.tracking.track(.init(
             name: "textfield_submit",
             component: "CosmosTextField",
@@ -172,9 +180,9 @@ extension CosmosTextField where Label == Text {
 
 /// Resolves a ``CosmosTextFieldStyle`` to a concrete native `TextFieldStyle`. `.cosmos` resolves
 /// to `.plain` (the chrome is composed in the atom body via ``CosmosTextFieldFocusBorderModifier``,
-/// where `@FocusState` is visible). `.bordered` is `@available(anyAppleOS 27.0)` (== OS 26) —
-/// gated and paired with `.textInputBorderShape(.roundedRectangle)`; below 26 it falls back to
-/// `.automatic`.
+/// where `@FocusState` is visible). `.bordered` is `@available(anyAppleOS 27.0)` (the **next** OS
+/// above the Cosmos 26 floor) — gated and paired with `.textInputBorderShape(.roundedRectangle)`;
+/// on OS 26 it falls back to `.automatic`.
 private struct CosmosTextFieldStyleApplier: ViewModifier {
     let style: CosmosTextFieldStyle
     func body(content: Content) -> some View {

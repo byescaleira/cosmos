@@ -12,7 +12,8 @@ import SwiftUI
 ///
 /// **Platform guard.** `SecureField` is available on all 5 platforms at the Cosmos 26 floor
 /// (visionOS not guarded). The keyboard modifiers are forwarded only on iOS/tvOS. `.submitLabel`
-/// is available on all 5.
+/// is available on all 5 (verified: it typechecks on the visionOS SDK; a no-op without a submit
+/// keyboard) and is applied unguarded.
 ///
 /// **Accessibility:** the title/prompt string is the default label; the native field auto-exposes
 /// secure editable-text traits and the current text length (not contents) as value. `.textContentType`
@@ -49,9 +50,7 @@ public struct CosmosSecureField<Label: View>: View {
                 .focused($isFocused)
                 .applyCosmosAccessibility(configuration.accessibility)
                 .cosmosAnimation(.focus, value: isFocused)
-                #if os(iOS) || os(tvOS)
                 .submitLabel(.done)
-                #endif
                 .onAppear { trackAppear() }
         } else {
             EmptyView()
