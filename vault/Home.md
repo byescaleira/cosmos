@@ -20,6 +20,7 @@ Synthesis/navigation layer for the [[Cosmos]] SwiftUI design-system library. The
 
 - [[phase4-core-navigation-atoms]] — PHASE4 roadmap restructure: core navigation/layout atoms (Scroll / AsyncImage / Form / Navigation), standing design principles (AnyLayout reflow, Stack↔SplitView identity crux, TabView↔Navigation contract, GroupBox-proven custom-style sub-pattern), waves F–I.
 - [[above-floor-gating-pattern]] — PHASE3: the three above-floor (Cosmos-27) gate shapes (shallow runtime / combined compile+runtime / resolver), pure-table-vs-runtime separation, and the recorded `TabRole`-has-no-modifier deviation. Template for future OS-27 surfaces.
+- [[ios-27-swiftui-above-floor-apis]] — research: every SwiftUI symbol genuinely introduced above the Cosmos-26 floor (`@available(*OS 27, *)`): `TabRole.prominent`, `NavigationTransition.crossFade`/`AnyNavigationTransition`, `PickerStyle.tabs`, toolbar (`topBarPinnedTrailing`/`toolbarMinimizeBehavior`/`visibilityPriority`/`ToolbarOverflowMenu`), `reorderContainer`/`reorderable`, document model, item/error-binding alerts, swipe-actions-anywhere, `AsyncImage(request:)`. Plus explicit floor confirmations (scroll geometry = iOS 18, `tabViewBottomAccessory` = iOS 26, glass = iOS 26, no new FormStyle/ControlGroupStyle/symbolEffect cases).
 
 ## Component index
 
@@ -28,6 +29,11 @@ Synthesis/navigation layer for the [[Cosmos]] SwiftUI design-system library. The
 - [[cosmos-list]] — `CosmosList` (Wave E): `List` wrap-view, `ListStyle` × platform matrix (9 styles), no-selection primary, `#Preview`-struct-declaration gotcha.
 - [[cosmos-selectable-list]] — `CosmosSelectableList` (PHASE3): selectable `List` wrap-view; one `Selection` generic unifies optional-single (all 5) + `Set` (`#if !os(watchOS)`); AnyView-in-init; `AnyHashable`-not-`Sendable` gotcha.
 - [[cosmos-tabview]] — `CosmosTabView` (Wave E): `TabView` wrap-view, `TabViewStyle` × platform matrix (6 styles), modern `TabContentBuilder` inits only, AnyView-in-init for selectable/non-selectable unification; `CosmosTabRole` (`.prominent` OS-27 resolver) + `bottomAccessory(isEnabled:)` iOS-26.1 gate added in PHASE3.
+- [[button-shapes-ios26-liquid-glass]] — research: Apple's Liquid Glass default button shape is **capsule** (WWDC25-323/284/356); `.glass`/`.glassProminent` default to `.buttonBorderShape(.capsule)`; `RoundedRectangle(cornerRadius:)` only for grouped/card/macOS-small-density; iOS 27 carries capsule forward (no new styles).
+
+## Design-system comparison index
+
+- [[apple-ios26-sample-code-patterns]] — research: catalog of Apple's official iOS 26 / Liquid Glass sample code (Landmarks, Applying Liquid Glass to custom views, SampleTrips, Trails App Intents) with exact SwiftUI APIs each demonstrates; synthesis of conventions (capsule default glass button shape, GlassEffectContainer grouping, matchedTransitionSource+navigationTransition(.zoom) for sheets, backgroundExtensionEffect, one withAnimation per morph).
 
 ## Risks index
 
