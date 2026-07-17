@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Removed
+- **Bundled fonts** — the `.ttf` files (DM Sans, Space Grotesk, JetBrains Mono) under `Sources/Cosmos/Resources/Fonts/` were removed; the library no longer ships font files. Cosmos is font-agnostic by design and uses the **system font by default** (full Dynamic Type support with no setup).
+
+### Changed
+- **Custom-font API** — `CosmosFontPreset` is now a single `.default` case (the brand presets `.dmSans`/`.spaceGrotesk`/`.jetBrainsMono` are removed). `CosmosTypographyTokens` stores a `customFontName: String?` (nil → system) with `init(customFont:)` taking a PostScript name; resolution still uses `Font.custom(_:size:relativeTo:)` so Dynamic Type scales. `CosmosTheme.withPreset(_:)` → `withCustomFont(_:)` (pass `nil` for system); the `.cosmosFontPreset(_:)` modifier → `.cosmosCustomFont(_:)`. The `CosmosFont` registration helper and `CosmosResources.prepare()` are removed (no bundled fonts to register). **Bring your own font:** register the `.ttf` in your app (`Info.plist` `UIAppFonts` on iOS/tvOS/watchOS/visionOS, or `CTFontManagerRegisterFontsForURL`), then pass the PostScript name to `withCustomFont(_:)` / `.cosmosCustomFont(_:)`.
+
 ### Added
 - **Wave E refinements (PHASE3)** — four follow-ups that resolve the deferrals recorded under Wave E below, in low-risk-first build order:
   - `CosmosSlider` **iOS 26 cluster** — the deferred ticks/`neutralValue`/`enabledBounds`/current-value-label surface. Three `@available(iOS 26, macOS 26, watchOS 26, visionOS 26, *) @available(tvOS, unavailable)` cluster inits (no-ticks, `@SliderTickBuilder<Double>` ticks, step+tick-closure) plus three `where ValueLabel == EmptyView` conveniences with a defaulted `currentValueLabel`; `neutralValue: Double?` and `enabledBounds: ClosedRange<Double>?` (plain optionals — not a `Binding`, not `Float`-only) forwarded to the native `Slider`; `steppedValue` now also clamps to `enabledBounds` via `CosmosSliderMath.clampedToEnabledBounds`, and `CosmosSliderMath.tickSnap(value:tickValues:)` snaps to the nearest tick. The AnyView-in-init pattern (cf. `CosmosTabView`) type-erases the opaque `@SliderTickBuilder` tick content. `#if !os(tvOS)`-guarded; `CosmosSliderClusterAvailability` (4-platform, not tvOS) + math tests.
