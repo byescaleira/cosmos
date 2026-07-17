@@ -34,6 +34,15 @@ public struct CosmosTheme: Sendable {
     /// Default control size.
     public var controlSize: CosmosControlSize
 
+    /// Default toggle style variant.
+    public var toggleStyle: CosmosToggleStyle
+
+    /// Default label style variant.
+    public var labelStyle: CosmosLabelStyle
+
+    /// Default progress style variant.
+    public var progressStyle: CosmosProgressStyle
+
     /// Motion visual tokens (spring presets, duration scale, transition presets, shadow).
     public var motion: CosmosMotionTokens
 
@@ -45,6 +54,9 @@ public struct CosmosTheme: Sendable {
         padding: CosmosPadding = .medium,
         buttonStyle: CosmosButtonStyle = .primary,
         controlSize: CosmosControlSize = .medium,
+        toggleStyle: CosmosToggleStyle = .automatic,
+        labelStyle: CosmosLabelStyle = .automatic,
+        progressStyle: CosmosProgressStyle = .automatic,
         motion: CosmosMotionTokens = .default
     ) {
         self.version = version
@@ -54,6 +66,9 @@ public struct CosmosTheme: Sendable {
         self.padding = padding
         self.buttonStyle = buttonStyle
         self.controlSize = controlSize
+        self.toggleStyle = toggleStyle
+        self.labelStyle = labelStyle
+        self.progressStyle = progressStyle
         self.motion = motion
     }
 
@@ -69,6 +84,9 @@ public struct CosmosTheme: Sendable {
     public func withPadding(_ padding: CosmosPadding) -> CosmosTheme { var c = self; c.padding = padding; return c }
     public func withButtonStyle(_ buttonStyle: CosmosButtonStyle) -> CosmosTheme { var c = self; c.buttonStyle = buttonStyle; return c }
     public func withControlSize(_ controlSize: CosmosControlSize) -> CosmosTheme { var c = self; c.controlSize = controlSize; return c }
+    public func withToggleStyle(_ toggleStyle: CosmosToggleStyle) -> CosmosTheme { var c = self; c.toggleStyle = toggleStyle; return c }
+    public func withLabelStyle(_ labelStyle: CosmosLabelStyle) -> CosmosTheme { var c = self; c.labelStyle = labelStyle; return c }
+    public func withProgressStyle(_ progressStyle: CosmosProgressStyle) -> CosmosTheme { var c = self; c.progressStyle = progressStyle; return c }
     public func withMotion(_ motion: CosmosMotionTokens) -> CosmosTheme { var c = self; c.motion = motion; return c }
     public func withSpringStyle(_ style: CosmosSpringStyle) -> CosmosTheme { var c = self; c.motion.defaultSpringStyle = style; return c }
 }
