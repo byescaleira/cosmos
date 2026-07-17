@@ -64,6 +64,14 @@ String Catalogs (`.xcstrings`) compiled via `.process("Resources")` in `Package.
 - Honor each component's customization limitations (see `DECISIONS.md`). Gate platform-absent components with `#if os()`.
 - Custom fonts use `Font.custom(_:size:relativeTo:)` — **always pass `relativeTo:`** so Dynamic Type scales (including accessibility sizes).
 
+## Research → Obsidian vault (binding)
+**Every research task — competitive analysis, component/API investigation, docs review, verification — must be persisted into the Obsidian knowledge vault at `vault/`** (open it in Obsidian: *Open folder as vault* → `vault/`). The vault is the project's long-term memory; it is not acceptable to do research and leave it only in chat.
+
+- Write findings as interlinked markdown notes (frontmatter `tags`/`aliases`/`related` + `[[wikilinks]]`; kebab-case filenames). Add to the appropriate folder: `03-componentes/` (atoms), `06-concorrencia/` (design-system comparison + Swift concurrency), `07-metodologia/` (workflows/methods), `08-riscos/` (open risks/refuted specs), `02-decisoes/` (new ADRs).
+- Link from `[[Home]]` (the MOC) and any related notes so the graph stays connected. Verify new `[[wikilinks]]` resolve (alias or filename).
+- The **source of truth stays the root docs** (`PHASE2.md`, `DECISIONS.md`, `ARCHITECTURE.md`, `VERSIONING.md`, …); the vault is a synthesis/navigation layer. On conflict, the root doc wins — update the note.
+- Prefer a focused note over appending to an existing wall of text; cross-link instead of duplicating.
+
 ## Build & verify
 `swift build && swift test && swift build -c release`. Build for **each** target platform to confirm `#if os()` coverage. Visual verification via co-located `#Preview` (default / disabled-loading / dark / Dynamic Type accessibility / landscape / per-platform).
 
