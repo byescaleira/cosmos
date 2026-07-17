@@ -12,6 +12,15 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      # The package declares `swift-tools-version: 6.4` (Xcode 26). The macos-latest
+      # image ships several Xcode versions and defaults to an older one (Swift 6.3),
+      # so select Xcode 26 explicitly before building. Its toolchain (Swift 6.4)
+      # and the macOS 26 SDK satisfy the .v26 deployment targets in Package.swift.
+      - name: Select Xcode 26
+        uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: '26'
+
       - name: Build
         run: swift build
 
