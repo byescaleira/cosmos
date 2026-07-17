@@ -12,7 +12,7 @@ related: [cosmos-section, cosmos-date-picker]
 
 `PickerStyle` is **opaque / native-bridged**: only underscored `_makeView`/`_makeViewList`; no `makeBody`, no `Configuration` associatedtype. A Cosmos struct cannot meaningfully conform. So — like [[cosmos-date-picker]] — Cosmos wraps a `View` that configures a native `Picker` and applies a built-in style via `CosmosPickerStyleApplier`.
 
-`CosmosPickerStyle` is an **enum** (8 cases) consumed by the applier, which guards each case per platform and falls back to `.automatic` — never blindly forwards a user-chosen style.
+`CosmosPickerStyle` is an **enum** (9 cases) consumed by the applier, which guards each case per platform and falls back to `.automatic` — never blindly forwards a user-chosen style.
 
 ## Generic shape
 
@@ -24,7 +24,7 @@ The atom's generic label param is named `Label`, which shadows SwiftUI's `Label`
 
 ## PickerStyle × platform matrix (verified Xcode 27 Beta 3)
 
-Derived from the `@available(...)` clauses in the iOS/macOS `.swiftinterface` (they list all platforms, so the tvOS/watchOS/visionOS interfaces don't need separate greps). All version bounds ≤ the Cosmos 26 floor → **no runtime `if #available`**; only `#if os()` compile guards. `.menu`'s tvOS 17 bound is below the floor.
+Derived from the `@available(...)` clauses in the iOS/macOS `.swiftinterface` (they list all platforms, so the tvOS/watchOS/visionOS interfaces don't need separate greps). All version bounds ≤ the Cosmos 26 floor → **no runtime `if #available`**; only `#if os()` compile guards. `.menu`'s tvOS 17 bound is below the floor. **`.tabs` is the exception** — OS 27, above floor → combined compile + runtime gate (see below).
 
 | Style | iOS | macOS | tvOS | watchOS | visionOS |
 |---|---|---|---|---|---|
@@ -36,8 +36,9 @@ Derived from the `@available(...)` clauses in the iOS/macOS `.swiftinterface` (t
 | `.palette` (Palette) | ✓17 | ✓14 | ✗ | ✗ | ✓ (via `*`) |
 | `.navigationLink` | ✓16 | ✗ | ✓16 | ✓9 | ✓ |
 | `.radioGroup` (RadioGroup) | ✗ | ✓ | ✗ | ✗ | ✗ |
+| `.tabs` (Tabs) | ✓27 | ✓27 | ✓27 | ✗ | ✓27 |
 
-`TabsPickerStyle` (`.tabs`) is `@available(iOS 27 / macOS 27 / tvOS 27 / visionOS 27, *)` — **above** the floor — deliberately not exposed.
+`.tabs` (`TabsPickerStyle`) is the **first above-floor (Cosmos-27) surface** — `@available(iOS/macOS/tvOS/visionOS 27, *) @available(watchOS, unavailable)`. It needs a **combined compile + runtime gate** in `CosmosPickerStyleApplier` (the only case that does): `#if !os(watchOS)` (the `TabsPickerStyle` symbol is itself `@available(watchOS, unavailable)`, so the reference must be compile-time-excluded on watchOS) + `if #available(iOS 27, macOS 27, tvOS 27, visionOS 27, *)` → `.tabs` else `.automatic` (OS-27-introduced → degrade on a floor-26 device). See [[above-floor-gating-pattern]]. The pure `CosmosPickerAvailability` table reports only the **platform** gate (true on iOS/macOS/tvOS/visionOS, false on watchOS); the version gate is runtime.
 
 ## Cross-cutting
 
