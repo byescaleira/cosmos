@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- **Wave B atoms** — `CosmosDivider` (decorative separator wrapping the native `Divider`, hidden from VoiceOver, no tracking/motion), `CosmosIcon` (generic `Image` wrapper with token-driven foreground style + typography, caller-driven symbol-effect surface, nearest-ancestor color override), and `CosmosLink` (generic `Link` wrapper with token-driven accent + typography, `.isLink` trait, `.openURL` intercept). Plus the centralized `.cosmosOpenURL(inApp:)` modifier and the pure, render-free `CosmosOpenURLRouting.resolve(url:inApp:)` → `CosmosOpenURLResolution` routing function (testable without rendering). All wrap-view atoms (no style protocol); all platform-agnostic at the Cosmos 26 baseline (no `#if os()` in the atoms); motion kind `none`; no haptics.
+
 ### Changed
 - Reorganized the SPM into a single `Cosmos` target; merged `Sources/CosmosBase` into `Sources/Cosmos/Base` and `Sources/CosmosScreen` into `Sources/Cosmos/Screen`; removed `@_exported` re-exports.
 - Made the package explicitly UIKit-free: removed `#if canImport(UIKit)` from `CosmosList.swift` and replaced `Color(uiColor:)` with `Color(.systemBackground)` in `CosmosColorTokens.swift`.
