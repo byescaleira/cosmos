@@ -8,6 +8,33 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **`CosmosAsyncImage`** — the second PHASE4 atom (Wave G): a wrap-View atom wrapping `AsyncImage`
+  with an explicit slot architecture (placeholder / error / retry), policy-gated phase-transition
+  motion, an OS-27 cache/performance surface, and cross-cutting error reporting + haptics +
+  tracking. No `CosmosAsyncImageStyle` selector (`AsyncImage` has no style protocol) → `CosmosTheme`
+  untouched. Uses the floor `AsyncImage(url:scale:transaction:content:)` (phase-based); maps
+  `AsyncImagePhase` (`.empty` → placeholder, `.success` → caller's `content`, `.failure` → failure
+  slot; `@unknown default` → placeholder). The phase is authoritative for the slot;
+  `configuration.loading.isLoading` is **not** consulted. Two inits — primary (Cosmos default
+  placeholder = `CosmosProgress` on `theme.colors.surface`; default failure = error glyph + a
+  localized "Retry" `CosmosButton`) and custom slots (`placeholder`/`failure` closures, `AnyView`-
+  erased so the atom stays single-generic). Retry via `.id(retryToken)` (re-fetch on identity
+  change). Phase transitions via `.cosmosTransition(.blurReplace)` on each slot + a motion-policy-
+  gated `Transaction` (the `.cosmosAnimation` chokepoint replicated via the init's `transaction`).
+  Haptics: `.error` on failure appear (via `failureToken`), not on the retry tap (the
+  `CosmosButton` fires its own `.impact(.light)` — no double haptic). Error reporting via
+  `configuration.error.report(_:code:)` + passive `track(.appear)` on failure. **OS-27 cache
+  surface:** `CosmosImageCache` (tuned `URLSession`+`URLCache`, `Sendable` namespace, once-token
+  `static let defaultSession`) + `@Entry cosmosAsyncImageURLSession` +
+  `View.cosmosAsyncImageURLSession(_:)` + `CosmosAsyncImageSessionApplier` (dual-gated
+  `#if swift(>=6.4)` + `if #available(iOS 27, macOS 27, watchOS 27, tvOS 27, visionOS 27, *)`;
+  `asyncImageURLSession` is `@available(anyAppleOS 27.0, *)` with no platform carve-out — OS-26 /
+  Xcode 26 fall back to the system default). Pure `CosmosAsyncImageAvailability` table (true on all
+  5). The `configuration.loading.delay`/`minimumDisplayTime` placeholder-flicker gate is a
+  documented Wave-G **refinement** (deferred). `CosmosMock.imageURL(seed:width:height:)` +
+  `badImageURL()` added for previews and the future unified `CosmosImage`. New String Catalog key
+  `cosmos.asyncimage.retry` (en "Retry" / pt-BR "Tentar novamente"). Every `@available` re-verified
+  against the Xcode 27 Beta.3 `.swiftinterface`. Builds clean on all 5 platforms; 198 tests passing.
 - **`CosmosScrollView`** — the first PHASE4 atom (Wave F): a wrap-View container wrapping
   `ScrollView`, the `CosmosList`/`CosmosSection` analogue. Structural — no haptics, no tracking, no
   container motion (caller-driven on content); no `ScrollViewStyle` selector (`ScrollView` has no

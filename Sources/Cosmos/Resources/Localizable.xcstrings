@@ -4,6 +4,23 @@
     "Loading" : {
 
     },
+    "cosmos.asyncimage.retry" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Retry"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tentar novamente"
+          }
+        }
+      }
+    },
     "preview.description" : {
       "extractionState" : "manual",
       "localizations" : {

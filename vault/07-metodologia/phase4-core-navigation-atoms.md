@@ -25,7 +25,7 @@ each wave's implementation time, with every `@available` clause re-verified agai
 | Wave | Atom | Shape | Pattern tag |
 |---|---|---|---|
 | F | `CosmosScrollView` | wrap-View | scroll-to helpers, position/visibility tracking, `AnyLayout` axis reflow |
-| G | `CosmosAsyncImage` | wrap-View | `AsyncImagePhase` state machine, placeholder/error/retry, phase transitions via `.cosmosContentTransition`/`.cosmosTransition` |
+| G | `CosmosAsyncImage` | wrap-View | `AsyncImagePhase` → placeholder/error/retry slots, phase transitions via `.cosmosTransition(.blurReplace)` + a motion-policy-gated `Transaction`; OS-27 `asyncImageURLSession` cache surface (dual-gated). **Shipped.** |
 | H | `CosmosForm` | custom-style + wrap-View | `CosmosFormStyle`/`CosmosFormChrome: FormStyle` `makeBody` + `CosmosControlGroupStyle` sibling |
 | I | `CosmosNavigation` | wrap-View + AnyView-in-init | Stack vs SplitView, typed route + `path` binding, `columnVisibility`, [[cosmos-tabview]] composition |
 
@@ -66,9 +66,19 @@ each wave's implementation time, with every `@available` clause re-verified agai
   `FormStyle` cases per platform.
 - watchOS `ScrollView` surface (`ScrollViewReader`, `scrollPosition(id:)`,
   `onScrollGeometryChange` / `onScrollVisibilityChange`) — OS-27 vs floor.
-- `AsyncImage` watchOS cache / phase limits.
+- ~~`AsyncImage` watchOS cache / phase limits.~~ **Resolved (Wave G):** `AsyncImage` +
+  `AsyncImagePhase` (`.empty`/`.success`/`.failure`; **no `.loading` case**, **no `.content`
+  accessor** — use `phase.image`) are floor on all 5 (iOS 15 / macOS 12 / tvOS 15 / watchOS 8). The
+  OS-27 cache surface `View.asyncImageURLSession(_:)` is `@available(anyAppleOS 27.0, *)` — **no
+  watchOS/tvOS/visionOS carve-out** (verified in the Xcode 27 Beta.3 `.swiftinterface`); dual-gated
+  `#if swift(>=6.4)` + `if #available(iOS 27, macOS 27, watchOS 27, tvOS 27, visionOS 27, *)`, OS-26
+  falls back to the system default `URLSession`. See [[cosmos-async-image]].
 - `FormStyle` / `ControlGroupStyle` built-in case availability per platform.
 - OS-27 surfaces in PHASE4 scope that may need the runtime `if #available` gate (mechanic introduced
   in PHASE3; see [[ROADMAP]] / `PHASE3.md`).
-- Haptic kind for AsyncImage retry / error.
+- ~~Haptic kind for AsyncImage retry / error.~~ **Resolved (Wave G):** `CosmosHapticsFeedback.error`
+  and `.warning` both exist (`Sources/Cosmos/Base/Configuration/CosmosHapticsConfiguration.swift`).
+  Wave G fires `.error` **on failure appear** (via a `failureToken` `@State`), not on the retry tap —
+  semantically correct (the error occurred); the retry tap is a `CosmosButton` that fires its own
+  `.impact(.light)` (no double haptic). See [[cosmos-async-image]].
 - `@preconformance @MainActor` conformance for `FormStyle` / `ControlGroupStyle` under Swift 6 v6.
