@@ -97,9 +97,16 @@
 
 **Waves (low-risk-first):**
 
-- [ ] **Wave F — `CosmosScrollView`** (`Sources/Cosmos/Atoms/CosmosScrollView.swift`) — wrap-View +
-      feature-ergonomics: scroll-to-top/bottom helpers via `ScrollViewReader`, position/visibility
-      tracking (`scrollPosition(id:)`), `scrollDismissesKeyboard`, refresh; `AnyLayout` axis reflow.
+- [x] **Wave F — `CosmosScrollView`** (`Sources/Cosmos/Atoms/CosmosScrollView.swift`) — wrap-View
+      container atom (structural: no haptics/tracking/container-motion; no `ScrollViewStyle` so no
+      theme selector). Programmatic scroll-to-top/bottom via native `ScrollViewReader` +
+      `CosmosScrollAnchor` sentinels + `ScrollViewProxy` helpers + `.cosmosScrollAnchor(_:)`. Two
+      platform-guarded pass-throughs — `cosmosScrollDismissesKeyboard` (visionOS-unavailable, whole
+      wrapper gated `#if !os(visionOS)` — its `ScrollDismissesKeyboardMode` type is also
+      visionOS-unavailable) and `cosmosScrollEdgeEffectStyle` (floor-exact 26, visionOS no-op). All
+      scroll APIs verified floor (≤ .v26) against the Xcode 27 `.swiftinterface` — zero above-floor
+      gates. AnyLayout reflow applies to content inside, not the scroll axis (switching the axis
+      would destroy scroll identity).
 - [ ] **Wave G — `CosmosAsyncImage`** (`Sources/Cosmos/Atoms/CosmosAsyncImage.swift`) — wrap-View +
       feature-ergonomics: explicit state machine over `AsyncImagePhase`
       (empty / loading / loaded / error), placeholder / error / retry slots, phase transitions via

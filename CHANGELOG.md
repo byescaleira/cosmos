@@ -7,6 +7,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- **`CosmosScrollView`** — the first PHASE4 atom (Wave F): a wrap-View container wrapping
+  `ScrollView`, the `CosmosList`/`CosmosSection` analogue. Structural — no haptics, no tracking, no
+  container motion (caller-driven on content); no `ScrollViewStyle` selector (`ScrollView` has no
+  style protocol). Content-only inits (`(content:)` and `(_ axes:showsIndicators:content:)`); gates
+  on `configuration.enable.isVisible`; applies `applyCosmosAccessibility`. Programmatic
+  scroll-to-top/bottom via the native `ScrollViewReader` + `CosmosScrollAnchor` sentinels (`.top` /
+  `.bottom`), an `extension ScrollViewProxy` (`scrollToTop()` / `scrollToBottom()` /
+  `scrollTo(_:)`), and `View.cosmosScrollAnchor(_:)`. Two platform-guarded pass-through modifiers:
+  `cosmosScrollDismissesKeyboard(_:)` (declared only off-visionOS — `ScrollDismissesKeyboardMode`
+  and the modifier are both `@available(visionOS, unavailable)`) and
+  `cosmosScrollEdgeEffectStyle(_:for:)` (floor-exact 26 on iOS/macOS/tvOS/watchOS, no-op on
+  visionOS). Universal-floor scroll modifiers (`.scrollPosition`, `.scrollTargetBehavior`,
+  `.onScrollGeometryChange`, `.onScrollVisibilityChange`, `.defaultScrollAnchor`,
+  `.scrollIndicators`, `.refreshable`, `.contentMargins`, `.scrollTransition`,
+  `.scrollClipDisabled`, `.scrollContentBackground`) are applied natively. Includes a pure
+  `CosmosScrollAvailability` table (both modifiers `false` on visionOS, `true` elsewhere). Every
+  `@available` re-verified against the Xcode 27 Beta.3 `.swiftinterface` — all scroll APIs are floor
+  (≤ .v26); zero above-floor (`#if swift(>=6.4)` / `if #available`) gates needed. Builds clean on
+  all 5 platforms; 193 tests passing.
+
 ## [0.1.1] - 2026-07-17
 
 Build/test fixes so CI passes on the hosted runner (Xcode 26 / Swift 6.3), which
