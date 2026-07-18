@@ -158,6 +158,23 @@ public enum CosmosMock {
         return URL(string: "https://\(domain)/\(path)") ?? URL(string: "https://example.com")!
     }
 
+    /// A deterministic remote-image URL (Lorem Picsum, seeded) for ``CosmosAsyncImage`` previews
+    /// and the future `CosmosImage`. The `seed` makes the chosen image reproducible across runs.
+    public static func imageURL(seed: String, width: Int = 400, height: Int = 300) -> URL {
+        URL(string: "https://picsum.photos/seed/\(seed)/\(width)/\(height)") ?? URL(string: "https://example.com")!
+    }
+
+    /// A remote-image URL with a random seed drawn from `g` (zero shared state).
+    public static func imageURL(width: Int = 400, height: Int = 300, using g: inout CosmosPreviewRNG) -> URL {
+        imageURL(seed: word(using: &g), width: width, height: height)
+    }
+
+    /// A URL whose host cannot resolve (`.invalid` is reserved by RFC 6761) → a deterministic
+    /// `.failure` phase for the ``CosmosAsyncImage`` error/retry preview.
+    public static func badImageURL() -> URL {
+        URL(string: "https://cosmos-unreachable-host.invalid/image.png")!
+    }
+
     public static func email(using g: inout CosmosPreviewRNG) -> String {
         let a = word(using: &g)
         let b = word(using: &g)
@@ -217,6 +234,9 @@ public enum CosmosMock {
         shared.withLock { color(brightnessIn: b, using: &$0) }
     }
     public static func url() -> URL { shared.withLock { url(using: &$0) } }
+    public static func imageURL(width: Int = 400, height: Int = 300) -> URL {
+        shared.withLock { imageURL(width: width, height: height, using: &$0) }
+    }
     public static func email() -> String { shared.withLock { email(using: &$0) } }
     public static func personName() -> String { shared.withLock { personName(using: &$0) } }
     public static func phone(locale: Locale = .current) -> String { shared.withLock { phone(locale: locale, using: &$0) } }
