@@ -1,5 +1,14 @@
 # Cosmos
 
+[![CI](https://github.com/byescaleira/cosmos/actions/workflows/ci.yml/badge.svg)](https://github.com/byescaleira/cosmos/actions/workflows/ci.yml)
+[![Coverage](https://codecov.io/gh/byescaleira/cosmos/branch/main/graph/badge.svg)](https://codecov.io/gh/byescaleira/cosmos)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](./LICENSE)
+[![Swift 6.4](https://img.shields.io/badge/Swift-6.4-orange.svg)](https://www.swift.org/)
+[![Swift Language Mode 6](https://img.shields.io/badge/Swift%20language%20mode-6-orange.svg)](https://www.swift.org/)
+[![SwiftPM](https://img.shields.io/badge/SwiftPM-compatible-orange.svg)](https://www.swift.org/package-manager/)
+[![Platforms](https://img.shields.io/badge/platforms-iOS%20%7C%20macOS%20%7C%20tvOS%20%7C%20watchOS%20%7C%20visionOS%2026-lightgrey.svg)](./Package.swift)
+[![Release](https://img.shields.io/github/v/tag/byescaleira/cosmos?label=release)](https://github.com/byescaleira/cosmos/tags)
+
 > A clean-room SwiftUI design system for iOS, macOS, tvOS, watchOS, and visionOS 26.
 
 ## Overview
