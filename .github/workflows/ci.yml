@@ -25,15 +25,23 @@ jobs:
       - name: Test
         run: swift test --enable-code-coverage
 
-      # `swift test --enable-code-coverage` emits raw profdata/profraw under
-      # `.build/out/Products/Debug/codecov/`. codecov-action@v5 does NOT auto-convert
-      # profdata — it needs a report format. Export lcov from the test binary + profdata,
-      # filtering generated build-directory sources so coverage reflects real sources only.
+      # `swift test --enable-code-coverage` emits raw profdata/profraw. codecov-action@v5
+      # does NOT auto-convert profdata — it needs a report format. Export lcov from the
+      # test binary + profdata, filtering generated build-directory sources so coverage
+      # reflects real sources only. The build layout differs by toolchain: Xcode 26 /
+      # Swift 6.3 (runner default) uses the legacy `.build/<triple>/debug/` layout with a
+      # `*PackageTests` executable; Xcode 27 / Swift 6.4 (dev baseline) uses the new
+      # `.build/out/Products/Debug/` layout with an `.xctest` bundle. Discover both
+      # dynamically instead of hard-coding either path.
       - name: Generate coverage report
         run: |
           set -euo pipefail
-          PROF=$(find .build -name default.profdata -type f | head -n 1)
-          BIN=$(find .build -type f -path '*CosmosTests.xctest/Contents/MacOS/*' | head -n 1)
+          echo "== profdata candidates =="
+          find .build -name '*.profdata' -type f
+          echo "== test binary candidates =="
+          find .build -type f \( -path '*Contents/MacOS/*' -o -name '*PackageTests*' \) ! -name '*.swift' ! -name '*.o' ! -path '*.o.d' | head -n 20
+          PROF=$(find .build -name '*.profdata' -type f | head -n 1)
+          BIN=$(find .build -type f \( -path '*Contents/MacOS/*' -o -name '*PackageTests*' \) ! -name '*.swift' ! -name '*.o' ! -path '*.o.d' | head -n 1)
           if [ -z "$PROF" ] || [ -z "$BIN" ]; then
             echo "::warning::profdata or test binary not found — skipping coverage report"
             exit 0
