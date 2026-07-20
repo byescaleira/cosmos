@@ -8,6 +8,8 @@ related: []
 
 Synthesis/navigation layer for the [[Cosmos]] SwiftUI design-system library. The **source of truth stays the root docs** (`PHASE2.md`, `DECISIONS.md`, `ARCHITECTURE.md`, `VERSIONING.md`, `CLAUDE.md`); this vault is a synthesis layer. On conflict, the root doc wins — update the note.
 
+> **Usage wiki:** the consumer-facing usage guide (API + runnable examples + best practices per atom) lives on the [GitHub Wiki](https://github.com/byescaleira/cosmos/wiki). This vault is the research/decisions layer (availability tables, gotchas, rationale); the wiki is the usage layer. They complement, they don't duplicate — source of truth remains the root docs.
+
 ## Folders
 
 - `02-decisoes/` — new ADRs / decisions
