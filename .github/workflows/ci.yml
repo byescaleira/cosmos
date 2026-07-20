@@ -39,9 +39,9 @@ jobs:
           echo "== profdata candidates =="
           find .build -name '*.profdata' -type f
           echo "== test binary candidates =="
-          find .build -type f \( -path '*Contents/MacOS/*' -o -name '*PackageTests*' \) ! -name '*.swift' ! -name '*.o' ! -path '*.o.d' | head -n 20
+          find .build -type f -path '*.xctest/Contents/MacOS/*' ! -path '*.dSYM*' | head -n 20
           PROF=$(find .build -name '*.profdata' -type f | head -n 1)
-          BIN=$(find .build -type f \( -path '*Contents/MacOS/*' -o -name '*PackageTests*' \) ! -name '*.swift' ! -name '*.o' ! -path '*.o.d' | head -n 1)
+          BIN=$(find .build -type f -path '*.xctest/Contents/MacOS/*' ! -path '*.dSYM*' | head -n 1)
           if [ -z "$PROF" ] || [ -z "$BIN" ]; then
             echo "::warning::profdata or test binary not found — skipping coverage report"
             exit 0
