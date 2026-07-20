@@ -8,6 +8,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- _Nothing yet._
+
+## [0.2.0] - 2026-07-20
+
+### Added
 - **`CosmosAsyncImage`** — the second PHASE4 atom (Wave G): a wrap-View atom wrapping `AsyncImage`
   with an explicit slot architecture (placeholder / error / retry), policy-gated phase-transition
   motion, an OS-27 cache/performance surface, and cross-cutting error reporting + haptics +
@@ -54,6 +59,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `@available` re-verified against the Xcode 27 Beta.3 `.swiftinterface` — all scroll APIs are floor
   (≤ .v26); zero above-floor (`#if swift(>=6.4)` / `if #available`) gates needed. Builds clean on
   all 5 platforms; 193 tests passing.
+
+### Changed
+- **README status badges** — added native CI, live Codecov coverage, License, Swift 6.4, and
+  Release badges. Coverage is wired into CI: `swift test --enable-code-coverage` → `llvm-cov
+  export` (lcov, generated build-directory sources filtered) → `codecov-action@v5` upload. The
+  Coverage badge shows a real per-branch percentage (not decoration); CI stays the build gate.
+- **Test count** — 198 tests passing (Wave F + G).
 
 ## [0.1.1] - 2026-07-17
 
