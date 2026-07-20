@@ -25,8 +25,30 @@ jobs:
       - name: Test
         run: swift test --enable-code-coverage
 
+      # `swift test --enable-code-coverage` emits raw profdata/profraw under
+      # `.build/out/Products/Debug/codecov/`. codecov-action@v5 does NOT auto-convert
+      # profdata — it needs a report format. Export lcov from the test binary + profdata,
+      # filtering generated build-directory sources so coverage reflects real sources only.
+      - name: Generate coverage report
+        run: |
+          set -euo pipefail
+          PROF=$(find .build -name default.profdata -type f | head -n 1)
+          BIN=$(find .build -type f -path '*CosmosTests.xctest/Contents/MacOS/*' | head -n 1)
+          if [ -z "$PROF" ] || [ -z "$BIN" ]; then
+            echo "::warning::profdata or test binary not found — skipping coverage report"
+            exit 0
+          fi
+          echo "profdata: $PROF"
+          echo "binary:   $BIN"
+          xcrun llvm-cov export -format="lcov" \
+            -ignore-filename-regex="\.build|Intermediates|DerivedSources|test_entry_point|resource_bundle_accessor|GeneratedStringSymbols" \
+            "$BIN" -instr-profile="$PROF" > coverage.lcov
+          SF=$(grep -c '^SF:' coverage.lcov)
+          echo "lcov source files: $SF"
+
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v5
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
+          files: ./coverage.lcov
           fail_ci_if_error: false   # coverage is observability, not a build gate
