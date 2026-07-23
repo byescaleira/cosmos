@@ -7,6 +7,19 @@ public enum CosmosMotionPolicy {
         isEnabled && (!respectReduceMotion || !reduceMotion)
     }
 
+    /// Whether to collapse a material/transparency to a solid token when Reduce Transparency is
+    /// active. Config-aware (`respectReduceTransparency` can override to keep materials) and
+    /// policy-aware (``CosmosReduceTransparencyPolicy/preserve`` keeps materials even when
+    /// reduce-transparency is active and respected; `.substitute` — the default — collapses).
+    /// The single chokepoint for reduce-transparency, mirroring ``shouldEmit(isEnabled:respectReduceMotion:reduceMotion:)``.
+    public static func shouldCollapseTransparency(
+        respectReduceTransparency: Bool,
+        reduceTransparency: Bool,
+        policy: CosmosReduceTransparencyPolicy
+    ) -> Bool {
+        reduceTransparency && respectReduceTransparency && policy == .substitute
+    }
+
     /// Picks the transition variant per reduce-motion policy.
     public static func transition(
         full: AnyTransition,
@@ -98,13 +111,15 @@ private struct CosmosContentTransitionModifier: ViewModifier {
 }
 
 /// Stagger delay cascade (identical curve, shifted `delay`). Fully implemented — takes an
-/// explicit `index` and `value` (a single `ViewModifier` cannot know its list position).
+/// explicit `index` and `value` (a single `ViewModifier` cannot know its list position). A `nil`
+/// `step`/`maxSteps` falls back to ``CosmosMotionConfiguration/stagger`` so the cascade base is
+/// configurable app-wide without per-call-site repetition.
 private struct CosmosStaggerModifier<V: Equatable & Sendable>: ViewModifier {
     let kind: CosmosMotionKind
     let index: Int
     let value: V
-    let step: CosmosDuration
-    let maxSteps: Int
+    let step: CosmosDuration?
+    let maxSteps: Int?
     @Environment(\.cosmosTheme) private var theme
     @Environment(\.cosmosConfiguration) private var configuration
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
@@ -116,6 +131,9 @@ private struct CosmosStaggerModifier<V: Equatable & Sendable>: ViewModifier {
             respectReduceMotion: motion.respectReduceMotion,
             reduceMotion: reduceMotion
         ) else { return AnyView(content) }
+        let stagger = motion.stagger
+        let step = self.step ?? stagger.step
+        let maxSteps = self.maxSteps ?? stagger.maxSteps
         let base = theme.motion.animation(
             for: kind, reduceMotion: reduceMotion, policy: motion.reduceMotionPolicy
         )
@@ -138,12 +156,14 @@ extension View {
         modifier(CosmosContentTransitionModifier(preset: preset))
     }
     /// Stagger delay cascade (identical curve, shifted delay). `index` is the item position.
+    /// A `nil` `step`/`maxSteps` (the default) falls back to ``CosmosMotionConfiguration/stagger``,
+    /// so the cascade base delay and cap are configurable app-wide.
     public func cosmosStagger<V: Equatable & Sendable>(
         _ kind: CosmosMotionKind,
         index: Int,
         value: V,
-        step: CosmosDuration = .moderate1,
-        maxSteps: Int = 3
+        step: CosmosDuration? = nil,
+        maxSteps: Int? = nil
     ) -> some View {
         modifier(CosmosStaggerModifier(kind: kind, index: index, value: value, step: step, maxSteps: maxSteps))
     }

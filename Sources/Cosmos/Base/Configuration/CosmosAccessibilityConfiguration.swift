@@ -14,9 +14,12 @@ public struct CosmosAccessibilityCustomContent: Sendable {
 /// Accessibility contract.
 ///
 /// Atoms apply these only when non-nil (via the `cosmosAccessibility*` helpers), so an
-/// unset value never silences VoiceOver's fallback. Environment gates
-/// (`accessibilityReduceMotion`, `accessibilityReduceTransparency`, `colorSchemeContrast`,
-/// `differentiateWithoutColor`, `dynamicTypeSize`) are read directly in atoms/modifiers.
+/// unset value never silences VoiceOver's fallback. Of the SwiftUI environment gates, only
+/// `accessibilityReduceMotion` and `accessibilityReduceTransparency` are currently read in
+/// atoms/modifiers (the latter via `CosmosMotionPolicy.shouldCollapseTransparency`); the
+/// increased-contrast / differentiate-without-color / button-shapes gates are not yet wired
+/// here (tracked gap — see the vault risks index). High-contrast color variants are surfaced
+/// through an asset catalog at the app layer.
 ///
 /// `AccessibilityTraits` and `AccessibilityCustomContentImportance` are SwiftUI `Sendable`
 /// types, so this struct is `Sendable` (SE-0302).

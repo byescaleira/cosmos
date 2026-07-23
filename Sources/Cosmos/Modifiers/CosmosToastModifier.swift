@@ -86,7 +86,11 @@ private struct CosmosToastHost<Key: Hashable, ToastContent: View>: View {
     @State private var presentToken = 0
 
     private var shadowHidden: Bool {
-        (reduceTransparency && configuration.motion.respectReduceTransparency) || reduceMotion
+        CosmosMotionPolicy.shouldCollapseTransparency(
+            respectReduceTransparency: configuration.motion.respectReduceTransparency,
+            reduceTransparency: reduceTransparency,
+            policy: configuration.motion.reduceTransparencyPolicy
+        ) || reduceMotion
     }
 
     /// Caps the toast width on regular width classes so it doesn't span the screen.
@@ -154,7 +158,11 @@ private struct CosmosToastHost<Key: Hashable, ToastContent: View>: View {
     }
 
     private var toastBackgroundStyle: AnyShapeStyle {
-        if reduceTransparency && configuration.motion.respectReduceTransparency {
+        if CosmosMotionPolicy.shouldCollapseTransparency(
+            respectReduceTransparency: configuration.motion.respectReduceTransparency,
+            reduceTransparency: reduceTransparency,
+            policy: configuration.motion.reduceTransparencyPolicy
+        ) {
             AnyShapeStyle(theme.colors.surface)
         } else {
             AnyShapeStyle(.regularMaterial)

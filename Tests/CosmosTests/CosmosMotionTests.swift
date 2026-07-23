@@ -46,6 +46,21 @@ struct CosmosMotionTests {
         #expect(CosmosMotionPolicy.shouldEmit(isEnabled: true, respectReduceMotion: false, reduceMotion: true) == true)
     }
 
+    // MARK: - Reduce-transparency collapse (chokepoint)
+
+    @Test func transparencyCollapseOnlyWhenActiveRespectedAndSubstituting() {
+        // Materials collapse only when reduce-transparency is active, respected by config, AND
+        // the policy is .substitute. Default config collapses; .preserve keeps materials.
+        #expect(CosmosMotionPolicy.shouldCollapseTransparency(respectReduceTransparency: true, reduceTransparency: true, policy: .substitute) == true)
+        #expect(CosmosMotionPolicy.shouldCollapseTransparency(respectReduceTransparency: true, reduceTransparency: true, policy: .preserve) == false)
+        #expect(CosmosMotionPolicy.shouldCollapseTransparency(respectReduceTransparency: true, reduceTransparency: false, policy: .substitute) == false)
+        #expect(CosmosMotionPolicy.shouldCollapseTransparency(respectReduceTransparency: false, reduceTransparency: true, policy: .substitute) == false)
+    }
+
+    @Test func reduceTransparencyPolicyAllCases() {
+        #expect(CosmosReduceTransparencyPolicy.allCases == [.substitute, .preserve])
+    }
+
     // MARK: - Handler invocation
 
     @Test func handlerInvokedWithMotionEvent() {

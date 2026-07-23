@@ -47,4 +47,5 @@ Synthesis/navigation layer for the [[Cosmos]] SwiftUI design-system library. The
 ## Risks index
 
 - [[cosmos-org-audit-2026-07]] — deep organization audit (2026-07): the spine is clean; the "mixed up" feeling comes from one-concept-split-across-folders, empty atomic-design placeholders + stale `ARCHITECTURE.md`, and three competing test-suite axes — plus an interrupted de-styling refactor (no ADR) and a silent no-op `.cosmosTextEditorStyle`. Findings ranked P0/P1/P2 + a 7-step cleanup sequence.
+- [[unwired-accessibility-gates]] — tracked gap (2026-07-23): of the five `CLAUDE.md` accessibility env gates, only reduceMotion + reduceTransparency are wired; `colorSchemeContrast` / `differentiateWithoutColor` / `showButtonShapes` are not. The false in-source claims were corrected; wiring is deferred to a dedicated a11y pass (per-atom semantic work, visual-regression risk).
 - [[header-prominence-not-a-real-api]] — PHASE2 §2.13 lists `.headerProminence(_:)`; it does **not** exist in the Xcode 27 SwiftUI SDK (refuted spec).

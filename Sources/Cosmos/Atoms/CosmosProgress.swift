@@ -143,11 +143,15 @@ private struct CosmosProgressChromeBody: View {
     @Environment(\.cosmosConfiguration) private var cosmosConfiguration
     @Environment(\.accessibilityReduceTransparency) private var reduceTransparency
 
-    /// Collapses the translucent track to opaque when Reduce Transparency is active and respected
-    /// by config (mirrors the ``CosmosCard`` shadow-suppression pattern — config-aware, not the
-    /// bare env value).
+    /// Collapses the translucent track to opaque when Reduce Transparency collapses materials
+    /// (config- and policy-aware via ``CosmosMotionPolicy/shouldCollapseTransparency``, mirroring
+    /// the ``CosmosCard`` shadow-suppression pattern — not the bare env value).
     private var trackFillOpacity: Double {
-        (reduceTransparency && cosmosConfiguration.motion.respectReduceTransparency) ? 1.0 : 0.4
+        CosmosMotionPolicy.shouldCollapseTransparency(
+            respectReduceTransparency: cosmosConfiguration.motion.respectReduceTransparency,
+            reduceTransparency: reduceTransparency,
+            policy: cosmosConfiguration.motion.reduceTransparencyPolicy
+        ) ? 1.0 : 0.4
     }
 
     var body: some View {
