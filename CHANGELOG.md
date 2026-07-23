@@ -8,6 +8,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- _Nothing yet._
+
+## [0.4.0] - 2026-07-23
+
+### Added
 - **Per-token color overrides** — nine subtree-scoped modifiers that override a single semantic
   color token of `theme.colors` without rebuilding the whole theme: `.cosmosAccent(_:)`,
   `.cosmosPrimary(_:)`, `.cosmosSecondary(_:)`, `.cosmosBackground(_:)`, `.cosmosSurface(_:)`,
