@@ -99,6 +99,7 @@ public struct CosmosTabView<SelectionValue: Hashable & Sendable, Content: View>:
         if configuration.enable.isVisible {
             resolved
                 .modifier(CosmosTabViewStyleApplier(style: theme.tabViewStyle))
+                .controlSize(theme.controlSize.controlSize)
                 .tint(theme.colors.accent)
                 .applyCosmosAccessibility(configuration.accessibility)
                 .modifier(CosmosTabHapticGate(selection: selection))
