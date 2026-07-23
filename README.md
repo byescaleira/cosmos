@@ -91,6 +91,7 @@ wrap a `View`.
 
 | Atom | Notes |
 |---|---|
+| `CosmosAdaptiveStack` | Reflows between `HStack` / `VStack` by size class + Dynamic Type, preserving view identity across rotation. |
 | `CosmosAsyncImage` | `AsyncImage` wrapper; placeholder / error / retry slots, retry via `.id`, OS-27 cache surface opt-in. |
 | `CosmosButton` | `ButtonStyle`-based; glass variant available on iOS 26. |
 | `CosmosCard` | Header / body / footer slots. |
