@@ -55,6 +55,7 @@ private struct ChromeBody: View {
 
     var body: some View {
         configuration.label
+            .font(theme.typography.font(for: theme.textStyle))
             .padding(.horizontal, CosmosSpacingTokens.large)
             .padding(.vertical, CosmosSpacingTokens.medium)
             .foregroundStyle(chromeForeground)

@@ -88,6 +88,42 @@ private struct CosmosTextStyleModifier: ViewModifier {
     func body(content: Content) -> some View { content.environment(\.cosmosTheme, theme.withTextStyle(style)) }
 }
 
+/// Canonical typography override (system font): sets the semantic text style plus optional
+/// weight/design. Clears any higher-scope `customFontName` so weight/design actually apply — a
+/// custom font would otherwise route resolution down the custom path and ignore weight/design
+/// (a custom font's weight/design live in its PostScript name).
+private struct CosmosFontModifier: ViewModifier {
+    let style: CosmosTextStyle
+    let weight: Font.Weight?
+    let design: Font.Design?
+    @Environment(\.cosmosTheme) private var theme
+    func body(content: Content) -> some View {
+        var typography = theme.typography
+        typography.customFontName = nil
+        typography.weight = weight
+        typography.design = design
+        var t = theme.withTextStyle(style)
+        t = t.withTypography(typography)
+        return content.environment(\.cosmosTheme, t)
+    }
+}
+
+/// Custom-font typography override (the replacement for the deprecated
+/// ``cosmosCustomFont(_:)``): sets a registered PostScript name at the given semantic style, and
+/// resolves via `Font.custom(_:size:relativeTo:)` so Dynamic Type still scales.
+private struct CosmosCustomFontNameModifier: ViewModifier {
+    let name: String?
+    let style: CosmosTextStyle
+    @Environment(\.cosmosTheme) private var theme
+    func body(content: Content) -> some View {
+        var typography = theme.typography
+        typography.customFontName = name
+        var t = theme.withTextStyle(style)
+        t = t.withTypography(typography)
+        return content.environment(\.cosmosTheme, t)
+    }
+}
+
 private struct CosmosPaddingModifier: ViewModifier {
     let padding: CosmosPadding
     @Environment(\.cosmosTheme) private var theme
@@ -182,6 +218,7 @@ extension View {
     /// where `TextEditor` exists — iOS/macOS/visionOS).
     public func cosmosTextEditorStyle(_ style: CosmosTextEditorStyle) -> some View { modifier(CosmosTextEditorStyleModifier(style: style)) }
     /// Overrides the default text style for descendant components.
+    @available(*, deprecated, message: "Use .cosmosFont(_:weight:design:) instead")
     public func cosmosTextStyle(_ style: CosmosTextStyle) -> some View { modifier(CosmosTextStyleModifier(style: style)) }
     /// Overrides the default padding selector for descendant components.
     public func cosmosPadding(_ padding: CosmosPadding) -> some View { modifier(CosmosPaddingModifier(padding: padding)) }
@@ -195,11 +232,30 @@ extension View {
     /// Overrides the font for descendant components with a custom font's PostScript name, or `nil`
     /// to return to the system font. The font must be registered in your app; resolution uses
     /// `Font.custom(_:size:relativeTo:)` so Dynamic Type still scales.
+    @available(*, deprecated, message: "Use .cosmosFont(_:for:) to set a custom font")
     public func cosmosCustomFont(_ name: String?) -> some View { modifier(CosmosCustomFontModifier(name: name)) }
+    /// Canonical typography override (system font): a semantic ``CosmosTextStyle`` plus optional
+    /// weight and design, mirroring SwiftUI's `Font.system(_:weight:design:)`. Clears any
+    /// higher-scope custom font so weight/design take effect. Replaces ``cosmosTextStyle(_:)``.
+    public func cosmosFont(_ style: CosmosTextStyle, weight: Font.Weight? = nil, design: Font.Design? = nil) -> some View {
+        modifier(CosmosFontModifier(style: style, weight: weight, design: design))
+    }
+    /// Custom-font typography override: a registered PostScript name at the given semantic style,
+    /// resolved via `Font.custom(_:size:relativeTo:)` so Dynamic Type still scales. `nil` returns
+    /// to the system font. Replaces ``cosmosCustomFont(_:)``.
+    public func cosmosFont(_ customFont: String?, for style: CosmosTextStyle = .body) -> some View {
+        modifier(CosmosCustomFontNameModifier(name: customFont, style: style))
+    }
     /// Overrides the accent/tint color token for descendant components.
     public func cosmosAccent(_ color: Color) -> some View { modifier(CosmosColorTokenModifier(token: .accent, color: color)) }
+    /// SwiftUI-idiomatic alias of ``cosmosAccent(_:)``: overrides the accent/tint color token for
+    /// descendant components (mirrors SwiftUI's `.tint(_:)`).
+    public func cosmosTint(_ color: Color) -> some View { modifier(CosmosColorTokenModifier(token: .accent, color: color)) }
     /// Overrides the primary foreground color token for descendant components.
     public func cosmosPrimary(_ color: Color) -> some View { modifier(CosmosColorTokenModifier(token: .primary, color: color)) }
+    /// SwiftUI-idiomatic alias of ``cosmosPrimary(_:)``: overrides the primary foreground color
+    /// token for descendant components (mirrors SwiftUI's `.foregroundStyle(_:)`).
+    public func cosmosForegroundStyle(_ color: Color) -> some View { modifier(CosmosColorTokenModifier(token: .primary, color: color)) }
     /// Overrides the secondary foreground color token for descendant components.
     public func cosmosSecondary(_ color: Color) -> some View { modifier(CosmosColorTokenModifier(token: .secondary, color: color)) }
     /// Overrides the root background color token for descendant components.

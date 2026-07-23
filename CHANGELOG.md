@@ -10,6 +10,43 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - _Nothing yet._
 
+## [0.5.0] - 2026-07-23
+
+### Added
+- **SwiftUI-shaped override modifiers** — the customization surface now mirrors SwiftUI's own
+  modifier names, so a dev can re-skin a subtree without building a whole `CosmosTheme`:
+  - `.cosmosTint(_ color:)` — SwiftUI-idiomatic alias of `.cosmosAccent(_:)` (overrides the
+    accent/tint color token for the subtree; honored by every control that reads
+    `theme.colors.accent` — buttons, toggles, sliders, fields, pickers, …).
+  - `.cosmosForegroundStyle(_ color:)` — SwiftUI-idiomatic alias of `.cosmosPrimary(_:)` (overrides
+    the primary foreground color token for the subtree).
+  - `.cosmosFont(_ style: CosmosTextStyle, weight: Font.Weight? = nil, design: Font.Design? = nil)`
+    — the canonical typography override: a semantic text style plus optional weight and design,
+    mirroring `Font.system(_:weight:design:)`. Clears any higher-scope custom font so weight/design
+    take effect; honors Dynamic Type on all five platforms (resolved via
+    `Font.system(_:design:).weight(_:)`, since the combined `Font.system(_:weight:design:)`
+    overload is not available on this SDK).
+  - `.cosmosFont(_ customFont: String?, for style: CosmosTextStyle = .body)` — custom-font
+    typography override (a registered PostScript name at the given semantic style; resolved via
+    `Font.custom(_:size:relativeTo:)` so Dynamic Type still scales). Replaces
+    `.cosmosCustomFont(_:)`.
+- **Typography weight/design tokens** — `CosmosTypographyTokens` gains optional `weight:
+  Font.Weight?` and `design: Font.Design?` fields (default `nil` → SwiftUI defaults). The
+  custom-font path ignores them (a custom font's weight/design live in its PostScript name).
+
+### Changed
+- **`CosmosButton` label now honors theme typography** — the button chrome applies
+  `theme.typography.font(for: theme.textStyle)` to its label, so `.cosmosFont` (and the deprecated
+  `.cosmosTextStyle`/`.cosmosCustomFont`) now actually reach button labels. The default
+  `theme.textStyle` (`.body`) keeps the visual default ~unchanged. The `.glass` variant still
+  routes to native `.glassProminent` and remains opaque to these overrides.
+
+### Deprecated
+- `.cosmosTextStyle(_:)` — use `.cosmosFont(_:weight:design:)` instead.
+- `.cosmosCustomFont(_:)` — use `.cosmosFont(_:for:)` to set a custom font.
+- Both remain functional on a migration runway (per `VERSIONING.md`); obsoletion comes in a later
+  major. The `CosmosTheme.withTextStyle`/`withCustomFont`/`withTypography` builders are unaffected.
+
 ## [0.4.0] - 2026-07-23
 
 ### Added

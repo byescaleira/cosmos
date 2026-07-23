@@ -161,14 +161,14 @@ private struct CosmosGroupBoxChromeBody: View {
 #Preview("Group box – styles") {
     VStack(spacing: 16) {
         CosmosGroupBox("preview.title") {
-            CosmosText("preview.description").cosmosTextStyle(.body)
+            CosmosText("preview.description").cosmosFont(.body)
         }
         CosmosGroupBox("preview.title") {
-            CosmosText("preview.description").cosmosTextStyle(.body)
+            CosmosText("preview.description").cosmosFont(.body)
         }
         .cosmosGroupBoxStyle(.cosmos)
         CosmosGroupBox {
-            CosmosText("preview.description").cosmosTextStyle(.body)
+            CosmosText("preview.description").cosmosFont(.body)
         }
     }
     .padding()
@@ -178,11 +178,11 @@ private struct CosmosGroupBoxChromeBody: View {
     CosmosPreviewContainer {
         VStack(spacing: 16) {
             CosmosGroupBox("preview.title") {
-                CosmosText("preview.description").cosmosTextStyle(.body)
+                CosmosText("preview.description").cosmosFont(.body)
             }
             .cosmosGroupBoxStyle(.cosmos)
             CosmosGroupBox(verbatim: CosmosMock.sentence(), content: {
-                CosmosText("preview.description").cosmosTextStyle(.body)
+                CosmosText("preview.description").cosmosFont(.body)
             })
             .cosmosGroupBoxStyle(.cosmos)
         }

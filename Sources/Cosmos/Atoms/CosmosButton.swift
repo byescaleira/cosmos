@@ -139,3 +139,22 @@ private struct CosmosButtonChromeApplier: ViewModifier {
         .cosmosPreviewEnv(dynamicTypeSize: .accessibility3)
     }
 }
+
+// SwiftUI-shaped per-subtree overrides: .cosmosFont / .cosmosTint / .cosmosForegroundStyle compose
+// without building a whole CosmosTheme. The button label now honors theme typography (so .cosmosFont
+// reaches the label), and .cosmosTint/.cosmosForegroundStyle re-skin the accent/foreground tokens.
+#Preview("Button – SwiftUI-shaped overrides", traits: .sizeThatFitsLayout) {
+    CosmosPreviewContainer {
+        VStack(spacing: 12) {
+            CosmosButton("welcome.continue") {}
+                .cosmosFont(.body, weight: .bold, design: .rounded)
+                .cosmosTint(.purple)
+                .cosmosForegroundStyle(.white)
+            CosmosButton("welcome.continue") {}
+                .cosmosButtonStyle(.secondary)
+                .cosmosFont(.headline, design: .serif)
+                .cosmosTint(.teal)
+        }
+        .padding()
+    }
+}

@@ -157,9 +157,9 @@ public struct CosmosLocalizedText: View {
 
 #Preview("Label – text styles + dark") {
     VStack(alignment: .leading, spacing: 12) {
-        CosmosLabel("preview.title", systemImage: "sparkles").cosmosTextStyle(.headline)
-        CosmosLabel("preview.description", systemImage: "text.alignleft").cosmosTextStyle(.body)
-        CosmosLabel("preview.name", systemImage: "person.fill").cosmosTextStyle(.caption)
+        CosmosLabel("preview.title", systemImage: "sparkles").cosmosFont(.headline)
+        CosmosLabel("preview.description", systemImage: "text.alignleft").cosmosFont(.body)
+        CosmosLabel("preview.name", systemImage: "person.fill").cosmosFont(.caption)
     }
     .padding()
     .preferredColorScheme(.dark)
@@ -168,7 +168,7 @@ public struct CosmosLocalizedText: View {
 #Preview("Label – accessibility size + languages", traits: .sizeThatFitsLayout) {
     CosmosPreviewContainer {
         VStack(alignment: .leading, spacing: 12) {
-            CosmosLabel("preview.title", systemImage: "star.fill").cosmosTextStyle(.title)
+            CosmosLabel("preview.title", systemImage: "star.fill").cosmosFont(.title)
             CosmosLabel(verbatim: CosmosMock.personName(), systemImage: "person.crop.circle")
         }
         .padding()

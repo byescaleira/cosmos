@@ -90,17 +90,17 @@ public struct CosmosCard<Header: View, Body: View, Footer: View>: View {
 
 #Preview("Card simple") {
     CosmosCard {
-        CosmosText("preview.title").cosmosTextStyle(.headline)
-        CosmosText("preview.description").cosmosTextStyle(.body)
+        CosmosText("preview.title").cosmosFont(.headline)
+        CosmosText("preview.description").cosmosFont(.body)
     }
     .padding()
 }
 
 #Preview("Card header + footer") {
     CosmosCard {
-        CosmosText("preview.title").cosmosTextStyle(.headline)
+        CosmosText("preview.title").cosmosFont(.headline)
     } body: {
-        CosmosText("preview.description").cosmosTextStyle(.body)
+        CosmosText("preview.description").cosmosFont(.body)
     } footer: {
         CosmosButton("welcome.continue") {}.cosmosButtonStyle(.secondary)
     }
@@ -110,9 +110,9 @@ public struct CosmosCard<Header: View, Body: View, Footer: View>: View {
 
 #Preview("Card landscape reflow") {
     CosmosCard {
-        CosmosText("preview.title").cosmosTextStyle(.headline)
+        CosmosText("preview.title").cosmosFont(.headline)
     } body: {
-        CosmosText("preview.description").cosmosTextStyle(.body)
+        CosmosText("preview.description").cosmosFont(.body)
     } footer: {
         CosmosButton("welcome.continue") {}
     }
@@ -123,11 +123,11 @@ public struct CosmosCard<Header: View, Body: View, Footer: View>: View {
 #Preview("Card – mock content + reduce motion", traits: .sizeThatFitsLayout) {
     CosmosPreviewContainer {
         CosmosCard {
-            CosmosText(verbatim: CosmosMock.personName()).cosmosTextStyle(.headline)
+            CosmosText(verbatim: CosmosMock.personName()).cosmosFont(.headline)
         } body: {
             VStack(alignment: .leading, spacing: 6) {
-                CosmosText(verbatim: CosmosMock.addressLine()).cosmosTextStyle(.body)
-                CosmosText(verbatim: CosmosMock.phone()).cosmosTextStyle(.body)
+                CosmosText(verbatim: CosmosMock.addressLine()).cosmosFont(.body)
+                CosmosText(verbatim: CosmosMock.phone()).cosmosFont(.body)
             }
         } footer: {
             CosmosButton("welcome.continue") {}
