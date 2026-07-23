@@ -10,6 +10,54 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - _Nothing yet._
 
+## [0.3.0] - 2026-07-22
+
+### Added
+- **Edge-aware padding** — new `CosmosPaddingEdges` enum (`.all` / `.horizontal` / `.vertical` /
+  `.top` / `.bottom` / `.leading` / `.trailing`, each mapping to SwiftUI's `Edge.Set`) and a new
+  `View.cosmosPadding(_:_:)` overload `.cosmosPadding(.horizontal, .large)` that applies a
+  token-scaled padding to a specific edge set directly (resolved through
+  `CosmosSpacingTokens.value(for:)`), so a per-edge padding stays on the 4-pt grid without raw
+  points. The existing single-arg `.cosmosPadding(_:)` (which overrides the **default** padding
+  selector for descendants) is unchanged; `theme.padding` remains a uniform scalar. The edge form
+  applies padding directly to the modified view (it is not a theme default override).
+- **`CosmosToast`** — the Wave H presentation primitive: a transient, non-modal toast with the
+  same binding API as `.sheet` / `.alert`. `.cosmosToast(isPresented:)` / `.cosmosToast(item:)`
+  (core, caller-provided content) plus role conveniences `.cosmosToast(_:isPresented:)` /
+  `.cosmosToast(_:item:)` that build a role-tinted ``CosmosToastContent`` and wire the appear
+  haptic in one call. `CosmosToastPlacement` (`.top` / `.bottom`), `CosmosToastTint`
+  (`.primary` / `.success` / `.warning` / `.error`), and `CosmosToastRole` (icon + tint +
+  `appearHaptic`; presets `.info` / `.success` / `.warning` / `.error`). There is no native
+  SwiftUI `.toast` (iOS 26 / 27), so this composes the two native primitives that back the
+  pattern — the `.alert` / `.sheet` binding/presentation shape, and a custom `.regularMaterial`
+  overlay entering/leaving via `.cosmosTransition(.slide)` (top) / `.cosmosTransition(.sheet)`
+  (bottom), gated through ``CosmosMotionPolicy`` (config-aware, not the bare env value). Auto-
+  dismiss via a cancellable `Task` keyed to the presentation identity (default `.seconds(3)`,
+  `nil` = manual parity with `.sheet`); no `DispatchQueue`, no `NSLock`. Tap-to-dismiss (default
+  on) flips the binding. Appear haptic gated by ``CosmosHapticsPolicy`` + Reduce Motion; tracking
+  fires `.appear` / `.disappear`; reduce-transparency falls back to a solid `theme.colors.surface`
+  and suppresses the shadow. `CosmosToastContent<Message: View>` is the icon + message row
+  (icon via a raw `Image(systemName:)` — decorative, `CosmosIcon` would pin `foregroundStyle` to
+  primary); localized-key and verbatim convenience inits where `Message == CosmosText`. The
+  `item` forms require `Item: Identifiable & Sendable` so the dismiss path is concurrency-safe
+  under Swift 6. No new motion token (reuses `.slide` / `.sheet`); `CosmosTheme` untouched.
+
+### Changed
+- **`CosmosText` is now optional-aware** — both inits accept `String?` (`init(_ key: String?)`
+  and `init(verbatim text: String?)`); `resolvedText` is `String?`. The body renders nothing when
+  the resolution is `nil` (`@ViewBuilder if let`), so a `nil` key or an unresolved key produces an
+  empty view instead of crashing or rendering the key literally.
+- **`CosmosLocalizationConfiguration.string(for:)` is now optional-aware** — signature is now
+  `string(for key: String?) -> String?` (nil key in → nil out; unresolved key → nil). Call sites
+  that treated the result as `String` (``CosmosLocalizedText``'s body, `CosmosLocalizationTests`)
+  were updated to unwrap.
+- **`CosmosButtonChrome` renders via Liquid Glass** — the chrome `ButtonStyle`'s `ChromeBody` now
+  surfaces the button with `.glassEffect(.regular.tint(chromeBackground), in: .capsule)` instead of
+  a manual `Capsule().fill` + `clipShape(Capsule())` + `scaleEffect`/`opacity` press feedback.
+  `chromeBackground` is now a `Color` (the tint fed to `.glassEffect`) rather than a `View`. The
+  capsule default aligns with the recorded shape decision (see
+  `vault/03-componentes/button-shapes-ios26-liquid-glass.md`).
+
 ## [0.2.0] - 2026-07-20
 
 ### Added

@@ -11,21 +11,21 @@ public struct CosmosText: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     private enum Storage: Sendable {
-        case key(String)
-        case verbatim(String)
+        case key(String?)
+        case verbatim(String?)
     }
 
     /// Creates text from a localized String Catalog key (resolved via the configuration).
-    public init(_ key: String) {
+    public init(_ key: String?) {
         self.storage = .key(key)
     }
 
     /// Creates verbatim (non-localized) text.
-    public init(verbatim text: String) {
+    public init(verbatim text: String?) {
         self.storage = .verbatim(text)
     }
 
-    private var resolvedText: String {
+    private var resolvedText: String? {
         switch storage {
         case .key(let key): return configuration.localization.string(for: key)
         case .verbatim(let text): return text
@@ -39,38 +39,41 @@ public struct CosmosText: View {
         }
     }
 
+    @ViewBuilder
     public var body: some View {
-        Text(resolvedText)
-            .font(theme.typography.font(for: theme.textStyle))
-            .foregroundStyle(theme.colors.primary)
-            .multilineTextAlignment(.leading)
+        if let resolvedText {
+            Text(resolvedText)
+                .font(theme.typography.font(for: theme.textStyle))
+                .foregroundStyle(theme.colors.primary)
+                .multilineTextAlignment(.leading)
             // Token-driven value-change motion, gated through the motion policy (single chokepoint).
-            .cosmosContentTransition(.numeric)
-            .cosmosAnimation(.valueChange, value: resolvedText)
-            .accessibilityLabelOrNil(configuration.accessibility.label ?? resolvedText)
-            .accessibilityHintOrNil(configuration.accessibility.hint)
-            .accessibilityValueOrNil(configuration.accessibility.value)
-            .accessibilityIdentifierOrNil(configuration.accessibility.identifier)
-            .accessibilitySortPriorityOrNil(configuration.accessibility.sortPriority)
-            .accessibilityHiddenIf(configuration.accessibility.isHidden)
-            .accessibilityTraitsIfPresent(configuration.accessibility.traits.union(isHeading ? .isHeader : []))
-            .accessibilityCustomContentIfPresent(configuration.accessibility.customContent)
-            .modifier(CosmosRespondsModifier(responds: configuration.accessibility.respondsToUserInteraction))
-            .onAppear {
-                configuration.tracking.track(.init(
-                    name: "text_appear",
-                    component: "CosmosText",
-                    componentId: trackingId ?? configuration.accessibility.identifier,
-                    action: .appear
-                ))
-                if CosmosMotionPolicy.shouldEmit(
-                    isEnabled: configuration.motion.isEnabled,
-                    respectReduceMotion: configuration.motion.respectReduceMotion,
-                    reduceMotion: reduceMotion
-                ) {
-                    configuration.motion.handler(.motion(.valueChange))
+                .cosmosContentTransition(.numeric)
+                .cosmosAnimation(.valueChange, value: resolvedText)
+                .accessibilityLabelOrNil(configuration.accessibility.label ?? resolvedText)
+                .accessibilityHintOrNil(configuration.accessibility.hint)
+                .accessibilityValueOrNil(configuration.accessibility.value)
+                .accessibilityIdentifierOrNil(configuration.accessibility.identifier)
+                .accessibilitySortPriorityOrNil(configuration.accessibility.sortPriority)
+                .accessibilityHiddenIf(configuration.accessibility.isHidden)
+                .accessibilityTraitsIfPresent(configuration.accessibility.traits.union(isHeading ? .isHeader : []))
+                .accessibilityCustomContentIfPresent(configuration.accessibility.customContent)
+                .modifier(CosmosRespondsModifier(responds: configuration.accessibility.respondsToUserInteraction))
+                .onAppear {
+                    configuration.tracking.track(.init(
+                        name: "text_appear",
+                        component: "CosmosText",
+                        componentId: trackingId ?? configuration.accessibility.identifier,
+                        action: .appear
+                    ))
+                    if CosmosMotionPolicy.shouldEmit(
+                        isEnabled: configuration.motion.isEnabled,
+                        respectReduceMotion: configuration.motion.respectReduceMotion,
+                        reduceMotion: reduceMotion
+                    ) {
+                        configuration.motion.handler(.motion(.valueChange))
+                    }
                 }
-            }
+        }
     }
 }
 

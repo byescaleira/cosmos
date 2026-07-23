@@ -129,6 +129,20 @@ URLs:
 - Map `CosmosTheme.buttonStyle.shape` (or a new `buttonShape` token) to `ButtonBorderShape` so consumers can opt into `.roundedRectangle(radius:)` or `.containerConcentric` for grouped content.
 - Gate `.glass` / `.glassProminent` at `@available(iOS 26, *)` (Cosmos 26 baseline — no gate needed within baseline, but needed if the design-system supports an older floor pin via `CosmosTheme.version`).
 
+## Implementation status (CosmosButtonChrome)
+
+`CosmosButtonChrome`'s `ChromeBody` now renders the chrome with
+`.glassEffect(.regular.tint(chromeBackground), in: .capsule)` — i.e. it uses the `.glassEffect(_:in:)`
+shape parameter (mechanism 2 above, `.capsule`) directly, with the variant's tint
+(`resolvedTint` / `theme.colors.surface` / `theme.colors.error`) fed as the glass tint, instead of
+the previous manual `Capsule().fill(...)` + `clipShape(Capsule())` + `scaleEffect`/`opacity` press
+feedback. `chromeBackground` is now a `Color` (the tint), not a `View`. This makes the chrome a real
+Liquid Glass surface (Apple's preferred path for custom glass views) rather than an opaque
+capsule-shaped fill, and delegates the capsule shape to `.glassEffect(in: .capsule)`. The press
+scale/opacity feedback that the manual path applied is no longer rendered by the chrome itself
+(the glass surface provides its own affordance). This is the capsule default from §1/§2 applied at
+the implementation layer.
+
 ## Sources
 
 - WWDC25-323 Build a SwiftUI app with the new design — https://developer.apple.com/videos/play/wwdc2025/323/

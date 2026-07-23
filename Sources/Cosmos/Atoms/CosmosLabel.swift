@@ -132,8 +132,13 @@ public struct CosmosLocalizedText: View {
 
     public init(key: String) { self.key = key }
 
+    @ViewBuilder
     public var body: some View {
-        Text(configuration.localization.string(for: key))
+        // `string(for:)` is optional-aware (returns `nil` for a `nil` key or an unresolved key);
+        // render nothing when unresolved, mirroring ``CosmosText``'s nil-handling.
+        if let resolved = configuration.localization.string(for: key) {
+            Text(resolved)
+        }
     }
 }
 

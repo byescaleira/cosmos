@@ -34,9 +34,10 @@ struct CosmosLocalizationTests {
 
     @Test func defaultConfigResolves() {
         // Smoke test: the default config (Bundle.module + system locale) resolves a known key
-        // to a non-empty string rather than returning the key literally.
+        // to a non-empty string rather than returning the key literally. `string(for:)` is
+        // optional-aware (returns nil for an unresolved key), so unwrap the resolution.
         let value = CosmosLocalizationConfiguration.default.string(for: CosmosPreviewStrings.previewName)
-        #expect(!value.isEmpty)
+        #expect(value?.isEmpty == false)
         #expect(value != CosmosPreviewStrings.previewName)
     }
 }

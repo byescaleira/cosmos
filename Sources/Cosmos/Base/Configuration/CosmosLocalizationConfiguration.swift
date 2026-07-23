@@ -26,7 +26,8 @@ public struct CosmosLocalizationConfiguration: Sendable {
     public static let `default` = CosmosLocalizationConfiguration()
 
     /// Resolves a localized string for `key`, honoring the configured `locale` when present.
-    public func string(for key: String) -> String {
+    public func string(for key: String?) -> String? {
+        guard let key else { return nil }
         let resolvedBundle = bundle ?? Bundle.module
 
         // Route 1 — compiled `.lproj/Localizable.strings` (Xcode 27 / Swift 6.4 SwiftPM compiles

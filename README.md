@@ -44,7 +44,7 @@ Add Cosmos to your `Package.swift`:
 
 ```swift
 dependencies: [
-    .package(url: "https://github.com/byescaleira/cosmos.git", from: "0.2.0")
+    .package(url: "https://github.com/byescaleira/cosmos.git", from: "0.3.0")
 ]
 ```
 
@@ -110,9 +110,10 @@ wrap a `View`.
 | `CosmosSlider` | `Slider` wrapper (not available on tvOS). |
 | `CosmosStepper` | `Stepper` wrapper (not available on tvOS). |
 | `CosmosTabView` | `TabView` wrapper with theme style and roles. |
-| `CosmosText` | Localized or verbatim text. |
+| `CosmosText` | Localized or verbatim text; optional key/verbatim (renders nothing for `nil`). |
 | `CosmosTextField` | `TextFieldStyle`-based. |
 | `CosmosTextEditor` | `TextEditor` wrapper (not on tvOS/watchOS). |
+| `CosmosToast` | `.cosmosToast(isPresented:)` / `.cosmosToast(item:)` presentation modifier; role conveniences build a `CosmosToastContent` (icon + message). |
 | `CosmosToggle` | `ToggleStyle`-based. |
 
 ## Behavior and appearance
@@ -148,6 +149,20 @@ VStack {
 .cosmosTextStyle(.headline)
 .cosmosPadding(.large)
 ```
+
+`.cosmosPadding(_:)` overrides the default padding selector for descendants. To apply a
+token-scaled padding to a specific edge set directly, use the edge form
+`.cosmosPadding(_:_:)`:
+
+```swift
+CosmosCard { … }
+    .cosmosPadding(.horizontal, .large)   // large on leading/trailing only
+    .cosmosPadding(.vertical, .medium)    // medium on top/bottom only
+```
+
+The edge set (`CosmosPaddingEdges`) mirrors SwiftUI's `Edge.Set` — `.all`, `.horizontal`,
+`.vertical`, `.top`, `.bottom`, `.leading`, `.trailing` — and resolves through the 4-pt spacing
+grid, so per-edge padding never falls back to raw points.
 
 Available selectors include `.cosmosButtonStyle`, `.cosmosToggleStyle`,
 `.cosmosPickerStyle`, `.cosmosListStyle`, `.cosmosTabViewStyle`,

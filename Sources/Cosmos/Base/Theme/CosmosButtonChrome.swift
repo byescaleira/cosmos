@@ -57,8 +57,6 @@ private struct ChromeBody: View {
         configuration.label
             .padding(.horizontal, CosmosSpacingTokens.large)
             .padding(.vertical, CosmosSpacingTokens.medium)
-            .frame(minHeight: 44, alignment: .center)
-            .background(chromeBackground)
             .foregroundStyle(chromeForeground)
             // Capsule is Apple's Liquid Glass default for filled/prominent buttons
             // (WWDC25-323: "Bordered buttons now have a capsule shape by default"). The native
@@ -66,12 +64,10 @@ private struct ChromeBody: View {
             // design rhythm is consistent on platforms without the glass style and for the
             // non-glass variants. Use a discrete `RoundedRectangle` radius only for grouped /
             // card-nested content (concentricity), not for standalone prominent buttons.
-            .clipShape(Capsule())
             // Press scale is UNCONDITIONAL — press feedback is a state signal, not decorative
             // motion (reduce-motion ≠ no feedback). Only the `.animation` is gated, so the scale
             // snaps instantly instead of animating under reduce-motion (vestibular-safe).
-            .scaleEffect(configuration.isPressed ? 0.97 : 1)
-            .opacity(configuration.isPressed ? 0.75 : 1)
+            .glassEffect(.regular.tint(chromeBackground), in: .capsule)
             .animation(
                 CosmosMotionPolicy.shouldEmit(
                     isEnabled: cosmosConfiguration.motion.isEnabled,
@@ -84,18 +80,17 @@ private struct ChromeBody: View {
             )
     }
 
-    @ViewBuilder
-    private var chromeBackground: some View {
+    private var chromeBackground: Color {
         switch variant {
         case .primary:
-            Capsule().fill(resolvedTint)
+            return resolvedTint
         case .secondary:
-            Capsule().fill(theme.colors.surface)
+            return theme.colors.surface
         case .danger:
-            Capsule().fill(theme.colors.error)
+            return theme.colors.error
         case .ghost, .glass:
             // `.glass` is unreachable (precondition in init); `.ghost` is chromeless.
-            Color.clear
+            return Color.clear
         }
     }
 

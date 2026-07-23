@@ -42,28 +42,55 @@ transition.
 
 ```swift
 extension View {
+    // Core: caller-provided content.
     func cosmosToast<Content: View>(
         isPresented: Binding<Bool>,
         placement: CosmosToastPlacement = .top,
-        dismissAfter: CosmosDuration? = .moderate2,   // ~0.24s? no — see note
-        onDismiss: (() -> Void)? = nil,
+        dismissAfter: Duration? = .seconds(3),     // nil = manual (caller flips the binding)
+        dismissOnTap: Bool = true,
+        haptic: CosmosHapticsFeedback? = nil,      // fired on present, policy-gated
+        onDismiss: (@Sendable () -> Void)? = nil,
         @ViewBuilder content: @escaping () -> Content
     ) -> some View
 
-    func cosmosToast<Item: Identifiable, Content: View>(
+    func cosmosToast<Item: Identifiable & Sendable, Content: View>(
         item: Binding<Item?>,
         placement: CosmosToastPlacement = .top,
-        dismissAfter: CosmosDuration? = nil,
-        onDismiss: (() -> Void)? = nil,
+        dismissAfter: Duration? = .seconds(3),
+        dismissOnTap: Bool = true,
+        haptic: CosmosHapticsFeedback? = nil,
+        onDismiss: (@Sendable () -> Void)? = nil,
         @ViewBuilder content: @escaping (Item) -> Content
+    ) -> some View
+
+    // Role convenience: CosmosToastContent + the role's appear haptic, in one call.
+    func cosmosToast<M: View>(
+        _ role: CosmosToastRole, isPresented: Binding<Bool>,
+        placement: CosmosToastPlacement = .top,
+        dismissAfter: Duration? = .seconds(3),
+        dismissOnTap: Bool = true,
+        onDismiss: (@Sendable () -> Void)? = nil,
+        @ViewBuilder message: @escaping () -> M
+    ) -> some View
+
+    func cosmosToast<Item: Identifiable & Sendable, M: View>(
+        _ role: CosmosToastRole, item: Binding<Item?>,
+        placement: CosmosToastPlacement = .top,
+        dismissAfter: Duration? = .seconds(3),
+        dismissOnTap: Bool = true,
+        onDismiss: (@Sendable () -> Void)? = nil,
+        @ViewBuilder message: @escaping (Item) -> M
     ) -> some View
 }
 ```
 
-`CosmosToastPlacement` is `.top` / `.bottom` (aligned to the safe area). `dismissAfter` opts into
-auto-dismiss; `nil` = manual dismiss (parity with `.sheet`, which is manual). The `item` form drives
-a re-present when the item's identity changes (same identity-changes-dismiss-represent trick
-CosmosAsyncImage uses for retry via `.id(retryToken)`).
+`CosmosToastPlacement` is `.top` / `.bottom` (aligned via the overlay/ZStack). `dismissAfter` opts
+into auto-dismiss; `nil` = manual dismiss (parity with `.sheet`, which is manual); default
+`.seconds(3)` so the common case just works. `Duration` (stdlib, `Sendable`) is used rather than
+`CosmosDuration` — the animation duration scale (0–0.7s) is the wrong domain for a ~3s display
+time. The `item` form requires `Item: Identifiable & Sendable` (so the dismiss path is
+concurrency-safe under Swift 6) and re-presents when the item's identity changes (same
+identity-changes-dismiss-represent trick CosmosAsyncImage uses for retry via `.id(retryToken)`).
 
 ## Cross-cutting integration (per CLAUDE.md)
 
@@ -121,12 +148,21 @@ CosmosAsyncImage uses for retry via `.id(retryToken)`).
 
 ## Open / deferred
 
-- Auto-dismiss default value (proposed `nil` = manual, parity with `.sheet`; a `dismissAfter` of
-  ~3s is the community default — see [[cosmos-toast]] decision in plan).
+- **Shipped (Wave H):** auto-dismiss **default `.seconds(3)` + tap-to-dismiss (default on)** —
+  chosen over `nil`-manual-default so the common case "just works"; `nil` remains available on
+  the core forms for full manual parity with `.sheet`. Role conveniences
+  (`.cosmosToast(_:isPresented:)` / `.cosmosToast(_:item:)`) ship and wire the role's appear
+  haptic automatically. `CosmosToastContent` ships (icon + message, role-tinted). `Duration`
+  (stdlib, `Sendable`) is used for `dismissAfter` rather than `CosmosDuration` — the animation
+  duration scale (0–0.7s) is the wrong domain for a ~3s display time.
 - VoiceOver announcement routing without UIKit (refinement).
 - Queueing / FIFO when a new toast replaces a visible one (UnionToast's "replacement
   choreography") — deferred; first version is single-toast-per-modifier (a second presentation
   site composes naturally by stacking two `.cosmosToast` modifiers).
+- `CosmosHapticsFeedback` gained `Hashable` (auto-synthesized; all associated values —
+  `CosmosHapticsWeight` String-raw, `Double?`, and the empty cases — are `Hashable`) so
+  `CosmosToastRole.appearHaptic: CosmosHapticsFeedback?` allows `CosmosToastRole: Hashable`
+  (the `ForEach(id: \.self)` over the four presets needs it).
 
 ## Sources
 
