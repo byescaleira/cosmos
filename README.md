@@ -96,6 +96,7 @@ wrap a `View`.
 | `CosmosDatePicker` | `DatePicker` wrapper; gated on platforms where it exists. |
 | `CosmosDivider` | Theme-tinted divider. |
 | `CosmosGroupBox` | Custom `GroupBoxStyle` chrome via theme tokens. |
+| `CosmosHStack` | `HStack` wrapper spacing children on the 4-pt grid (`CosmosPadding`). |
 | `CosmosIcon` | SF Symbol wrapper. |
 | `CosmosLabel` | `LabelStyle`-based. |
 | `CosmosLink` | `Link` wrapper. |
@@ -115,6 +116,7 @@ wrap a `View`.
 | `CosmosTextEditor` | `TextEditor` wrapper (not on tvOS/watchOS). |
 | `CosmosToast` | `.cosmosToast(isPresented:)` / `.cosmosToast(item:)` presentation modifier; role conveniences build a `CosmosToastContent` (icon + message). |
 | `CosmosToggle` | `ToggleStyle`-based. |
+| `CosmosVStack` | `VStack` wrapper spacing children on the 4-pt grid (`CosmosPadding`). |
 
 ## Behavior and appearance
 

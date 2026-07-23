@@ -8,7 +8,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
-- _Nothing yet._
+- **`CosmosHStack` / `CosmosVStack`** — drop-in `HStack` / `VStack` wrappers whose spacing is a
+  `CosmosPadding` selector resolved through `CosmosSpacingTokens.value(for:)`, so layouts never
+  hardcode raw point values. Content-only init with `alignment` (default `.center`) and `spacing`
+  (default `.medium` → 12 pt); pass `.none` to use the system stack default. Available on all five
+  platforms at `.v26`.
 
 ## [0.5.0] - 2026-07-23
 
