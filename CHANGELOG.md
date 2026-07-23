@@ -14,6 +14,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   (default `.medium` → 12 pt); pass `.none` to use the system stack default. Available on all five
   platforms at `.v26`.
 
+### Changed
+- **`CosmosToastContent` reworked** — now offers `init(role:title:description:)` (icon + a
+  title/description stack) and `init(role:message:)` (`@ViewBuilder`). The previous `role:` +
+  localized-key and `role:verbatim:` convenience inits (which built a `CosmosText` message) are
+  removed; pass `CosmosText(verbatim:)` / `CosmosText(_:)` in the `message:` closure instead.
+- **Toast surface uses Liquid Glass** — the toast background is now
+  `.glassEffect(.regular, in: .rect(cornerRadius: 32))` (iOS/macOS/tvOS/watchOS/visionOS 26) instead
+  of the theme-material `RoundedRectangle`; the host gains `CosmosSpacingTokens.medium` padding.
+- **`.error` toast role icon** changed from `xmark.octagon.fill` to `xmark.circle.fill`.
+
 ## [0.5.0] - 2026-07-23
 
 ### Added

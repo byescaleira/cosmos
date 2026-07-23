@@ -114,7 +114,7 @@ wrap a `View`.
 | `CosmosText` | Localized or verbatim text; optional key/verbatim (renders nothing for `nil`). |
 | `CosmosTextField` | `TextFieldStyle`-based. |
 | `CosmosTextEditor` | `TextEditor` wrapper (not on tvOS/watchOS). |
-| `CosmosToast` | `.cosmosToast(isPresented:)` / `.cosmosToast(item:)` presentation modifier; role conveniences build a `CosmosToastContent` (icon + message). |
+| `CosmosToast` | `.cosmosToast(isPresented:)` / `.cosmosToast(item:)` presentation modifier; `CosmosToastContent(role:, title:, description:)` or `CosmosToastContent(role:) { message }` (icon + content, Liquid Glass surface). |
 | `CosmosToggle` | `ToggleStyle`-based. |
 | `CosmosVStack` | `VStack` wrapper spacing children on the 4-pt grid (`CosmosPadding`). |
 

@@ -55,7 +55,7 @@ struct CosmosToastTests {
 
     @Test func roleErrorMapping() {
         let role = CosmosToastRole.error
-        #expect(role.icon == "xmark.octagon.fill")
+        #expect(role.icon == "xmark.circle.fill")
         #expect(role.tint == .error)
         #expect(role.appearHaptic == .error)
     }
@@ -81,28 +81,34 @@ struct CosmosToastTests {
         #expect(CosmosToastRole.success != .error)
     }
 
-    // MARK: - CosmosToastContent — convenience inits construct without crashing
+    // MARK: - CosmosToastContent — inits construct without crashing
 
-    @Test func toastContentLocalizedInitConstructs() {
-        // The localized-key convenience init builds a CosmosText-backed content; value-level
+    @Test func toastContentTitleDescriptionInitConstructs() {
+        // The title/description init stores both strings and a nil message closure; value-level
         // construction only (no ViewInspector / snapshots per the test contract).
-        let content = CosmosToastContent(role: .success, "common.save")
-        _ = content
+        let content = CosmosToastContent<Never>(role: .success, title: "Saved", description: "Added to your library")
         #expect(content.role == .success)
+        #expect(content.title == "Saved")
+        #expect(content.description == "Added to your library")
     }
 
-    @Test func toastContentVerbatimInitConstructs() {
-        let content = CosmosToastContent(role: .warning, verbatim: "Heads up")
-        _ = content
+    @Test func toastContentTitleDescriptionInitAcceptsNilOptionals() {
+        // The title/description init's parameters are optional; a nil description is a valid
+        // construction (the body only renders the title/description stack when both are non-nil).
+        let content = CosmosToastContent<Never>(role: .warning, title: "Heads up", description: nil)
         #expect(content.role == .warning)
+        #expect(content.title == "Heads up")
+        #expect(content.description == nil)
     }
 
     @Test func toastContentCustomMessageConstructs() {
-        // Non-CosmosText message path (custom View).
+        // The @ViewBuilder message path (custom View) leaves title/description nil.
         let content = CosmosToastContent(role: .error) {
             CosmosText(verbatim: "Could not reach the server.")
         }
         #expect(content.role == .error)
+        #expect(content.title == nil)
+        #expect(content.description == nil)
     }
 
     // MARK: - CosmosHapticsFeedback Hashable (added for CosmosToastRole.appearHaptic)

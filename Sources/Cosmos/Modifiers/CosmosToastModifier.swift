@@ -42,7 +42,7 @@ public struct CosmosToastRole: Sendable, Hashable {
     /// Warning (warning tint + `.warning` haptic).
     public static let warning = CosmosToastRole(icon: "exclamationmark.triangle.fill", tint: .warning, appearHaptic: .warning)
     /// Error (error tint + `.error` haptic).
-    public static let error = CosmosToastRole(icon: "xmark.octagon.fill", tint: .error, appearHaptic: .error)
+    public static let error = CosmosToastRole(icon: "xmark.circle.fill", tint: .error, appearHaptic: .error)
 }
 
 /// A transient, non-modal toast presentation with the same binding API as `.sheet` / `.alert`:
@@ -94,13 +94,14 @@ private struct CosmosToastHost<Key: Hashable, ToastContent: View>: View {
         horizontalSizeClass == .regular ? 420 : .infinity
     }
 
+    @ViewBuilder
     var body: some View {
         // Bind Sendable locals before the `.task` closure so it captures these, not `self`
         // (the host is `@MainActor`; a `@Sendable` closure may not capture it).
         let isPresent = presentedKey != nil
         let autoDismissAfter = dismissAfter
         let autoDismiss = dismiss
-        return ZStack(alignment: placement.alignment) {
+        ZStack(alignment: placement.alignment) {
             if presentedKey != nil {
                 toastSurface
                     .id(presentToken)
@@ -120,6 +121,7 @@ private struct CosmosToastHost<Key: Hashable, ToastContent: View>: View {
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: placement.alignment)
         .allowsHitTesting(presentedKey != nil)
+        .padding(CosmosSpacingTokens.medium)
     }
 
     @ViewBuilder
@@ -140,7 +142,7 @@ private struct CosmosToastHost<Key: Hashable, ToastContent: View>: View {
         content()
             .padding(CosmosSpacingTokens.value(for: theme.padding))
             .frame(maxWidth: maxToastWidth, alignment: .leading)
-            .background(toastBackgroundStyle, in: RoundedRectangle(cornerRadius: CosmosRadiusTokens.large, style: .continuous))
+            .glassEffect(.regular, in: .rect(cornerRadius: 32))
             .shadow(
                 color: theme.colors.primary.opacity(shadowHidden ? 0 : theme.motion.shadowOpacity),
                 radius: shadowHidden ? 0 : theme.motion.shadowRadius,
