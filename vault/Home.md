@@ -18,6 +18,10 @@ Synthesis/navigation layer for the [[Cosmos]] SwiftUI design-system library. The
 - `07-metodologia/` — workflows / methods
 - `08-riscos/` — open risks / refuted specs
 
+## Decisions index
+
+- [[adr-atoms-impose-theme-defaults]] — 2026-07-23: atoms impose theme-driven visual defaults; `.cosmosFont`/`.cosmosForegroundStyle`/`.cosmosTint`/`.cosmosControlSize` are subtree overrides (not pass-through). Reverts the interrupted de-styling refactor; resolves the `.cosmosTextEditorStyle` no-op and `CosmosText` vestigial motion. An atom is never pass-through for the tokens its override surface promises.
+
 ## Methodology index
 
 - [[phase4-core-navigation-atoms]] — PHASE4 roadmap restructure: core navigation/layout atoms (Scroll / AsyncImage / Form / Navigation), standing design principles (AnyLayout reflow, Stack↔SplitView identity crux, TabView↔Navigation contract, GroupBox-proven custom-style sub-pattern), waves F–I.
@@ -42,4 +46,5 @@ Synthesis/navigation layer for the [[Cosmos]] SwiftUI design-system library. The
 
 ## Risks index
 
+- [[cosmos-org-audit-2026-07]] — deep organization audit (2026-07): the spine is clean; the "mixed up" feeling comes from one-concept-split-across-folders, empty atomic-design placeholders + stale `ARCHITECTURE.md`, and three competing test-suite axes — plus an interrupted de-styling refactor (no ADR) and a silent no-op `.cosmosTextEditorStyle`. Findings ranked P0/P1/P2 + a 7-step cleanup sequence.
 - [[header-prominence-not-a-real-api]] — PHASE2 §2.13 lists `.headerProminence(_:)`; it does **not** exist in the Xcode 27 SwiftUI SDK (refuted spec).
