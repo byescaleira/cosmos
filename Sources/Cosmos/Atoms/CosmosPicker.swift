@@ -70,6 +70,7 @@ public struct CosmosPicker<Label: View, SelectionValue: Hashable & Sendable, Con
         if configuration.enable.isVisible {
             Picker(selection: selection, content: content, label: label)
                 .modifier(CosmosPickerStyleApplier(style: theme.pickerStyle))
+                .controlSize(theme.controlSize.controlSize)
                 .tint(theme.colors.accent)
                 .applyCosmosAccessibility(configuration.accessibility)
                 .cosmosHaptic(.selection, trigger: selection.wrappedValue)

@@ -2,29 +2,41 @@
 
 ## Overview
 
-Cosmos is a multi-platform SwiftUI design system distributed as an SPM package. It starts with two shared, mutable-by-replacement value types distributed through the SwiftUI `Environment`:
+Cosmos is a multi-platform SwiftUI design system distributed as a single SwiftPM module — one
+`import`, one target, no third-party dependencies. It wraps the native SwiftUI control set so every
+component reads the same global behavior and appearance contracts from the SwiftUI environment,
+instead of carrying per-component state and theme structs.
 
-- `CosmosConfiguration` — cross-cutting **behavior** contracts: accessibility, localization, log, error, loading, enablement, haptics, **motion**, and tracking.
-- `CosmosTheme` — visual **tokens**: colors, typography, spacing, radii, **motion** (springs/durations/transitions), plus component style selectors.
+Three `Sendable` value types flow through the environment as `@Entry` values:
 
-Every component — atom, molecule, or organism — reads both values via the environment.
+- **`CosmosConfiguration`** — nine cross-cutting **behavior** contracts: accessibility,
+  localization, log, error, loading, enable, haptics, **motion**, and tracking.
+- **`CosmosTheme`** — visual **tokens**: colors, typography, spacing, radii, **motion**
+  (springs/durations/transitions), plus the default selector for each component family
+  (`buttonStyle`, `toggleStyle`, `pickerStyle`, …) and a runtime design-language pin (`version`).
+- **`cosmosTrackingId: String?`** — analytics id fallback (defaults to `accessibilityIdentifier`).
+
+Every component reads the relevant subset of these in `body`. Both `CosmosConfiguration` and
+`CosmosTheme` default to sensible values, so every atom renders correctly without explicit
+injection. Override a contract for a subtree and the change propagates to every descendant atom.
 
 ## Goals
 
-1. **Shared foundation first:** every component inherits the same base contract.
-2. **Modularity:** a single `Cosmos` target exposes both the foundation (configuration/theme/tokens under `Sources/Cosmos/Base`) and the full component library (`Atoms`/`Molecules`/…); import only what you use.
-3. **Testability:** value types and plain environment keys are easy to unit-test.
-4. **Maintainability:** atomic design keeps component scope small and composable.
-5. **Concurrency safety:** Swift 6 strict mode; public types are `Sendable`.
-6. **Apple-aligned:** follow SwiftUI, Accessibility, and Localization guidelines.
+1. **Shared foundation first:** every component inherits the same base contracts.
+2. **Single target, single module:** `Base` (foundation) and `Atoms` (component library) live in
+   one `Cosmos` target; import only what you use.
+3. **Testability:** value types and plain environment keys are easy to unit-test off the main actor.
+4. **Concurrency safety:** Swift 6 strict mode; public types are `Sendable`; zero warnings.
+5. **Apple-aligned:** SwiftUI, Accessibility, Localization, and Motion guidelines.
 
 ## Non-goals
 
 - Backwards compatibility with pre-v26 Apple platforms (Cosmos major == OS major; baseline Cosmos 26).
 - UIKit support or any explicit UIKit dependency.
 - Per-component state/theme structs (concerns are global via `@Entry`).
-- Runtime theming engine (static bundles only for now).
-- Component library without a finished base.
+- A data-driven screen engine / JSON renderer (an earlier direction, since discarded — see
+  `ROADMAP.md` and `vault/`).
+- Atomic-design molecules / organisms / screens (folders removed; atoms compose directly).
 
 ## Stack
 
@@ -35,31 +47,37 @@ Every component — atom, molecule, or organism — reads both values via the en
 
 ## Structure
 
+One folder per **kind of thing**, so a file's home is predictable by kind, not by name:
+
 ```
-Cosmos/
-├── Sources/Cosmos/          # Single SPM target
-│   ├── Base/                # Foundation
-│   │   ├── Configuration/   # CosmosConfiguration + contracts
-│   │   ├── Theme/           # CosmosTheme + color/typography/spacing/radius tokens
-│   │   └── Environment/     # @Entry definitions and focused modifiers
-│   ├── Atoms/               # Flat folder: Button, Text, Icon, Image, Label, Link, TextField, Toggle, Progress, Slider, Picker, Stepper, DatePicker, Menu, Badge, Divider, Spacer, Section, List, TabView
-│   ├── Molecules/           # InputRow, ListRow, FormRow, EmptyState, ButtonRow, SearchBar, StatusRow, Card, AlertBanner, LoadingState
-│   └── Screen/              # Data-driven screen assembly
-│       ├── Model/           # CosmosScreen, CosmosComponent
-│       ├── Renderer/        # CosmosScreenRenderer
-│       ├── Registry/        # CosmosActionRegistry
-│       └── Loader/          # CosmosScreenLoader
-└── Tests/
-    └── CosmosTests/           # Base + atom unit tests
+Sources/Cosmos/
+├── Base/
+│   ├── Configuration/   # CosmosConfiguration + the 9 behavior contracts
+│   ├── Theme/           # CosmosTheme + color/typography/spacing/radius/motion tokens
+│   │                    # + style/role selector enums (CosmosButtonStyle, CosmosTabRole, …)
+│   │                    # + CosmosThemeObservable / CosmosVersion / CosmosPlatform
+│   ├── Environment/     # @Entry definitions + env-reading helpers (a11y/haptics/motion)
+│   │                    # + shared runtime singletons (CosmosResources bundle accessor)
+│   └── Preview/         # Preview/mock infrastructure (CosmosMock, CosmosPreviewRNG,
+│                        # CosmosPreviewModifier, CosmosPreviewContainer/Variant)
+├── Atoms/               # Public component Views/Styles (one file per atom;
+│                        # atom-specific chrome/applier/availability co-located in that file)
+├── Modifiers/           # ViewModifiers + the View extensions that apply them (.cosmos*)
+└── Resources/          # Compiled resources (Localizable.xcstrings String Catalog)
 ```
+
+`Tests/CosmosTests/` holds the Swift Testing suites (no UI snapshots, no ViewInspector).
 
 ## Configuration and theme
 
-Both `CosmosConfiguration` and `CosmosTheme` are `Sendable` `struct` value types. Mutations happen by replacement:
+`CosmosConfiguration` and `CosmosTheme` are `Sendable` `struct` value types. Mutations happen by
+replacement:
 
-1. **Replace the whole object** through the environment: `.cosmosConfiguration(newConfig)` or `.cosmosTheme(newTheme)`.
+1. **Replace the whole object** through the environment: `.cosmosConfiguration(newConfig)` or
+   `.cosmosTheme(newTheme)`.
 2. **Mutate a local copy** inside `@State` and re-inject it.
-3. **Apply focused modifiers** to a subtree: `.cosmosEnabled(false)`, `.cosmosLoading(true)`, `.cosmosAccessibilityLabel("Dismiss")`, `.cosmosControlSize(.large)`.
+3. **Apply focused modifiers** to a subtree: `.cosmosEnabled(false)`, `.cosmosLoading(true)`,
+   `.cosmosAccessibilityLabel("Dismiss")`, `.cosmosControlSize(.large)`.
 
 ```swift
 @State private var configuration = CosmosConfiguration.default
@@ -76,134 +94,139 @@ var body: some View {
 }
 ```
 
-This avoids `@Observable` + `@MainActor` friction and keeps the objects testable off the main actor. Atoms have minimal, content-only initializers; state and configuration come from the environment.
-
-`@Entry` (SwiftUI v26) generates the `EnvironmentKey`, `EnvironmentValues` accessor, and view modifier from a single declaration:
+`@Entry` (SwiftUI v26) generates the `EnvironmentKey`, `EnvironmentValues` accessor, and view
+modifier from a single declaration:
 
 ```swift
 extension EnvironmentValues {
     @Entry public var cosmosConfiguration: CosmosConfiguration = .default
     @Entry public var cosmosTheme: CosmosTheme = .default
+    @Entry public var cosmosTrackingId: String? = nil
 }
 ```
 
-Focused modifiers (`.cosmosEnabled`, `.cosmosLoading`, etc.) are implemented as `ViewModifier`s that read the current value from the environment, mutate a copy, and re-inject it with `.environment(_:_:)`. This preserves the upstream configuration while overriding a single field for the subtree.
+Focused modifiers (`.cosmosEnabled`, `.cosmosLoading`, `.cosmosFont`, …) are `ViewModifier`s that read
+the current value from the environment, mutate a copy, and re-inject it with `.environment(\.…, …)`.
+This preserves the upstream value while overriding a single field for the subtree — so overrides are
+**subtree-scoped** and compose with every other selector.
 
 ## Base contracts
 
-All contracts live in `CosmosBase/Configuration` and are owned by `CosmosConfiguration`:
+All contracts live in `Base/Configuration` and are aggregated by `CosmosConfiguration`:
 
 | Contract | Responsibility |
 |---|---|
-| `CosmosAccessibilityConfiguration` | labels, hints, traits, hidden state, sort priority |
-| `CosmosLocalizationConfiguration` | locale, bundle, string/plural resolution |
+| `CosmosAccessibilityConfiguration` | labels, hints, value, traits, custom content, hidden, sort priority, responds-to-user-interaction |
+| `CosmosLocalizationConfiguration` | locale, bundle, string / plural resolution |
 | `CosmosLogConfiguration` | log level, category, event handler |
 | `CosmosErrorConfiguration` | error source, metadata, handler |
 | `CosmosLoadingConfiguration` | loading flag, delay, minimum display time |
 | `CosmosEnableConfiguration` | enabled, visible, read-only flags |
+| `CosmosHapticsConfiguration` | isEnabled, respectReduceMotion, handler (`.sensoryFeedback`) |
+| `CosmosMotionConfiguration` | isEnabled, respectReduceMotion, reduceMotionPolicy, respectReduceTransparency, handler |
+| `CosmosTrackingConfiguration` | isEnabled, track(_:) (componentId = trackingId ?? accessibilityId) |
+
+All `Sendable`; handlers `@Sendable`. Motion is split behavior (`CosmosConfiguration.motion`) /
+visual (`CosmosTheme.motion`) — see `DECISIONS.md` (2026-07-17).
 
 ## Theme tokens
 
-`CosmosBase/Theme` defines semantic token collections:
+`Base/Theme` defines semantic token collections + the style/role selectors atoms pick a default
+look from:
 
-| Token | Responsibility |
+| Token / selector | Responsibility |
 |---|---|
-| `CosmosColorTokens` | primary, secondary, accent, background, surface, success, warning, error |
-| `CosmosTypographyTokens` | largeTitle, title, body, caption, etc. |
-| `CosmosSpacingTokens` | none, xs, small, medium, large, xl, xxl |
+| `CosmosColorTokens` | primary, secondary, accent, background, surface, success, warning, error, outline |
+| `CosmosTypographyTokens` | text-style scale + optional weight/design + optional custom font (system by default) |
+| `CosmosSpacingTokens` | none, xs, small, medium, large, xl, xxl (4-pt grid) |
 | `CosmosRadiusTokens` | none, small, medium, large, full |
+| `CosmosMotionTokens` | spring presets, duration scale, transition / content-transition presets + the `animation(for:reduceMotion:policy:)` resolver |
+| `CosmosTextStyle`, `CosmosButtonStyle`, `CosmosToggleStyle`, `CosmosLabelStyle`, `CosmosProgressStyle`, `CosmosGroupBoxStyle`, `CosmosMenuStyle`, `CosmosPickerStyle`, `CosmosListStyle`, `CosmosTabViewStyle`, `CosmosDatePickerStyle`, `CosmosTextFieldStyle`, `CosmosTextEditorStyle`, `CosmosPadding`, `CosmosControlSize`, `CosmosSpringStyle`, `CosmosTabRole` | default selector per component family, on `CosmosTheme` |
 
-Selectors (`CosmosTextStyle`, `CosmosButtonStyle`, `CosmosIconScale`, `CosmosDividerStyle`, `CosmosPadding`, `CosmosControlSize`) remain on `CosmosTheme` so atoms can pick a default look without exposing raw points.
+## Atoms
 
-## Data-driven screens
+Two shapes, by what the underlying SwiftUI component allows:
 
-The `CosmosScreen` target renders a serializable screen model into SwiftUI:
+- **Style-protocol atoms** (`ButtonStyle`, `ToggleStyle`, `LabelStyle`, `ProgressViewStyle`,
+  `GroupBoxStyle`, `MenuStyle`) adopt the protocol + SE-0299 dot-syntax: `CosmosButton`,
+  `CosmosToggle`, `CosmosLabel`, `CosmosProgress`, `CosmosGroupBox`, `CosmosMenu`.
+- **Wrap-`View` atoms** for the components with no conformable style protocol: `CosmosText`,
+  `CosmosLocalizedText`, `CosmosIcon`, `CosmosAsyncImage`, `CosmosLink`, `CosmosDivider`,
+  `CosmosHStack`, `CosmosVStack`, `CosmosAdaptiveStack`, `CosmosScrollView`, `CosmosSection`,
+  `CosmosList`, `CosmosSelectableList`, `CosmosTabView`, `CosmosTextField`, `CosmosSecureField`,
+  `CosmosTextEditor`, `CosmosSlider`, `CosmosStepper`, `CosmosDatePicker`, `CosmosPicker`,
+  `CosmosCard`, `CosmosToast`.
 
-- `CosmosScreen` — identifier + array of `CosmosComponent`.
-- `CosmosComponent` — `Sendable`, `Codable`, `Equatable` enum covering text, button, icon, image, label, link, textField, toggle, progress, slider, picker, stepper, datePicker, menu, badge, divider, spacer, the three stack axes, list, section, tabView, inputRow, listRow, formRow, emptyState, buttonRow, searchBar, statusRow, card, alertBanner, and loadingState.
-- `CosmosScreenRenderer` — recursive renderer that maps each component case to its atom, wrapped in `AnyView` to break recursive opaque-type inference.
-- `CosmosActionRegistry` — decouples serializable action identifiers from runtime closures.
-- `CosmosScreenLoader` — decodes `CosmosScreen` from JSON using a snake-case decoder.
+Atoms have minimal, content-only initializers; state and configuration come from the environment.
+Input atoms that require `Binding` (`CosmosTextField`, `CosmosToggle`, `CosmosSlider`,
+`CosmosPicker`, …) accept the binding from the caller while still reading enabled/visible/loading
+from `CosmosConfiguration` — behavioral overrides stay environment-driven even where editable
+controls cannot be fully content-only.
 
-This layer lets screens be defined as JSON or server payloads and rendered with the same atoms used by hand-written UI.
+**Atoms impose theme-driven visual defaults and read the relevant tokens in `body`** so the
+`.cosmosFont` / `.cosmosForegroundStyle` / `.cosmosTint` / `.cosmosControlSize` subtree overrides
+reach them. An atom is never pass-through for a token its override surface promises
+(`DECISIONS.md`, 2026-07-23). Raw SwiftUI `.font` / `.foregroundStyle` / `.tint` remain available as
+one-off escape hatches.
 
-## UI testing strategy
+## Cross-cutting integration
 
-Cosmos ships without third-party UI testing dependencies. Visual and structural validation happens through:
+Every atom integrates, where relevant: **accessibility** (label/value/hint/identifier/traits/
+custom content + env gates reduceMotion/reduceTransparency/colorSchemeContrast/
+differentiateWithoutColor + Dynamic Type reflow), **haptics** (`.sensoryFeedback` gated by config +
+reduceMotion), **motion** (`.cosmosAnimation` / `.cosmosTransition` / `.cosmosContentTransition`
+gated by `CosmosMotionPolicy`, never raw `Animation.spring`/`.transition`; symbol effects
+auto-respect Reduce Motion — gated on `isEnabled` only), **localization** (String Catalogs), and
+**tracking** (`CosmosTrackingConfiguration.track(_:)`, opt-in, passive, no network/PII).
 
-- **Swift Testing** — unit tests for models, configuration, theme, and JSON round-trips.
-- **Xcode Previews** — visual regression and state inspection during development.
-- **Catalog app** (planned) — a dedicated `CosmosPreview` executable target that renders every atom and molecule in default, disabled, loading, dark mode, and dynamic-type states.
+## Localization
 
-The project intentionally avoids snapshot and inspection libraries because none are provided by Apple. A future native alternative, if Apple introduces one, will be evaluated without breaking the public API.
+Cosmos uses String Catalogs (`.xcstrings`) compiled via `.process("Resources")` in `Package.swift`
+and resolved with `LocalizedStringResource` / `String(localized:)` / public string-constant symbols.
+`CosmosResources.bundle` (`Bundle.module`) is the compiled resource bundle accessor. Baseline `en`
++ `pt-BR`, extensible. Cosmos ships **no bundled fonts** — it defaults to the system font;
+consumers register custom fonts in their app and pass the PostScript name via `.cosmosFont(_:for:)`.
+
+## Runtime theming
+
+For live-switched theming, `CosmosThemeObservable` is an `@Observable @MainActor` holder injected
+through `.environment(_:)` and read with `@Environment(CosmosThemeObservable.self)` — so mutable
+theme access stays main-actor-isolated (see `DECISIONS.md`).
+
+## UI validation
+
+No third-party UI testing dependencies (none provided by Apple). Validation runs through:
+
+- **Swift Testing** — unit tests for tokens, configuration, theme, motion policy, and atom
+  construction/behavior (`Tests/CosmosTests/`).
+- **Co-located `#Preview(_:traits:)`** — visual + state inspection at the bottom of each atom file
+  (default / dark / Dynamic Type accessibility / landscape / RTL / per-platform), using
+  `.cosmosPreviewEnv(…)` / `.cosmosPreviewVariant(…)` / `CosmosPreviewModifier`. The deprecated
+  `.previewDevice` / `.previewLayout` / `.previewDisplayName` / `.previewInterfaceOrientation` /
+  `.previewContext` modifiers are not used.
+- **`CosmosMock`** — deterministic mock data (seeded `CosmosPreviewRNG` SplitMix64) for previews/tests.
 
 ## Conventions
 
 - All public types are prefixed with `Cosmos`.
-- Base contracts live in `CosmosBase`; components live in `Cosmos`.
 - Components read configuration and theme from the environment; they do not own it.
-- Atom initializers accept only content (text, label view, icon name). State, configuration, and theme are environment-driven.
-- Previews are co-located with components using `#Preview`.
-- Every public component has a Swift Testing unit test or a visible preview in the catalog app.
-
-## Image loading
-
-`CosmosImage` is the most complex atom because it supports multiple sources:
-
-- **Resource bundle assets** via `Image(_:bundle:)`.
-- **SF Symbols** via `Image(systemName:)`.
-- **Remote URLs** via `AsyncImage`, accepting both `URL` and `String` forms.
-
-Remote images use SwiftUI's shared URL cache by default; the component exposes
-a `contentShape` placeholder for loading and failure states, and automatically
-applies placeholder effects when the environment reports `isLoading`.
-
-## Input atoms
-
-`CosmosTextField`, `CosmosToggle`, `CosmosSlider`, and `CosmosPicker` require
-`Binding` values because their state is inherently owned by the caller. They
-still read their enabled/visible/loading state from `CosmosConfiguration`,
-keeping behavioral overrides environment-driven while acknowledging that
-editable controls cannot be fully content-only.
-
-## Container atoms
-
-Three atoms manage child layout and selection:
-
-- `CosmosSection<Header, Footer, Content>` — wraps SwiftUI `Section` with optional header and footer.
-- `CosmosList` — wraps SwiftUI `List`, supports multi-selection via `Binding<Set<String>>`, and maps `CosmosListStyle` to native `ListStyle` values. The `.grouped` and `.insetGrouped` styles are unavailable on macOS, so they fall back to `.automatic` at compile time.
-- `CosmosTabView` — adaptive tab container. On `.compact` horizontal size classes it renders a `TabView`; on `.regular` it renders a `NavigationSplitView` sidebar. The adaptive behavior can be overridden via the `.cosmosTabAdaptiveStrategy(_:)` environment value.
-
-These atoms stay native-first: they use SwiftUI primitives and size classes rather than orientation or idiom checks, aligning with the iOS 27 resizable-app guidance.
-
-## Molecules
-
-Molecules are small, recognizable combinations of atoms:
-
-- `CosmosInputRow` — `CosmosLabel` + `CosmosTextField` for labeled form inputs.
-- `CosmosListRow` — icon + title/subtitle + trailing element (`none`, `badge`, `chevron`, `text`) for list content.
-- `CosmosFormRow` — `CosmosLabel` + trailing control (`toggle`, `picker`, `stepper`, `slider`, `value`) for settings rows.
-- `CosmosEmptyState` — image + title + subtitle + button for empty/error/onboarding placeholders.
-- `CosmosButtonRow` — full-width icon + text button for primary CTAs and list-style actions.
-- `CosmosSearchBar` — search icon + text field + clear button with rounded surface background.
-- `CosmosStatusRow` — icon/image + title/subtitle + optional badge for status and notification rows.
-- `CosmosCard` — optional image + title + subtitle + badge + button for content cards.
-- `CosmosAlertBanner` — icon + title + optional action button with info/success/warning/error variants.
-- `CosmosLoadingState` — progress indicator + optional title/subtitle for loading placeholders.
-
-Interactive molecules accept `Binding` values in Swift code. In `CosmosScreen` JSON the renderer creates a local `@State` wrapper initialized from the model's `initialValue` and dispatches actions through `CosmosActionRegistry` when the value changes. This keeps JSON declarative while supporting live controls. Non-interactive molecules such as `CosmosStatusRow`, `CosmosCard`, `CosmosAlertBanner`, and `CosmosLoadingState` are rendered directly from their models.
-
-## Dependencies
-
-- None at runtime.
-- Swift Testing is part of the Swift toolchain.
+- Atom initializers accept only content; state, configuration, and theme are environment-driven.
+- Custom fonts use `Font.custom(_:size:relativeTo:)` — always `relativeTo:` so Dynamic Type scales.
+- No `UIKit` symbols are authored (haptics via `.sensoryFeedback`; fonts via CoreText; colors via
+  SwiftUI `Color`). SwiftUI APIs that wrap UIKit internally are acceptable.
+- `#if os()` gates platform-absent components; `if #available` for above-floor features is
+  centralized and mirrors the SDK `@available` it guards.
+- Deprecate with `@available(*, deprecated, message:)` + a migration runway before obsoletion
+  (`VERSIONING.md`); record changes in `CHANGELOG.md`.
 
 ## Targets
 
-`Cosmos` ships as a single SPM target. Consumers import one module:
+`Cosmos` ships as a single SPM target on iOS / macOS / tvOS / watchOS / visionOS — all at `.v26`.
+Consumers import one module:
 
 ```swift
 import Cosmos
 ```
 
-This keeps the public surface simple while still organizing code internally as `Base`, `Atoms`, `Molecules`, and `Screen`.
+See `DECISIONS.md` for the architectural decisions, `VERSIONING.md` for the versioning policy, and
+`vault/` for the research / decision synthesis layer.

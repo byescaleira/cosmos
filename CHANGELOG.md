@@ -7,8 +7,39 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.6.0] - 2026-07-23
+
 ### Added
-- _Nothing yet._
+- **`CosmosHStack` / `CosmosVStack`** — drop-in `HStack` / `VStack` wrappers whose spacing is a
+  `CosmosPadding` selector resolved through `CosmosSpacingTokens.value(for:)`, so layouts never
+  hardcode raw point values. Content-only init with `alignment` (default `.center`) and `spacing`
+  (default `.medium` → 12 pt); pass `.none` to use the system stack default. Available on all five
+  platforms at `.v26`.
+
+### Changed
+- **`CosmosToastContent` reworked** — now offers `init(role:title:description:)` (icon + a
+  title/description stack) and `init(role:message:)` (`@ViewBuilder`). The previous `role:` +
+  localized-key and `role:verbatim:` convenience inits (which built a `CosmosText` message) are
+  removed; pass `CosmosText(verbatim:)` / `CosmosText(_:)` in the `message:` closure instead.
+- **Toast surface uses Liquid Glass** — the toast background is now
+  `.glassEffect(.regular, in: .rect(cornerRadius: 32))` (iOS/macOS/tvOS/watchOS/visionOS 26) instead
+  of the theme-material `RoundedRectangle`; the host gains `CosmosSpacingTokens.medium` padding.
+- **`.error` toast role icon** changed from `xmark.octagon.fill` to `xmark.circle.fill`.
+- **Reduce-transparency collapse is now policy-aware.** The previously-declared-but-unread
+  `CosmosMotionConfiguration.reduceTransparencyPolicy` is now wired through a new
+  `CosmosMotionPolicy.shouldCollapseTransparency(…)` chokepoint (mirrors `shouldEmit`): `.substitute`
+  (default) collapses materials/shadows to solid tokens when Reduce Transparency is active and
+  respected; `.preserve` keeps materials. CosmosCard, CosmosToast, and CosmosProgress route through
+  it. Non-breaking — the default-config behavior is unchanged.
+- **`.cosmosStagger` now reads `CosmosMotionConfiguration.stagger` as its fallback.** The
+  `step` / `maxSteps` parameters are now `Optional` with `nil` defaulting to the configured
+  `CosmosStaggerConfig` (previously the modifier took its own defaults and ignored the config
+  field). Source-compatible — the config default matches the prior defaults.
+
+### Fixed
+- **`.cosmosControlSize` was silently ignored on `CosmosPicker`, `CosmosDatePicker`, and
+  `CosmosTabView`.** They now apply `.controlSize(theme.controlSize.controlSize)` like the other
+  controls (Button/Toggle/Slider/Stepper/Menu).
 
 ## [0.5.0] - 2026-07-23
 

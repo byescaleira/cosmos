@@ -17,11 +17,16 @@ public struct CosmosCard<Header: View, Body: View, Footer: View>: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.accessibilityReduceTransparency) private var reduceTransparency
 
-    /// Shadow is suppressed when reduce-transparency is active *and* respected by config, or
-    /// when reduce-motion is active. Config-aware (not the bare env value); tokens replace the
-    /// hardcoded `0.08`/`8` from the pre-motion implementation.
+    /// Shadow is suppressed when reduce-transparency collapses materials (config- and
+    /// policy-aware via ``CosmosMotionPolicy/shouldCollapseTransparency``), or when reduce-motion
+    /// is active. Config-aware (not the bare env value); tokens replace the hardcoded
+    /// `0.08`/`8` from the pre-motion implementation.
     private var shadowHidden: Bool {
-        (reduceTransparency && configuration.motion.respectReduceTransparency) || reduceMotion
+        CosmosMotionPolicy.shouldCollapseTransparency(
+            respectReduceTransparency: configuration.motion.respectReduceTransparency,
+            reduceTransparency: reduceTransparency,
+            policy: configuration.motion.reduceTransparencyPolicy
+        ) || reduceMotion
     }
 
     public init(

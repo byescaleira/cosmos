@@ -44,7 +44,7 @@ Add Cosmos to your `Package.swift`:
 
 ```swift
 dependencies: [
-    .package(url: "https://github.com/byescaleira/cosmos.git", from: "0.5.0")
+    .package(url: "https://github.com/byescaleira/cosmos.git", from: "0.6.0")
 ]
 ```
 
@@ -91,16 +91,20 @@ wrap a `View`.
 
 | Atom | Notes |
 |---|---|
+| `CosmosAdaptiveStack` | Reflows between `HStack` / `VStack` by size class + Dynamic Type, preserving view identity across rotation. |
+| `CosmosAsyncImage` | `AsyncImage` wrapper; placeholder / error / retry slots, retry via `.id`, OS-27 cache surface opt-in. |
 | `CosmosButton` | `ButtonStyle`-based; glass variant available on iOS 26. |
 | `CosmosCard` | Header / body / footer slots. |
 | `CosmosDatePicker` | `DatePicker` wrapper; gated on platforms where it exists. |
-| `CosmosDivider` | Theme-tinted divider. |
+| `CosmosDivider` | Native `Divider` wrapper; decorative, axis inferred from the enclosing stack. Not recolored (`Divider` ignores foreground/background). |
 | `CosmosGroupBox` | Custom `GroupBoxStyle` chrome via theme tokens. |
+| `CosmosHStack` | `HStack` wrapper spacing children on the 4-pt grid (`CosmosPadding`). |
 | `CosmosIcon` | SF Symbol wrapper. |
 | `CosmosLabel` | `LabelStyle`-based. |
 | `CosmosLink` | `Link` wrapper. |
 | `CosmosList` | `List` wrapper with theme list style. |
 | `CosmosSelectableList` | `List(selection:)` wrapper (single or multi). |
+| `CosmosScrollView` | `ScrollView` wrapper; programmatic scroll via `ScrollViewReader` + `CosmosScrollAnchor`. |
 | `CosmosLocalizedText` | Resolves a `LocalizedStringResource`. |
 | `CosmosMenu` | `MenuStyle`-based. |
 | `CosmosPicker` | `PickerStyle`-based; `.tabs` available since Cosmos 27. |
@@ -113,8 +117,9 @@ wrap a `View`.
 | `CosmosText` | Localized or verbatim text; optional key/verbatim (renders nothing for `nil`). |
 | `CosmosTextField` | `TextFieldStyle`-based. |
 | `CosmosTextEditor` | `TextEditor` wrapper (not on tvOS/watchOS). |
-| `CosmosToast` | `.cosmosToast(isPresented:)` / `.cosmosToast(item:)` presentation modifier; role conveniences build a `CosmosToastContent` (icon + message). |
+| `CosmosToast` | `.cosmosToast(isPresented:)` / `.cosmosToast(item:)` presentation modifier; `CosmosToastContent(role:, title:, description:)` or `CosmosToastContent(role:) { message }` (icon + content, Liquid Glass surface). |
 | `CosmosToggle` | `ToggleStyle`-based. |
+| `CosmosVStack` | `VStack` wrapper spacing children on the 4-pt grid (`CosmosPadding`). |
 
 ## Behavior and appearance
 

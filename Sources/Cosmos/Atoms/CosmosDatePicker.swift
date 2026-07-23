@@ -102,6 +102,7 @@ public struct CosmosDatePicker<Label: View>: View {
         if configuration.enable.isVisible {
             datePicker
                 .modifier(CosmosDatePickerStyleApplier(style: theme.datePickerStyle))
+                .controlSize(theme.controlSize.controlSize)
                 .tint(theme.colors.accent)
                 .applyCosmosAccessibility(configuration.accessibility)
                 .cosmosContentTransition(.numeric)
