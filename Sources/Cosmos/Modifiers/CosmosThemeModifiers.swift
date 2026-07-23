@@ -113,6 +113,31 @@ private struct CosmosCustomFontModifier: ViewModifier {
     func body(content: Content) -> some View { content.environment(\.cosmosTheme, theme.withCustomFont(name)) }
 }
 
+/// Overrides a single semantic color token of `theme.colors` for the subtree (mirrors the
+/// per-selector `.cosmos*` pattern: read the env theme, mutate one token, re-inject). The token
+/// enum is file-private so the public surface is the nine `.cosmos<Color>(_:)` funcs only.
+private struct CosmosColorTokenModifier: ViewModifier {
+    enum Token { case accent, primary, secondary, background, surface, success, warning, error, outline }
+    let token: Token
+    let color: Color
+    @Environment(\.cosmosTheme) private var theme
+    func body(content: Content) -> some View {
+        var colors = theme.colors
+        switch token {
+        case .accent: colors.accent = color
+        case .primary: colors.primary = color
+        case .secondary: colors.secondary = color
+        case .background: colors.background = color
+        case .surface: colors.surface = color
+        case .success: colors.success = color
+        case .warning: colors.warning = color
+        case .error: colors.error = color
+        case .outline: colors.outline = color
+        }
+        return content.environment(\.cosmosTheme, theme.withColors(colors))
+    }
+}
+
 private struct CosmosMotionTokensModifier: ViewModifier {
     let tokens: CosmosMotionTokens
     @Environment(\.cosmosTheme) private var theme
@@ -171,6 +196,24 @@ extension View {
     /// to return to the system font. The font must be registered in your app; resolution uses
     /// `Font.custom(_:size:relativeTo:)` so Dynamic Type still scales.
     public func cosmosCustomFont(_ name: String?) -> some View { modifier(CosmosCustomFontModifier(name: name)) }
+    /// Overrides the accent/tint color token for descendant components.
+    public func cosmosAccent(_ color: Color) -> some View { modifier(CosmosColorTokenModifier(token: .accent, color: color)) }
+    /// Overrides the primary foreground color token for descendant components.
+    public func cosmosPrimary(_ color: Color) -> some View { modifier(CosmosColorTokenModifier(token: .primary, color: color)) }
+    /// Overrides the secondary foreground color token for descendant components.
+    public func cosmosSecondary(_ color: Color) -> some View { modifier(CosmosColorTokenModifier(token: .secondary, color: color)) }
+    /// Overrides the root background color token for descendant components.
+    public func cosmosBackground(_ color: Color) -> some View { modifier(CosmosColorTokenModifier(token: .background, color: color)) }
+    /// Overrides the elevated surface color token for descendant components.
+    public func cosmosSurface(_ color: Color) -> some View { modifier(CosmosColorTokenModifier(token: .surface, color: color)) }
+    /// Overrides the success state color token for descendant components.
+    public func cosmosSuccess(_ color: Color) -> some View { modifier(CosmosColorTokenModifier(token: .success, color: color)) }
+    /// Overrides the warning state color token for descendant components.
+    public func cosmosWarning(_ color: Color) -> some View { modifier(CosmosColorTokenModifier(token: .warning, color: color)) }
+    /// Overrides the error/destructive state color token for descendant components.
+    public func cosmosError(_ color: Color) -> some View { modifier(CosmosColorTokenModifier(token: .error, color: color)) }
+    /// Overrides the outline/hairline color token for descendant components.
+    public func cosmosOutline(_ color: Color) -> some View { modifier(CosmosColorTokenModifier(token: .outline, color: color)) }
     /// Overrides the motion tokens (visual) for descendant components.
     public func cosmosMotionTokens(_ tokens: CosmosMotionTokens) -> some View { modifier(CosmosMotionTokensModifier(tokens: tokens)) }
     /// Overrides the default spring style for descendant components.

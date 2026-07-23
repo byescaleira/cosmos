@@ -2,6 +2,7 @@ import Testing
 import SwiftUI
 @testable import Cosmos
 
+@MainActor
 @Suite("CosmosToast (Wave H)")
 struct CosmosToastTests {
 

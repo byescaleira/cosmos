@@ -171,6 +171,27 @@ Available selectors include `.cosmosButtonStyle`, `.cosmosToggleStyle`,
 `.cosmosTextEditorStyle`, `.cosmosControlSize`, `.cosmosTextStyle`, and
 `.cosmosPadding`.
 
+#### Override a single color token
+
+You don't need to rebuild a whole `CosmosTheme` to re-skin one color. Each
+semantic color token has its own subtree-scoped modifier:
+
+```swift
+VStack {
+    CosmosButton("Delete") { delete() }
+}
+.cosmosBackground(.black)        // root background token
+.cosmosError(.red)              // error/destructive state token
+.cosmosAccent(.yellow)          // accent/tint token
+```
+
+The nine tokens map to `theme.colors` fields: `.cosmosAccent`, `.cosmosPrimary`,
+`.cosmosSecondary`, `.cosmosBackground`, `.cosmosSurface`, `.cosmosSuccess`,
+`.cosmosWarning`, `.cosmosError`, `.cosmosOutline`. Each reads the env theme,
+mutates one `CosmosColorTokens` field, and re-injects — the same pattern as the
+other `.cosmos*` selectors, so the override applies to descendants only and
+composes with every other selector.
+
 ### Cross-cutting features
 
 Each atom integrates accessibility, haptics, motion, localization, and

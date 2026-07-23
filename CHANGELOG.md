@@ -8,7 +8,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
-- _Nothing yet._
+- **Per-token color overrides** — nine subtree-scoped modifiers that override a single semantic
+  color token of `theme.colors` without rebuilding the whole theme: `.cosmosAccent(_:)`,
+  `.cosmosPrimary(_:)`, `.cosmosSecondary(_:)`, `.cosmosBackground(_:)`, `.cosmosSurface(_:)`,
+  `.cosmosSuccess(_:)`, `.cosmosWarning(_:)`, `.cosmosError(_:)`, `.cosmosOutline(_:)`. Each reads
+  the env theme, mutates one `CosmosColorTokens` field, and re-injects — the same pattern as the
+  existing `.cosmos*` selectors. Closes the gap where customizing a color required hand-building a
+  full `CosmosTheme` (control size, semantic text style, and custom font already had direct
+  modifiers; colors and custom typography did not). `CosmosColorTokenModifier` (private) backs
+  all nine; the public surface is the nine `.cosmos<Color>(_:)` funcs.
 
 ## [0.3.0] - 2026-07-22
 
