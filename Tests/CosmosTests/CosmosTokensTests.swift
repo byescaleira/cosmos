@@ -22,6 +22,34 @@ struct CosmosTokensTests {
         #expect(CosmosSpacingTokens.xxl == 32)
     }
 
+    // MARK: Padding edges
+
+    @Test func paddingAllCases() {
+        #expect(CosmosPadding.allCases == [.none, .xs, .small, .medium, .large, .xl, .xxl])
+    }
+
+    @Test func paddingEdgesAllCases() {
+        #expect(CosmosPaddingEdges.allCases == [.all, .horizontal, .vertical, .top, .bottom, .leading, .trailing])
+    }
+
+    @Test func paddingEdgesMapToSwiftUISet() {
+        // The edge enum mirrors SwiftUI's Edge.Set so `.cosmosPadding(.horizontal, .large)`
+        // routes to `.padding(.horizontal, value)`.
+        #expect(CosmosPaddingEdges.all.edgeSet == .all)
+        #expect(CosmosPaddingEdges.horizontal.edgeSet == .horizontal)
+        #expect(CosmosPaddingEdges.vertical.edgeSet == .vertical)
+        #expect(CosmosPaddingEdges.top.edgeSet == .top)
+        #expect(CosmosPaddingEdges.bottom.edgeSet == .bottom)
+        #expect(CosmosPaddingEdges.leading.edgeSet == .leading)
+        #expect(CosmosPaddingEdges.trailing.edgeSet == .trailing)
+    }
+
+    @Test func paddingEdgesHashable() {
+        #expect(Set(CosmosPaddingEdges.allCases).count == 7)
+        #expect(CosmosPaddingEdges.horizontal == .horizontal)
+        #expect(CosmosPaddingEdges.horizontal != .vertical)
+    }
+
     // MARK: Radius
 
     @Test func radiusTokens() {

@@ -94,6 +94,19 @@ private struct CosmosPaddingModifier: ViewModifier {
     func body(content: Content) -> some View { content.environment(\.cosmosTheme, theme.withPadding(padding)) }
 }
 
+/// Applies a token-scaled padding to a specific edge set directly (not a theme default override).
+/// `.cosmosPadding(.large)` (single-arg) overrides the **default** padding selector for
+/// descendants; `.cosmosPadding(.horizontal, .large)` (edge form) **applies** `large` to the
+/// horizontal edges of this view, resolved through `CosmosSpacingTokens.value(for:)` — so a
+/// per-edge padding stays on the 4-pt grid without raw points.
+private struct CosmosPaddingEdgesModifier: ViewModifier {
+    let edges: CosmosPaddingEdges
+    let padding: CosmosPadding
+    func body(content: Content) -> some View {
+        content.padding(edges.edgeSet, CosmosSpacingTokens.value(for: padding))
+    }
+}
+
 private struct CosmosCustomFontModifier: ViewModifier {
     let name: String?
     @Environment(\.cosmosTheme) private var theme
@@ -147,6 +160,13 @@ extension View {
     public func cosmosTextStyle(_ style: CosmosTextStyle) -> some View { modifier(CosmosTextStyleModifier(style: style)) }
     /// Overrides the default padding selector for descendant components.
     public func cosmosPadding(_ padding: CosmosPadding) -> some View { modifier(CosmosPaddingModifier(padding: padding)) }
+    /// Applies a token-scaled padding to the given edges of this view (resolved through
+    /// `CosmosSpacingTokens.value(for:)`), so a per-edge padding stays on the 4-pt grid without
+    /// raw points. Unlike the single-arg ``cosmosPadding(_:)-5htpt`` (which overrides the default
+    /// padding selector for descendants), this form applies padding directly to the modified view.
+    public func cosmosPadding(_ edges: CosmosPaddingEdges, _ padding: CosmosPadding) -> some View {
+        modifier(CosmosPaddingEdgesModifier(edges: edges, padding: padding))
+    }
     /// Overrides the font for descendant components with a custom font's PostScript name, or `nil`
     /// to return to the system font. The font must be registered in your app; resolution uses
     /// `Font.custom(_:size:relativeTo:)` so Dynamic Type still scales.

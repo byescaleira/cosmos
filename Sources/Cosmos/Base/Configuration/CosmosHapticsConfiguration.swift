@@ -11,7 +11,7 @@ public enum CosmosHapticsWeight: String, Sendable, Codable, CaseIterable {
 }
 
 /// A haptic feedback emission, for tracking/logging when a haptic fires.
-public enum CosmosHapticsFeedback: Sendable {
+public enum CosmosHapticsFeedback: Sendable, Hashable {
     case impact(weight: CosmosHapticsWeight, intensity: Double?)
     case selection
     case success
