@@ -81,17 +81,17 @@ public struct CosmosText: View {
 
 #Preview("Text styles") {
     VStack(alignment: .leading, spacing: 8) {
-        CosmosText("preview.title").cosmosTextStyle(.largeTitle)
-        CosmosText("preview.description").cosmosTextStyle(.body)
-        CosmosText(verbatim: "JetBrains Mono").cosmosTextStyle(.body).cosmosCustomFont("JetBrainsMono-Regular")
+        CosmosText("preview.title").cosmosFont(.largeTitle)
+        CosmosText("preview.description").cosmosFont(.body)
+        CosmosText(verbatim: "JetBrains Mono").cosmosFont(.body).cosmosFont("JetBrainsMono-Regular")
     }
     .padding()
 }
 
 #Preview("Dark + accessibility size") {
     VStack(alignment: .leading, spacing: 8) {
-        CosmosText("preview.title").cosmosTextStyle(.title)
-        CosmosText("preview.description").cosmosTextStyle(.body)
+        CosmosText("preview.title").cosmosFont(.title)
+        CosmosText("preview.description").cosmosFont(.body)
     }
     .padding()
     .preferredColorScheme(.dark)
@@ -100,8 +100,8 @@ public struct CosmosText: View {
 
 #Preview("Languages") {
     VStack(alignment: .leading, spacing: 8) {
-        CosmosText("welcome.headline").cosmosTextStyle(.headline)
-        CosmosText("preview.name").cosmosTextStyle(.body)
+        CosmosText("welcome.headline").cosmosFont(.headline)
+        CosmosText("preview.name").cosmosFont(.body)
     }
     .padding()
     .environment(\.locale, Locale(identifier: "pt-BR"))
@@ -110,9 +110,9 @@ public struct CosmosText: View {
 #Preview("Mock data – randomized strings", traits: .sizeThatFitsLayout) {
     CosmosPreviewContainer {
         VStack(alignment: .leading, spacing: 8) {
-            CosmosText(verbatim: CosmosMock.personName()).cosmosTextStyle(.headline)
-            CosmosText(verbatim: CosmosMock.email()).cosmosTextStyle(.body)
-            CosmosText(verbatim: CosmosMock.lorem(paragraphs: 1)).cosmosTextStyle(.body)
+            CosmosText(verbatim: CosmosMock.personName()).cosmosFont(.headline)
+            CosmosText(verbatim: CosmosMock.email()).cosmosFont(.body)
+            CosmosText(verbatim: CosmosMock.lorem(paragraphs: 1)).cosmosFont(.body)
         }
         .padding()
     }

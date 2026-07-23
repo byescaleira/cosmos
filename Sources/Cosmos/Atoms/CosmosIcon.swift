@@ -87,10 +87,10 @@ extension CosmosIcon where Icon == Image {
 
 #Preview("Icon – SF Symbols + text styles") {
     VStack(spacing: 12) {
-        CosmosIcon(systemName: "star.fill").cosmosTextStyle(.largeTitle)
-        CosmosIcon(systemName: "gearshape").cosmosTextStyle(.title)
-        CosmosIcon(systemName: "bell.badge.fill").cosmosTextStyle(.headline)
-        CosmosIcon(systemName: "battery.25", variableValue: 0.25).cosmosTextStyle(.title)
+        CosmosIcon(systemName: "star.fill").cosmosFont(.largeTitle)
+        CosmosIcon(systemName: "gearshape").cosmosFont(.title)
+        CosmosIcon(systemName: "bell.badge.fill").cosmosFont(.headline)
+        CosmosIcon(systemName: "battery.25", variableValue: 0.25).cosmosFont(.title)
     }
     .padding()
 }
@@ -112,11 +112,11 @@ extension CosmosIcon where Icon == Image {
     CosmosPreviewContainer {
         VStack(spacing: 12) {
             CosmosIcon(systemName: "wand.and.stars")
-                .cosmosTextStyle(.title)
+                .cosmosFont(.title)
                 .cosmosAccessibilityLabel("Magic")
-            CosmosIcon(systemName: "sparkles").cosmosTextStyle(.headline)
+            CosmosIcon(systemName: "sparkles").cosmosFont(.headline)
             CosmosIcon { Image(systemName: "trophy.fill").foregroundStyle(.yellow) }
-                .cosmosTextStyle(.largeTitle)
+                .cosmosFont(.largeTitle)
         }
         .padding()
         .cosmosPreviewVariant(.dark)

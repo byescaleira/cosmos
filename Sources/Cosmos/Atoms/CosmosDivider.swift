@@ -36,18 +36,18 @@ public struct CosmosDivider: View {
 
 #Preview("Divider – between content") {
     VStack(alignment: .leading, spacing: 12) {
-        CosmosText("preview.title").cosmosTextStyle(.headline)
+        CosmosText("preview.title").cosmosFont(.headline)
         CosmosDivider()
-        CosmosText("preview.description").cosmosTextStyle(.body)
+        CosmosText("preview.description").cosmosFont(.body)
     }
     .padding()
 }
 
 #Preview("Divider – in an HStack (vertical axis)") {
     HStack(spacing: 12) {
-        CosmosText("preview.name").cosmosTextStyle(.body)
+        CosmosText("preview.name").cosmosFont(.body)
         CosmosDivider()
-        CosmosText("preview.name").cosmosTextStyle(.body)
+        CosmosText("preview.name").cosmosFont(.body)
     }
     .padding()
 }
@@ -55,9 +55,9 @@ public struct CosmosDivider: View {
 #Preview("Divider – dark + accessibility size", traits: .sizeThatFitsLayout) {
     CosmosPreviewContainer {
         VStack(alignment: .leading, spacing: 12) {
-            CosmosText("welcome.headline").cosmosTextStyle(.headline)
+            CosmosText("welcome.headline").cosmosFont(.headline)
             CosmosDivider()
-            CosmosText("preview.description").cosmosTextStyle(.body)
+            CosmosText("preview.description").cosmosFont(.body)
         }
         .padding()
         .cosmosPreviewVariant(.dark)

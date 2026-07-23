@@ -44,7 +44,7 @@ Add Cosmos to your `Package.swift`:
 
 ```swift
 dependencies: [
-    .package(url: "https://github.com/byescaleira/cosmos.git", from: "0.4.0")
+    .package(url: "https://github.com/byescaleira/cosmos.git", from: "0.5.0")
 ]
 ```
 
@@ -146,9 +146,29 @@ VStack {
 }
 .cosmosButtonStyle(.glass)      // visual token
 .cosmosControlSize(.large)
-.cosmosTextStyle(.headline)
+.cosmosFont(.headline)          // typography (style + weight + design)
 .cosmosPadding(.large)
 ```
+
+#### SwiftUI-shaped typography, tint & foreground
+
+`.cosmosFont`, `.cosmosTint`, and `.cosmosForegroundStyle` mirror SwiftUI's own modifier names, so
+you can re-skin a subtree without building a whole `CosmosTheme`. They override the relevant
+`cosmosTheme` tokens for descendants (and compose with every other selector):
+
+```swift
+VStack {
+    CosmosButton("Save") { save() }
+}
+.cosmosFont(.body, weight: .bold, design: .rounded)   // style + weight + design
+.cosmosTint(.purple)                                  // accent/tint token (alias of .cosmosAccent)
+.cosmosForegroundStyle(.white)                        // primary foreground (alias of .cosmosPrimary)
+```
+
+`.cosmosFont(_:weight:design:)` uses the system font and honors Dynamic Type; a `nil` weight/design
+falls back to SwiftUI's defaults. For a custom font, use the `.cosmosFont(_:for:)` overload with the
+font's PostScript name (it resolves via `Font.custom(_:size:relativeTo:)`, so Dynamic Type still
+scales): `.cosmosFont("DMSans-Regular", for: .body)`.
 
 `.cosmosPadding(_:)` overrides the default padding selector for descendants. To apply a
 token-scaled padding to a specific edge set directly, use the edge form
@@ -168,8 +188,9 @@ Available selectors include `.cosmosButtonStyle`, `.cosmosToggleStyle`,
 `.cosmosPickerStyle`, `.cosmosListStyle`, `.cosmosTabViewStyle`,
 `.cosmosDatePickerStyle`, `.cosmosMenuStyle`, `.cosmosGroupBoxStyle`,
 `.cosmosLabelStyle`, `.cosmosProgressStyle`, `.cosmosTextFieldStyle`,
-`.cosmosTextEditorStyle`, `.cosmosControlSize`, `.cosmosTextStyle`, and
-`.cosmosPadding`.
+`.cosmosTextEditorStyle`, `.cosmosControlSize`, `.cosmosFont` (and the SwiftUI
+aliases `.cosmosTint` / `.cosmosForegroundStyle`), and `.cosmosPadding`.
+`.cosmosTextStyle` and `.cosmosCustomFont` are deprecated in favor of `.cosmosFont`.
 
 #### Override a single color token
 
@@ -283,11 +304,11 @@ Then opt in at the theme level. Pass `nil` to return to the system font:
 ```swift
 // At the root of your view tree:
 ContentView()
-    .cosmosCustomFont("DMSans-Regular")
+    .cosmosFont("DMSans-Regular")            // custom font at .body; pass nil to return to system
 
 // Or on a subtree:
 VStack { CosmosText("Headline") }
-    .cosmosCustomFont("DMSans-Regular")
+    .cosmosFont("DMSans-Regular", for: .headline)
 
 // Programmatically on the theme value:
 let theme = CosmosTheme.default.withCustomFont("DMSans-Regular")

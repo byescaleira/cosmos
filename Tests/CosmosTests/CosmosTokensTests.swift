@@ -1,5 +1,6 @@
 import Testing
 import Foundation
+import SwiftUI
 @testable import Cosmos
 
 @Suite("Tokens")
@@ -74,6 +75,48 @@ struct CosmosTokensTests {
         for style in CosmosTextStyle.allCases {
             _ = CosmosTypographyTokens.default.font(for: style)
         }
+    }
+
+    // MARK: Typography — weight/design overrides (.cosmosFont backing tokens)
+
+    @Test func typographyDefaultsAreNil() {
+        #expect(CosmosTypographyTokens.default.weight == nil)
+        #expect(CosmosTypographyTokens.default.design == nil)
+        #expect(CosmosTypographyTokens.default.customFontName == nil)
+    }
+
+    @Test func typographyInitsCarryWeightDesign() {
+        let system = CosmosTypographyTokens(preset: .default, weight: .bold, design: .rounded)
+        #expect(system.weight == .bold)
+        #expect(system.design == .rounded)
+        #expect(system.customFontName == nil)
+        let custom = CosmosTypographyTokens(customFont: "DMSans-Bold", weight: .semibold, design: .serif)
+        #expect(custom.customFontName == "DMSans-Bold")
+        // weight/design are accepted on the custom path for completeness (ignored by the resolver).
+        #expect(custom.weight == .semibold)
+        #expect(custom.design == .serif)
+    }
+
+    @Test func typographySystemResolverHonorsWeightAndDesign() {
+        // Value-level: the resolver returns a Font for every (style, weight, design) combination
+        // without crashing. (Font equality is not inspectable; we exercise construction only.)
+        for style in CosmosTextStyle.allCases {
+            for weight: Font.Weight? in [.regular, .bold, .semibold, .heavy, nil] {
+                for design: Font.Design? in [.default, .rounded, .serif, .monospaced, nil] {
+                    let tokens = CosmosTypographyTokens(preset: .default, weight: weight, design: design)
+                    _ = tokens.font(for: style)
+                }
+            }
+        }
+    }
+
+    @Test func typographyCustomPathIgnoresWeightDesign() {
+        // A custom font routes through Font.custom(_:size:relativeTo:) regardless of weight/design.
+        let tokens = CosmosTypographyTokens(customFont: "DMSans-Regular", weight: .bold, design: .rounded)
+        for style in CosmosTextStyle.allCases {
+            _ = tokens.font(for: style)   // must not crash; weight/design do not alter the custom path.
+        }
+        #expect(tokens.customFontName == "DMSans-Regular")
     }
 
     // MARK: Selectors

@@ -83,7 +83,7 @@ extension CosmosLink where Label == Text {
     VStack(alignment: .leading, spacing: 12) {
         CosmosLink("welcome.headline", destination: URL(string: "https://example.com")!)
         CosmosLink(verbatim: "https://example.com", destination: URL(string: "https://example.com")!)
-            .cosmosTextStyle(.body)
+            .cosmosFont(.body)
     }
     .padding()
 }
@@ -99,9 +99,9 @@ extension CosmosLink where Label == Text {
 #Preview("Link – dark + accessibility size", traits: .sizeThatFitsLayout) {
     CosmosPreviewContainer {
         VStack(alignment: .leading, spacing: 12) {
-            CosmosLink("welcome.headline", destination: CosmosMock.url()).cosmosTextStyle(.headline)
+            CosmosLink("welcome.headline", destination: CosmosMock.url()).cosmosFont(.headline)
             CosmosLink(verbatim: CosmosMock.url().absoluteString, destination: CosmosMock.url())
-                .cosmosTextStyle(.body)
+                .cosmosFont(.body)
         }
         .padding()
         .cosmosPreviewVariant(.dark)
