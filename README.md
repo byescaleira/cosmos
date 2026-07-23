@@ -91,10 +91,11 @@ wrap a `View`.
 
 | Atom | Notes |
 |---|---|
+| `CosmosAsyncImage` | `AsyncImage` wrapper; placeholder / error / retry slots, retry via `.id`, OS-27 cache surface opt-in. |
 | `CosmosButton` | `ButtonStyle`-based; glass variant available on iOS 26. |
 | `CosmosCard` | Header / body / footer slots. |
 | `CosmosDatePicker` | `DatePicker` wrapper; gated on platforms where it exists. |
-| `CosmosDivider` | Theme-tinted divider. |
+| `CosmosDivider` | Native `Divider` wrapper; decorative, axis inferred from the enclosing stack. Not recolored (`Divider` ignores foreground/background). |
 | `CosmosGroupBox` | Custom `GroupBoxStyle` chrome via theme tokens. |
 | `CosmosHStack` | `HStack` wrapper spacing children on the 4-pt grid (`CosmosPadding`). |
 | `CosmosIcon` | SF Symbol wrapper. |
@@ -102,6 +103,7 @@ wrap a `View`.
 | `CosmosLink` | `Link` wrapper. |
 | `CosmosList` | `List` wrapper with theme list style. |
 | `CosmosSelectableList` | `List(selection:)` wrapper (single or multi). |
+| `CosmosScrollView` | `ScrollView` wrapper; programmatic scroll via `ScrollViewReader` + `CosmosScrollAnchor`. |
 | `CosmosLocalizedText` | Resolves a `LocalizedStringResource`. |
 | `CosmosMenu` | `MenuStyle`-based. |
 | `CosmosPicker` | `PickerStyle`-based; `.tabs` available since Cosmos 27. |
