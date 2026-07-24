@@ -120,6 +120,31 @@ private struct CosmosContentTransitionModifier: ViewModifier {
     }
 }
 
+/// Gated SF Symbol effect — `.symbolEffect(_:options:isActive:)`. `.symbolEffect` **already
+/// auto-respects Reduce Motion** (Apple's implementation), so this gates on motion `isEnabled`
+/// only and deliberately does NOT double-gate on `respectReduceMotion` (CLAUDE.md). The
+/// `isActive`-driven overload covers the indefinite effects (`.pulse`, `.variableColor`, and the
+/// SF Symbols 6 set `.wiggle`/`.breathe`/`.rotate`/`.blink` — all available at the Cosmos 26 floor,
+/// iOS 17/18 ≤ 26 on all 5 platforms). One-shot discrete effects (`.bounce`) use the `value`-
+/// triggered overload and are caller-driven; wrap them in a `motion.isEnabled` check at the
+/// call site, or extend this modifier to the discrete form later if needed.
+private struct CosmosSymbolEffectModifier<E: IndefiniteSymbolEffect & SymbolEffect>: ViewModifier {
+    let effect: E
+    let options: SymbolEffectOptions
+    let isActive: Bool
+    @Environment(\.cosmosConfiguration) private var configuration
+
+    @ViewBuilder
+    func body(content: Content) -> some View {
+        // `.symbolEffect` auto-respects Reduce Motion — gate on isEnabled + isActive only.
+        if configuration.motion.isEnabled && isActive {
+            content.symbolEffect(effect, options: options, isActive: isActive)
+        } else {
+            content
+        }
+    }
+}
+
 /// Stagger delay cascade (identical curve, shifted `delay`). Fully implemented — takes an
 /// explicit `index` and `value` (a single `ViewModifier` cannot know its list position). A `nil`
 /// `step`/`maxSteps` falls back to ``CosmosMotionConfiguration/stagger`` so the cascade base is
@@ -229,5 +254,17 @@ extension View {
         maxSteps: Int? = nil
     ) -> some View {
         modifier(CosmosStaggerModifier(kind: kind, index: index, value: value, step: step, maxSteps: maxSteps))
+    }
+
+    /// Applies an indefinite SF Symbol effect (`.pulse`, `.variableColor`, SF Symbols 6
+    /// `.wiggle`/`.breathe`/`.rotate`/`.blink`) gated on motion `isEnabled` + `isActive` only.
+    /// `.symbolEffect` **already auto-respects Reduce Motion** — do NOT double-gate on
+    /// `respectReduceMotion` (CLAUDE.md). Available at the Cosmos 26 floor on all 5 platforms.
+    public func cosmosSymbolEffect<E: IndefiniteSymbolEffect & SymbolEffect>(
+        _ effect: E,
+        options: SymbolEffectOptions = .default,
+        isActive: Bool = true
+    ) -> some View {
+        modifier(CosmosSymbolEffectModifier(effect: effect, options: options, isActive: isActive))
     }
 }
