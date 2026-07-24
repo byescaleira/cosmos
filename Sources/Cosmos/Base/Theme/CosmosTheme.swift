@@ -82,6 +82,11 @@ public struct CosmosTheme: Sendable {
     /// Motion visual tokens (spring presets, duration scale, transition presets, shadow).
     public var motion: CosmosMotionTokens
 
+    /// Maximum width a regular-width-class toast clamps to (the compact width class uses
+    /// `.infinity`). A semantic token instead of a raw `420` literal so the surface is themeable
+    /// via ``withToastMaxWidth(_:)`` / `.cosmosToastMaxWidth(_:)`.
+    public var toastMaxWidth: CGFloat
+
     public init(
         version: CosmosVersion = .current,
         colors: CosmosColorTokens = .default,
@@ -101,7 +106,8 @@ public struct CosmosTheme: Sendable {
         tabViewStyle: CosmosTabViewStyle = .automatic,
         textFieldStyle: CosmosTextFieldStyle = .automatic,
         textEditorStyle: CosmosTextEditorStyle = .automatic,
-        motion: CosmosMotionTokens = .default
+        motion: CosmosMotionTokens = .default,
+        toastMaxWidth: CGFloat = 420
     ) {
         self.version = version
         self.colors = colors
@@ -122,6 +128,7 @@ public struct CosmosTheme: Sendable {
         self.textFieldStyle = textFieldStyle
         self.textEditorStyle = textEditorStyle
         self.motion = motion
+        self.toastMaxWidth = toastMaxWidth
     }
 
     public static let `default` = CosmosTheme()
@@ -152,4 +159,7 @@ public struct CosmosTheme: Sendable {
     public func withTextEditorStyle(_ textEditorStyle: CosmosTextEditorStyle) -> CosmosTheme { var c = self; c.textEditorStyle = textEditorStyle; return c }
     public func withMotion(_ motion: CosmosMotionTokens) -> CosmosTheme { var c = self; c.motion = motion; return c }
     public func withSpringStyle(_ style: CosmosSpringStyle) -> CosmosTheme { var c = self; c.motion.defaultSpringStyle = style; return c }
+    /// Sets the maximum width a regular-width-class toast clamps to (the compact width class uses
+    /// `.infinity`). Replaces the prior hard-coded `420` magic number.
+    public func withToastMaxWidth(_ toastMaxWidth: CGFloat) -> CosmosTheme { var c = self; c.toastMaxWidth = toastMaxWidth; return c }
 }

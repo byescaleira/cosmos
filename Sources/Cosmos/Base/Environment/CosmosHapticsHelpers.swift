@@ -40,21 +40,21 @@ private struct CosmosHapticFeedbackModifier<Trigger: Equatable & Sendable>: View
     @Environment(\.cosmosConfiguration) private var configuration
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
+    @ViewBuilder
     func body(content: Content) -> some View {
-        guard CosmosHapticsPolicy.shouldEmit(
+        if CosmosHapticsPolicy.shouldEmit(
             isEnabled: configuration.haptics.isEnabled,
             respectReduceMotion: configuration.haptics.respectReduceMotion,
             reduceMotion: reduceMotion
-        ) else {
-            return AnyView(content)
-        }
-        return AnyView(
+        ) {
             content
                 .sensoryFeedback(feedback.sensoryFeedback, trigger: trigger)
                 .onChange(of: trigger) { _, _ in
                     configuration.haptics.handler(feedback)
                 }
-        )
+        } else {
+            content
+        }
     }
 }
 

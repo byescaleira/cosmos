@@ -56,6 +56,10 @@ import SwiftUI
 /// snapping to instant under reduce-motion. Thumb tracking is motion-as-sole-signal (`.preserve`,
 /// WCAG 2.3.3 exempt).
 #if !os(tvOS)
+/// A reference value-control atom wrapping `Slider` (unavailable on tvOS). Supports a neutral
+/// value that drives a tint crossfade, an enabled sub-range, cluster inits, and the full
+/// cross-cutting stack (accessibility, haptics, motion, tracking). State/theme are global — read
+/// from the environment and overridden per-instance via `.cosmos*` modifiers.
 public struct CosmosSlider<Label: View, ValueLabel: View>: View {
     private let value: Binding<Double>
     private let bounds: ClosedRange<Double>

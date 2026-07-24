@@ -14,7 +14,7 @@ import CoreGraphics
 /// not double-gate it. Continuous-loop suppression is therefore handled natively; a custom
 /// indefinite animation (not used here) would have to be suppressed via ``CosmosMotionPolicy``
 /// unless progress is the sole state signal (`.preserve`).
-public struct CosmosProgress: View {
+public struct CosmosProgress<Label: View>: View {
     private let storage: Storage
 
     @Environment(\.cosmosConfiguration) private var configuration
@@ -22,39 +22,40 @@ public struct CosmosProgress: View {
     @Environment(\.cosmosTrackingId) private var trackingId
 
     private enum Storage {
-        case indeterminate(label: AnyView?)
-        case determinate(value: Double, total: Double, label: AnyView?)
+        case indeterminate(label: Label?)
+        case determinate(value: Double, total: Double, label: Label?)
     }
 
     /// Indeterminate progress (spinner), no label.
-    public init() { storage = .indeterminate(label: nil) }
+    public init() where Label == EmptyView { storage = .indeterminate(label: nil) }
 
-    /// Indeterminate progress with a custom label.
-    public init<L: View>(@ViewBuilder label: () -> L) {
-        storage = .indeterminate(label: AnyView(label()))
+    /// Indeterminate progress with a custom, typed label (the label keeps its view identity — the
+    /// diffing win `AnyView` would forfeit, WWDC21-10022). `Label` is inferred from the closure.
+    public init(@ViewBuilder label: @escaping () -> Label) {
+        storage = .indeterminate(label: label())
     }
 
     /// Indeterminate progress with a localized String Catalog title.
-    public init(_ titleKey: String) {
-        storage = .indeterminate(label: AnyView(CosmosLocalizedText(key: titleKey)))
+    public init(_ titleKey: String) where Label == CosmosLocalizedText {
+        storage = .indeterminate(label: CosmosLocalizedText(key: titleKey))
     }
 
     /// Determinate progress. A `nil` value falls back to indeterminate.
-    public init(value: Double?, total: Double = 1.0) {
+    public init(value: Double?, total: Double = 1.0) where Label == EmptyView {
         storage = Self.determinateStorage(value: value, total: total, label: nil)
     }
 
-    /// Determinate progress with a custom label.
-    public init<L: View>(value: Double?, total: Double = 1.0, @ViewBuilder label: () -> L) {
-        storage = Self.determinateStorage(value: value, total: total, label: AnyView(label()))
+    /// Determinate progress with a custom, typed label. `Label` is inferred from the closure.
+    public init(value: Double?, total: Double = 1.0, @ViewBuilder label: @escaping () -> Label) {
+        storage = Self.determinateStorage(value: value, total: total, label: label())
     }
 
     /// Determinate progress with a localized String Catalog title.
-    public init(_ titleKey: String, value: Double?, total: Double = 1.0) {
-        storage = Self.determinateStorage(value: value, total: total, label: AnyView(CosmosLocalizedText(key: titleKey)))
+    public init(_ titleKey: String, value: Double?, total: Double = 1.0) where Label == CosmosLocalizedText {
+        storage = Self.determinateStorage(value: value, total: total, label: CosmosLocalizedText(key: titleKey))
     }
 
-    private static func determinateStorage(value: Double?, total: Double, label: AnyView?) -> Storage {
+    private static func determinateStorage(value: Double?, total: Double, label: Label?) -> Storage {
         if let value { return .determinate(value: value, total: total, label: label) }
         return .indeterminate(label: label)
     }
@@ -142,12 +143,21 @@ private struct CosmosProgressChromeBody: View {
     @Environment(\.cosmosTheme) private var theme
     @Environment(\.cosmosConfiguration) private var cosmosConfiguration
     @Environment(\.accessibilityReduceTransparency) private var reduceTransparency
+    @Environment(\.colorSchemeContrast) private var colorSchemeContrast
 
     /// Collapses the translucent track to opaque when Reduce Transparency collapses materials
     /// (config- and policy-aware via ``CosmosMotionPolicy/shouldCollapseTransparency``, mirroring
-    /// the ``CosmosCard`` shadow-suppression pattern — not the bare env value).
+    /// the ``CosmosCard`` shadow-suppression pattern — not the bare env value), or when Increased
+    /// Contrast is on (config-aware via ``CosmosAccessibilityPolicy/shouldIncreaseContrast``) so the
+    /// unfilled track stays a clearly distinct shape rather than a faint tint.
     private var trackFillOpacity: Double {
-        CosmosMotionPolicy.shouldCollapseTransparency(
+        if CosmosAccessibilityPolicy.shouldIncreaseContrast(
+            respectIncreaseContrast: cosmosConfiguration.accessibility.respectIncreaseContrast,
+            contrast: colorSchemeContrast
+        ) {
+            return 1.0
+        }
+        return CosmosMotionPolicy.shouldCollapseTransparency(
             respectReduceTransparency: cosmosConfiguration.motion.respectReduceTransparency,
             reduceTransparency: reduceTransparency,
             policy: cosmosConfiguration.motion.reduceTransparencyPolicy

@@ -175,9 +175,10 @@ struct CosmosPreviewTests {
     }
 
     @Test func variantsAllCases() {
-        #expect(CosmosPreviewVariant.allCases.count == 9)
+        #expect(CosmosPreviewVariant.allCases.count == 10)
         #expect(CosmosPreviewVariant.allCases.contains(.reduceMotion))
         #expect(CosmosPreviewVariant.allCases.contains(.increasedContrast))
+        #expect(CosmosPreviewVariant.allCases.contains(.showBorders))
         #expect(CosmosPreviewVariant.allCases.contains(.rtl))
     }
 

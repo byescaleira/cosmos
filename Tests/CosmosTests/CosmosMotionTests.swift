@@ -87,6 +87,67 @@ struct CosmosMotionTests {
         #expect(CosmosSpringStyle.snappy.spring.spring == CosmosSpring.cosmosSnappy.spring)
     }
 
+    @Test func springInteractiveUsesDurationBounceForm() {
+        // M1: cosmosInteractive migrated from the legacy Spring(response:dampingRatio:) form to
+        // the modern Spring(duration:bounce:) form (WWDC23-10158). The other 4 presets already used
+        // duration:bounce; this closes the lone legacy site. dampingRatio 0.7 → bounce 1 − 0.7².
+        let interactive = CosmosSpring.cosmosInteractive.spring
+        let expected = Spring(duration: 0.3, bounce: 0.3)
+        #expect(interactive == expected)
+        #expect(CosmosSpringStyle.interactive.spring.spring == expected)
+    }
+
+    @Test func springLegacyResponseInitMapsDampingToBounce() {
+        // The deprecated init(response:dampingRatio:) maps dampingFraction → bounce via
+        // bounce = 1 − dampingFraction² (the documented relationship), so the runway remains
+        // numerically faithful while pointing callers at init(duration:bounce:).
+        let legacy = CosmosSpring(response: 0.3, dampingRatio: 0.7)
+        #expect(legacy.spring == Spring(duration: 0.3, bounce: 1 - 0.7 * 0.7))
+    }
+
+    // MARK: - cosmosWithAnimation chokepoint (M3)
+
+    @Test func cosmosWithAnimationFiresHandlerWhenEmitted() {
+        let box = Mutex<[CosmosMotionEvent]>([])
+        let config = CosmosConfiguration.default.withMotion(.init(
+            isEnabled: true, respectReduceMotion: false,
+            handler: { event in box.withLock { $0.append(event) } }
+        ))
+        var didRunBody = false
+        cosmosWithAnimation(.press, configuration: config, theme: .default, reduceMotion: false) {
+            didRunBody = true
+        }
+        #expect(didRunBody)
+        let received = box.withLock { $0 }
+        #expect(received.count == 1)
+        if case .motion(let kind) = received[0] {
+            #expect(kind == .press)
+        } else {
+            Issue.record("expected .motion(.press), got \(received[0])")
+        }
+    }
+
+    @Test func cosmosWithAnimationSuppressesHandlerUnderReduceMotionInstant() {
+        // reduce-motion + .instant + respected → motion suppressed: body still runs (no animation),
+        // and the handler does NOT fire (no motion emitted).
+        let box = Mutex<[CosmosMotionEvent]>([])
+        let config = CosmosConfiguration.default.withMotion(.init(
+            isEnabled: true, respectReduceMotion: true, reduceMotionPolicy: .instant,
+            handler: { event in box.withLock { $0.append(event) } }
+        ))
+        var didRunBody = false
+        cosmosWithAnimation(.press, configuration: config, theme: .default, reduceMotion: true) {
+            didRunBody = true
+        }
+        #expect(didRunBody)
+        #expect(box.withLock { $0 }.isEmpty)
+    }
+
+    // NOTE: the completion-fires-once behavior of `cosmosWithAnimation` is driven by SwiftUI's
+    // animation transaction loop and is not deterministic in a headless `swift test` run (no run
+    // loop settles a nil-animation completion synchronously). It is verified visually via the
+    // `#Preview` in `CosmosTabView` (default + reduceMotion), not by a unit test.
+
     @Test func durationScaleMonotonic() {
         let values = CosmosDuration.allCases.map(\.rawValue)
         #expect(values == [0, 0.070, 0.110, 0.150, 0.240, 0.400, 0.700])

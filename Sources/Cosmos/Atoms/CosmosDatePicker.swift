@@ -30,6 +30,11 @@ import SwiftUI
 /// applied for the compact/field text reflow (a no-op where irrelevant); callers may add
 /// `.cosmosAnimation(.valueChange, value:)` to *dependent* content.
 #if !os(tvOS)
+/// A reference value-control atom wrapping `DatePicker` (unavailable on tvOS). Applies the
+/// token-driven date-picker style, accessibility, and tracking; deliberately adds no motion to
+/// the native wheel/graphical picker (system-controlled, auto-respects Reduce Motion), only a
+/// `.cosmosContentTransition(.numeric)` for the compact/field text reflow. State/theme are global —
+/// read from the environment and overridden per-instance via `.cosmos*` modifiers.
 public struct CosmosDatePicker<Label: View>: View {
     private let selection: Binding<Date>
     private let range: Range

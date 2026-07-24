@@ -7,6 +7,115 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.7.0] - 2026-07-23
+
+### Added
+- **`CosmosAccessibilityPolicy` chokepoint** — a pure, testable policy mirror of
+  `CosmosMotionPolicy` / `CosmosHapticsPolicy`: `shouldIncreaseContrast(…)`,
+  `shouldDifferentiateWithoutColor(…)`, `shouldShowBorders(…)`. Accessibility gates
+  can now be read config-aware rather than as bare environment values.
+- **`CosmosAccessibilityConfiguration` respect flags** — `respectIncreaseContrast`,
+  `respectDifferentiateWithoutColor`, `respectShowBorders` (all default `true`) with
+  init params, mirroring the motion/haptics `respect*` pattern. Per-atom wiring
+  landed in this release (see Fixed / Changed).
+- **Accessibility gates wired through the policy chokepoints (A4 / A6).**
+  `colorSchemeContrast` now drives the synthetic-surface atoms — `CosmosCard`
+  border thickens, `CosmosProgressChrome` track fill goes opaque, and
+  `CosmosToastContent` gains a hairline outline — all via
+  `CosmosAccessibilityPolicy.shouldIncreaseContrast`. `accessibilityShowBorders`
+  (née `accessibilityShowButtonShapes`, iOS 14+ … `@backDeployed` to 26.1) drives a
+  capsule outline on borderless `.ghost` `CosmosButton` via `shouldShowBorders`.
+  Both are config-aware (not the bare environment value); `differentiateWithoutColor`
+  was already wired through the same chokepoint on the toast icon.
+- **Motion helpers: `cosmosSymbolEffect` and `cosmosZoomNavigation`.**
+  `cosmosSymbolEffect(_:options:isActive:)` gates the indefinite SF Symbol effects
+  (`.pulse` / `.variableColor` and the SF Symbols 6 `.wiggle` / `.breathe` /
+  `.rotate` / `.blink`) on motion `isEnabled` + `isActive` only — `.symbolEffect`
+  already auto-respects Reduce Motion, so it is deliberately not double-gated.
+  `cosmosZoomNavigation(sourceID:in:)` wraps `navigationTransition(.zoom(…))`
+  (iOS / tvOS / watchOS / visionOS 18+) with a macOS no-op (the `.zoom` transition
+  is `@available(macOS, unavailable)`).
+- **`CosmosViewThatFits`** — a token-consistent `ViewThatFits` wrapper.
+  `CosmosToastContent` now reflows its icon / message between a horizontal row and
+  a vertical stack by available width, preserving view identity across the choice
+  (WWDC21-10022).
+- **Plural + device String Catalog variations.**
+  `CosmosLocalizationConfiguration.string(for:count:)` resolves plural
+  (`one` / `other`) and device (`iPhone` / `iPad` / `Mac` / `Apple TV` /
+  `Apple Watch` / `Apple Vision Pro`) variations; `CosmosLocalizedText(key:count:)`
+  carries an optional plural count; `CosmosPlatform.localizedTextDeviceKey` maps the
+  host to the catalog device key. The plural path resolves via `NSLocalizedString`
+  + a manual `.xcstrings` parse; device variations resolve through the native
+  SwiftUI String Catalog runtime (`Text(LocalizedStringKey)`) — device tests skip
+  where the raw catalog is compiled away by the toolchain.
+- **Documentation** — per-atom doc comments on the gated value-control atoms
+  (`CosmosSlider` / `CosmosTextEditor` / `CosmosDatePicker`) documenting the
+  platform gates and the cross-cutting stack, plus a new `CosmosTutorial.tutorial`
+  DocC tutorial.
+- **Test taxonomy + parameterized availability matrices.** `@Tag` categories
+  (`.smoke` / `.selector` / `.availability`) with `.disabled(if:)` availability
+  gates, and parameterized style × platform availability matrices
+  (`CosmosTextEditor` 3×5, `CosmosDatePicker` 6×5) replacing the per-platform
+  test functions. **350 tests pass** (was 258).
+
+### Changed
+- **Motion and haptics modifier bodies are now `@ViewBuilder`.** The four motion
+  modifier bodies (`CosmosAnimationModifier`, `CosmosTransitionModifier`,
+  `CosmosContentTransitionModifier`, the reduce-motion overlay) and the haptic
+  feedback / toggle selection-haptic modifier bodies drop `AnyView` erasure in
+  favor of `@ViewBuilder if/else`, preserving structural identity
+  (`_ConditionalContent`) so SwiftUI diffs the live branch (WWDC21-10022,
+  WWDC23-10160). Non-breaking; behavior is unchanged.
+- **`CosmosAsyncImage` is now generic over `<Content, Placeholder, Failure>`.** The
+  custom-slot init takes typed `placeholder` / `failure` closures so each slot
+  keeps its structural identity across phase swaps (WWDC21-10022) instead of being
+  `AnyView`-erased. The default-slot views (`CosmosAsyncImagePlaceholder` /
+  `CosmosAsyncImageFailure`) are now public so they can serve as the constrained
+  default `Placeholder` / `Failure` and be reused as custom slots. The default-init
+  call signature is unchanged.
+- **`CosmosProgress` is now generic over `<Label>`.** Label storage moves from
+  `AnyView?` to `Label?`, so a custom label keeps its identity (WWDC21-10022). No
+  public call signature changed (`AnyView` was internal storage only); no
+  deprecation runway is needed. The label-closure inits take `() -> Label` directly
+  (the SwiftUI-idiomatic form) rather than a method-generic with a same-type
+  requirement.
+
+### Deprecated
+- **`CosmosAsyncImage` `AnyView`-erased custom-slot init.** Use the typed generic
+  slot inits (typed `placeholder` / `failure` closures) to preserve slot view
+  identity. The `AnyView` overload remains for the migration runway (per
+  `VERSIONING.md`); it is the more-constrained overload, so legacy `AnyView` call
+  sites resolve there and emit the migration warning.
+
+### Fixed
+- **Toast role tint was never applied.** `CosmosToastRole.tint` was declared but
+  unused — `CosmosToastContent` rendered the role icon monochrome by accident. The
+  icon now resolves its tint through a new `CosmosToastTint.color(in:)` resolver
+  against the theme color tokens, and the `accessibilityDifferentiateWithoutColor`
+  gate (read config-aware via `CosmosAccessibilityPolicy`) renders the icon
+  monochrome / shape-only under the gate (WCAG 1.4.1).
+- **`blurReplace` was over-collapsed under Reduce Motion.** It is vestibular-safe
+  (no spatial component), so it now stays under reduce-motion `.substitute` /
+  `.preserve` and collapses only under `.instant` (or when motion is disabled),
+  keeping the crossfade feedback that reduce-motion `.substitute` is meant to
+  preserve.
+
+### Internal
+- **P6 environment-churn audit (refuted).** Audited the `@Sendable` handler closures
+  on `Cosmos*Configuration` for environment-churn risk; no Cosmos-side defect — no
+  atom constructs a config in `body`, overrides use the `with*` copy + reinject
+  path, and handlers are no-capture no-ops by default. Recorded in
+  `vault/08-riscos/env-churn-config-closures.md`. The only remaining churn vector is
+  a consumer-supplied closure capturing env-derived state (a consumer
+  responsibility).
+
+### Deferred
+- **T1 per-atom `@Suite` reorg** — consolidating atom tests into one `@Suite` per
+  atom is deferred to a dedicated pass (high churn, no behavior change, against a
+  green 350-test suite). The remaining style × platform availability tables
+  (picker / list / tabView / …) follow the parameterized-matrix recipe added in
+  this release as a follow-up.
+
 ## [0.6.0] - 2026-07-23
 
 ### Added

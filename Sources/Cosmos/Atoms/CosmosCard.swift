@@ -16,6 +16,7 @@ public struct CosmosCard<Header: View, Body: View, Footer: View>: View {
     @Environment(\.cosmosTrackingId) private var trackingId
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.accessibilityReduceTransparency) private var reduceTransparency
+    @Environment(\.colorSchemeContrast) private var colorSchemeContrast
 
     /// Shadow is suppressed when reduce-transparency collapses materials (config- and
     /// policy-aware via ``CosmosMotionPolicy/shouldCollapseTransparency``), or when reduce-motion
@@ -27,6 +28,16 @@ public struct CosmosCard<Header: View, Body: View, Footer: View>: View {
             reduceTransparency: reduceTransparency,
             policy: configuration.motion.reduceTransparencyPolicy
         ) || reduceMotion
+    }
+
+    /// Under Increased Contrast (config-aware), the card border thickens so the card edge stays
+    /// legible against the background — the synthetic outline is the part the UIKit-backed tokens
+    /// don't already adapt.
+    private var increasesContrast: Bool {
+        CosmosAccessibilityPolicy.shouldIncreaseContrast(
+            respectIncreaseContrast: configuration.accessibility.respectIncreaseContrast,
+            contrast: colorSchemeContrast
+        )
     }
 
     public init(
@@ -87,7 +98,7 @@ public struct CosmosCard<Header: View, Body: View, Footer: View>: View {
     @ViewBuilder
     private var cardBorder: some View {
         RoundedRectangle(cornerRadius: CosmosRadiusTokens.card, style: .continuous)
-            .stroke(theme.colors.outline, lineWidth: 1)
+            .stroke(theme.colors.outline, lineWidth: increasesContrast ? 1.5 : 1)
     }
 }
 

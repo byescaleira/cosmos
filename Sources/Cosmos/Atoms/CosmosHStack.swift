@@ -115,3 +115,15 @@ public struct CosmosHStack<Content: View>: View {
         .cosmosPreviewVariant(.rtl)
     }
 }
+
+#Preview("HStack – landscape reflow", traits: .landscapeLeft) {
+    CosmosPreviewContainer {
+        CosmosHStack(spacing: .medium) {
+            CosmosIcon("arrow.forward")
+            CosmosText(verbatim: "Next")
+            CosmosButton("welcome.continue") {}
+        }
+        .padding()
+        .cosmosPreviewEnv(dynamicTypeSize: .accessibility3)
+    }
+}

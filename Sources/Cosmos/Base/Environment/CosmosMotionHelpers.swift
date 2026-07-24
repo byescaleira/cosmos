@@ -34,8 +34,8 @@ public enum CosmosMotionPolicy {
     }
 }
 
-/// Gated `.animation(_:value:)` — the single chokepoint. Uses `AnyView` early-return to match
-/// the existing ``CosmosHapticFeedbackModifier`` pattern (consistency).
+/// Gated `.animation(_:value:)` — the single chokepoint. `@ViewBuilder` + opaque `some View`
+/// preserves structural identity (WWDC21-10022 "Demystify SwiftUI"); `AnyView` would erase it.
 private struct CosmosAnimationModifier<V: Equatable & Sendable>: ViewModifier {
     let kind: CosmosMotionKind
     let value: V
@@ -43,17 +43,21 @@ private struct CosmosAnimationModifier<V: Equatable & Sendable>: ViewModifier {
     @Environment(\.cosmosConfiguration) private var configuration
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
+    @ViewBuilder
     func body(content: Content) -> some View {
         let motion = configuration.motion
-        guard CosmosMotionPolicy.shouldEmit(
+        if CosmosMotionPolicy.shouldEmit(
             isEnabled: motion.isEnabled,
             respectReduceMotion: motion.respectReduceMotion,
             reduceMotion: reduceMotion
-        ) else { return AnyView(content) }
-        let animation = theme.motion.animation(
-            for: kind, reduceMotion: reduceMotion, policy: motion.reduceMotionPolicy
-        )
-        return AnyView(content.animation(animation, value: value))
+        ) {
+            let animation = theme.motion.animation(
+                for: kind, reduceMotion: reduceMotion, policy: motion.reduceMotionPolicy
+            )
+            content.animation(animation, value: value)
+        } else {
+            content
+        }
     }
 }
 
@@ -64,23 +68,28 @@ private struct CosmosTransitionModifier: ViewModifier {
     @Environment(\.cosmosConfiguration) private var configuration
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
+    @ViewBuilder
     func body(content: Content) -> some View {
         let motion = configuration.motion
-        let shouldReduce = reduceMotion && motion.reduceMotionPolicy != .preserve
         // `BlurReplaceTransition` is a concrete `Transition` (MainActor) that cannot be erased
         // into `AnyTransition`, so it is applied here via the generic `.transition<T>(_:)` View
-        // overload when motion is fully on. Under reduce-motion it falls through to the
-        // `AnyTransition` substitute (`.opacity`/`.identity`) returned by `resolved()`.
-        // The `body` is MainActor-isolated (ViewModifier requirement), so the MainActor
-        // `BlurReplaceTransition(configuration:)` init is reachable here without isolation work.
-        if case .blurReplace = preset, !shouldReduce {
-            return AnyView(content.transition(BlurReplaceTransition(configuration: .downUp)))
-        }
-        let resolved = theme.motion.transition(
+        // overload. It is vestibular-safe — it has no spatial component (it blurs the outgoing
+        // content and resolves the incoming content in place, like an opacity/blur crossfade),
+        // so it stays under reduce-motion `.substitute`/`.preserve` (the substitute the HIG
+        // recommends), collapsing only under `.instant` (snap to `.identity`). Motion disabled
+        // entirely also collapses it. The `body` is MainActor-isolated (ViewModifier
+        // requirement), so the MainActor `BlurReplaceTransition(configuration:)` init is
+        // reachable here without isolation work.
+        let reduceInstant = reduceMotion && motion.reduceMotionPolicy == .instant
+        if case .blurReplace = preset, motion.isEnabled, !reduceInstant {
+            content.transition(BlurReplaceTransition(configuration: .downUp))
+        } else if let resolved = theme.motion.transition(
             preset, reduceMotion: reduceMotion, policy: motion.reduceMotionPolicy
-        )
-        if let resolved { return AnyView(content.transition(resolved)) }
-        return AnyView(content)
+        ) {
+            content.transition(resolved)
+        } else {
+            content
+        }
     }
 }
 
@@ -92,21 +101,47 @@ private struct CosmosContentTransitionModifier: ViewModifier {
     @Environment(\.cosmosConfiguration) private var configuration
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
+    @ViewBuilder
     func body(content: Content) -> some View {
         let motion = configuration.motion
-        let applies: Bool
-        if preset.isSymbolEffect {
-            // Symbol effects auto-respect reduce-motion; gate on isEnabled only (do NOT double-gate).
-            applies = motion.isEnabled
-        } else {
-            applies = CosmosMotionPolicy.shouldEmit(
+        // Symbol effects auto-respect reduce-motion; gate on isEnabled only (do NOT double-gate).
+        let applies = preset.isSymbolEffect
+            ? motion.isEnabled
+            : CosmosMotionPolicy.shouldEmit(
                 isEnabled: motion.isEnabled,
                 respectReduceMotion: motion.respectReduceMotion,
                 reduceMotion: reduceMotion
             )
+        if applies {
+            content.contentTransition(preset.contentTransition)
+        } else {
+            content
         }
-        guard applies else { return AnyView(content) }
-        return AnyView(content.contentTransition(preset.contentTransition))
+    }
+}
+
+/// Gated SF Symbol effect — `.symbolEffect(_:options:isActive:)`. `.symbolEffect` **already
+/// auto-respects Reduce Motion** (Apple's implementation), so this gates on motion `isEnabled`
+/// only and deliberately does NOT double-gate on `respectReduceMotion` (CLAUDE.md). The
+/// `isActive`-driven overload covers the indefinite effects (`.pulse`, `.variableColor`, and the
+/// SF Symbols 6 set `.wiggle`/`.breathe`/`.rotate`/`.blink` — all available at the Cosmos 26 floor,
+/// iOS 17/18 ≤ 26 on all 5 platforms). One-shot discrete effects (`.bounce`) use the `value`-
+/// triggered overload and are caller-driven; wrap them in a `motion.isEnabled` check at the
+/// call site, or extend this modifier to the discrete form later if needed.
+private struct CosmosSymbolEffectModifier<E: IndefiniteSymbolEffect & SymbolEffect>: ViewModifier {
+    let effect: E
+    let options: SymbolEffectOptions
+    let isActive: Bool
+    @Environment(\.cosmosConfiguration) private var configuration
+
+    @ViewBuilder
+    func body(content: Content) -> some View {
+        // `.symbolEffect` auto-respects Reduce Motion — gate on isEnabled + isActive only.
+        if configuration.motion.isEnabled && isActive {
+            content.symbolEffect(effect, options: options, isActive: isActive)
+        } else {
+            content
+        }
     }
 }
 
@@ -124,21 +159,74 @@ private struct CosmosStaggerModifier<V: Equatable & Sendable>: ViewModifier {
     @Environment(\.cosmosConfiguration) private var configuration
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
+    @ViewBuilder
     func body(content: Content) -> some View {
         let motion = configuration.motion
-        guard CosmosMotionPolicy.shouldEmit(
+        if CosmosMotionPolicy.shouldEmit(
             isEnabled: motion.isEnabled,
             respectReduceMotion: motion.respectReduceMotion,
             reduceMotion: reduceMotion
-        ) else { return AnyView(content) }
-        let stagger = motion.stagger
-        let step = self.step ?? stagger.step
-        let maxSteps = self.maxSteps ?? stagger.maxSteps
-        let base = theme.motion.animation(
-            for: kind, reduceMotion: reduceMotion, policy: motion.reduceMotionPolicy
-        )
-        let delay = Double(min(index, max(0, maxSteps))) * step.rawValue
-        return AnyView(content.animation(base?.delay(delay), value: value))
+        ) {
+            let stagger = motion.stagger
+            let step = self.step ?? stagger.step
+            let maxSteps = self.maxSteps ?? stagger.maxSteps
+            let base = theme.motion.animation(
+                for: kind, reduceMotion: reduceMotion, policy: motion.reduceMotionPolicy
+            )
+            let delay = Double(min(index, max(0, maxSteps))) * step.rawValue
+            content.animation(base?.delay(delay), value: value)
+        } else {
+            content
+        }
+    }
+}
+
+/// Gated, token-driven `withAnimation` — the coordinated-transition chokepoint (WWDC23-10156).
+/// Wraps `withAnimation(_:completionCriteria:body:completion:)` so a coordinated state change
+/// resolves its curve through ``CosmosMotionTokens/animation(for:reduceMotion:policy:)`` (the
+/// single source of truth), gates through ``CosmosMotionPolicy/shouldEmit(isEnabled:respectReduceMotion:reduceMotion:)``
+/// (config-aware, not the bare env value), fires the motion `handler` once when motion emits, and
+/// honors a completion closure that fires exactly once.
+///
+/// When motion is suppressed (disabled or reduce-motion respected), `body` runs with **no**
+/// animation and `completion` fires **immediately** (SwiftUI invokes the completion of a
+/// `nil`-animation `withAnimation` synchronously), so callers never dead-lock waiting on a
+/// completion that an accessibility gate cancelled. CLAUDE.md mandates one `withAnimation` per
+/// coordinated state change — this is the Cosmos-sanctioned form.
+///
+/// - Parameters:
+///   - kind: the motion intent; resolves to the canonical spring for that intent.
+///   - configuration: the active `CosmosConfiguration` (motion behavior/policy + handler).
+///   - theme: the active `CosmosTheme` (motion visual tokens — the curve source of truth).
+///   - reduceMotion: the `@Environment(\.accessibilityReduceMotion)` value at the call site.
+///   - completionCriteria: `.logicallyComplete` (default) — when the completion fires.
+///   - body: the state mutation to animate.
+///   - completion: fires once when the coordinated change settles (immediately if suppressed).
+public func cosmosWithAnimation(
+    _ kind: CosmosMotionKind,
+    configuration: CosmosConfiguration,
+    theme: CosmosTheme,
+    reduceMotion: Bool,
+    completionCriteria: AnimationCompletionCriteria = .logicallyComplete,
+    body: () -> Void,
+    completion: (@Sendable () -> Void)? = nil
+) {
+    let motion = configuration.motion
+    let shouldEmit = CosmosMotionPolicy.shouldEmit(
+        isEnabled: motion.isEnabled,
+        respectReduceMotion: motion.respectReduceMotion,
+        reduceMotion: reduceMotion
+    )
+    let animation = shouldEmit
+        ? theme.motion.animation(for: kind, reduceMotion: reduceMotion, policy: motion.reduceMotionPolicy)
+        : nil
+    if let completion {
+        withAnimation(animation, completionCriteria: completionCriteria, body, completion: completion)
+    } else {
+        withAnimation(animation, body)
+    }
+    if shouldEmit {
+        motion.handler(.motion(kind))
     }
 }
 
@@ -166,5 +254,34 @@ extension View {
         maxSteps: Int? = nil
     ) -> some View {
         modifier(CosmosStaggerModifier(kind: kind, index: index, value: value, step: step, maxSteps: maxSteps))
+    }
+
+    /// Applies an indefinite SF Symbol effect (`.pulse`, `.variableColor`, SF Symbols 6
+    /// `.wiggle`/`.breathe`/`.rotate`/`.blink`) gated on motion `isEnabled` + `isActive` only.
+    /// `.symbolEffect` **already auto-respects Reduce Motion** — do NOT double-gate on
+    /// `respectReduceMotion` (CLAUDE.md). Available at the Cosmos 26 floor on all 5 platforms.
+    public func cosmosSymbolEffect<E: IndefiniteSymbolEffect & SymbolEffect>(
+        _ effect: E,
+        options: SymbolEffectOptions = .default,
+        isActive: Bool = true
+    ) -> some View {
+        modifier(CosmosSymbolEffectModifier(effect: effect, options: options, isActive: isActive))
+    }
+
+    /// Liquid Glass zoom navigation transition (the OS 26 morph). Pair with a `matchedGeometryEffect`
+    /// source of the same `sourceID` + `namespace` on the destination so the pushed view grows from
+    /// the source's frame. Available on iOS/tvOS/watchOS/visionOS 18+ (the `.zoom` transition is
+    /// `@available(macOS, unavailable)`) — a no-op on macOS, where `NavigationStack` push morphs are
+    /// not part of the platform. No reduce-motion gating: navigation transitions are system-controlled
+    /// and auto-respect Reduce Motion (like the native date-picker wheel).
+    public func cosmosZoomNavigation(
+        sourceID: some Hashable,
+        in namespace: Namespace.ID
+    ) -> some View {
+        #if !os(macOS)
+        return self.navigationTransition(.zoom(sourceID: sourceID, in: namespace))
+        #else
+        return self
+        #endif
     }
 }

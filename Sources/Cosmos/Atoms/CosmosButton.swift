@@ -147,8 +147,27 @@ private struct ChromeBody: View {
     /// is the ButtonStyle config and has no `.motion`; this is the Cosmos behavior aggregate.
     @Environment(\.cosmosConfiguration) private var cosmosConfiguration
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    /// Read-only public env gate (`accessibilityShowBorders`, iOS 14+/macOS 11+/tvOS 14+/
+    /// watchOS 7+, `@backDeployed` to 26.1 — née `accessibilityShowButtonShapes`; fully
+    /// available at the Cosmos 26 floor on all 5 platforms). Drives the borderless `.ghost`
+    /// shape outline when the user enables "Show button shapes".
+    @Environment(\.accessibilityShowBorders) private var showBorders
 
     private var resolvedTint: Color { tint ?? theme.colors.accent }
+
+    /// When the "Show button shapes" accessibility setting (or a config override) is on,
+    /// borderless controls must reveal their tappable shape. For `.ghost` — the only truly
+    /// chromeless variant — we draw a subtle capsule outline; resolved through the
+    /// ``CosmosAccessibilityPolicy`` chokepoint so `respectShowBorders = false` can opt out.
+    /// `.glass` is handled by the native Liquid Glass style (which always shows its shape),
+    /// and the filled variants already carry visible chrome, so this only applies to `.ghost`.
+    private var showsGhostBorder: Bool {
+        variant == .ghost
+            && CosmosAccessibilityPolicy.shouldShowBorders(
+                respectShowBorders: cosmosConfiguration.accessibility.respectShowBorders,
+                showBorders: showBorders
+            )
+    }
 
     var body: some View {
         configuration.label
@@ -176,6 +195,14 @@ private struct ChromeBody: View {
                     : nil,
                 value: configuration.isPressed
             )
+            // Borderless `.ghost` reveals a capsule outline under "Show button shapes"
+            // (config-aware via `showsGhostBorder`). The capsule matches the `.glassEffect`
+            // shape above so the revealed shape is the real tappable shape, not an impostor.
+            .overlay {
+                if showsGhostBorder {
+                    Capsule().stroke(theme.colors.outline, lineWidth: 1)
+                }
+            }
     }
 
     private var chromeBackground: Color {
@@ -263,5 +290,21 @@ private struct ChromeBody: View {
                 .cosmosTint(.teal)
         }
         .padding()
+    }
+}
+
+// "Show button shapes" accessibility: the borderless `.ghost` variant reveals a capsule outline
+// matching its real tappable shape; filled/secondary/danger already carry visible chrome and the
+// `.glass` style always shows its Liquid Glass shape, so only `.ghost` adapts. Resolved through
+// `CosmosAccessibilityPolicy.shouldShowBorders` (config-aware: `respectShowBorders` can opt out).
+#Preview("Button – show borders (a11y)", traits: .sizeThatFitsLayout) {
+    CosmosPreviewContainer {
+        VStack(spacing: 12) {
+            CosmosButton("welcome.continue") {}.cosmosButtonStyle(.ghost)
+            CosmosButton("welcome.continue") {}.cosmosButtonStyle(.secondary)
+            CosmosButton("welcome.headline") {}
+        }
+        .padding()
+        .cosmosPreviewVariant(.showBorders)
     }
 }

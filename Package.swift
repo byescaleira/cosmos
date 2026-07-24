@@ -28,6 +28,14 @@ let package = Package(
         .target(
             name: "Cosmos",
             dependencies: [],
+            exclude: [
+                // The DocC curation catalog is documentation, not a bundled resource — exclude it
+                // from the SwiftPM build so it does not trigger an "unhandled file" warning. Build
+                // it directly with `xcrun docc convert Sources/Cosmos/Documentation.docc` (or add
+                // the optional `swift-docc-plugin`); Cosmos itself stays dependency-free per the
+                // project's no-third-party-dependencies rule.
+                "Documentation.docc",
+            ],
             resources: [
                 // .process compiles Localizable.xcstrings → .lproj/.strings at runtime.
                 // Cosmos ships no bundled fonts; bring your own and pass the PostScript name

@@ -1,5 +1,37 @@
 import SwiftUI
 
+/// Decides whether the increased-contrast / differentiate-without-color / show-borders
+/// accessibility gates may apply, combining the relevant `respect*` flag on
+/// ``CosmosAccessibilityConfiguration`` with the matching environment gate. Mirrors
+/// ``CosmosMotionPolicy`` — the single chokepoint every atom routes these gates through,
+/// so `respect* = false` can intentionally override (never the bare env value).
+public enum CosmosAccessibilityPolicy {
+    /// Whether increased contrast should drive adaptive surface/outline strengthening.
+    public static func shouldIncreaseContrast(
+        respectIncreaseContrast: Bool,
+        contrast: ColorSchemeContrast
+    ) -> Bool {
+        contrast == .increased && respectIncreaseContrast
+    }
+
+    /// Whether the UI must stop conveying information by color alone (use shape/symbol/text instead).
+    public static func shouldDifferentiateWithoutColor(
+        respectDifferentiateWithoutColor: Bool,
+        differentiateWithoutColor: Bool
+    ) -> Bool {
+        differentiateWithoutColor && respectDifferentiateWithoutColor
+    }
+
+    /// Whether interactive controls should draw a visible border/shape. (`accessibilityShowBorders`
+    /// on iOS 26 — née `accessibilityShowButtonShapes`; on macOS true when Increased Contrast is on.)
+    public static func shouldShowBorders(
+        respectShowBorders: Bool,
+        showBorders: Bool
+    ) -> Bool {
+        showBorders && respectShowBorders
+    }
+}
+
 /// Internal helpers that apply SwiftUI accessibility modifiers only when an override is
 /// present, so an unset value never silences VoiceOver's native fallback. Atoms use these
 /// after resolving values from ``CosmosAccessibilityConfiguration``.

@@ -12,20 +12,19 @@ struct CosmosAtomsBehaviorTests {
 
     // MARK: - CosmosButton
 
-    @Test func buttonConstructsFromCustomLabel() {
+    @Test(.tags(.smoke)) func buttonConstructsFromCustomLabel() {
         _ = CosmosButton(action: {}) { Text(verbatim: "Save") }
     }
 
-    @Test func buttonConstructsFromLocalizedTitleKey() {
+    @Test(.tags(.smoke)) func buttonConstructsFromLocalizedTitleKey() {
         _ = CosmosButton("welcome.continue") {}
     }
 
-    @Test func buttonAcceptsEveryButtonStyleVariant() {
+    @Test(.tags(.selector), arguments: CosmosButtonStyle.allCases)
+    func buttonAcceptsEveryButtonStyleVariant(_ style: CosmosButtonStyle) {
         // The style applier routes each variant (incl. .glass on iOS/macOS 26); construction must
         // not crash for any selector. Override is subtree-scoped via the .cosmos* modifier.
-        for style in CosmosButtonStyle.allCases {
-            _ = CosmosButton("welcome.continue") {}.cosmosButtonStyle(style)
-        }
+        _ = CosmosButton("welcome.continue") {}.cosmosButtonStyle(style)
     }
 
     @Test func buttonAcceptsSwiftUIShapedOverrides() {
@@ -164,11 +163,12 @@ struct CosmosAtomsBehaviorTests {
     @Test func asyncImageConstructsWithCustomPlaceholderAndFailure() {
         // The `retry` closure is non-Sendable; do not send it into another view — exercise the
         // failure slot with a static view and ignore `retry` (its wiring is covered by previews).
+        // Typed (non-AnyView) slot closures — the canonical generic form (WWDC21-10022 identity).
         _ = CosmosAsyncImage(
             url: URL(string: "https://example.com/image.png"),
             content: { image in image },
-            placeholder: { AnyView(CosmosText(verbatim: "Loading…")) },
-            failure: { _, _ in AnyView(CosmosText(verbatim: "Failed to load")) }
+            placeholder: { CosmosText(verbatim: "Loading…") },
+            failure: { _, _ in CosmosText(verbatim: "Failed to load") }
         )
     }
 }

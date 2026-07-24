@@ -29,6 +29,10 @@ import SwiftUI
 /// no Cosmos motion kind is applied (text edits are not motion-worthy; binding `valueChange` to
 /// the text binding would fire per keystroke).
 #if !os(tvOS) && !os(watchOS)
+/// A multiline text-input atom wrapping `TextEditor` (unavailable on tvOS and watchOS). Applies
+/// the token-driven text-editor style, accessibility, and tracking from the environment; adds no
+/// haptics or motion (text edits are neither). State/theme are global — read from the environment
+/// and overridden per-instance via `.cosmos*` modifiers.
 public struct CosmosTextEditor: View {
     private let text: Binding<String>
 
