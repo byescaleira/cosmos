@@ -16,31 +16,24 @@ struct CosmosWaveDAtomsTests {
     }
 
     // MARK: - CosmosTextEditorAvailability (full style × platform matrix)
+    //
+    // Parameterized over (style, platform) so the whole 3×5 matrix is asserted in one test on any
+    // host (T5). `TextEditor` is unavailable on tvOS/watchOS entirely; `.roundedBorder` is
+    // visionOS-only; `.automatic`/`.plain` are available on iOS/macOS/visionOS.
 
-    @Test func textEditorAvailabilityTvOSWatchOSAlwaysFalse() {
-        // TextEditorStyle is unavailable on tvOS/watchOS — every style must be false there.
-        for style in CosmosTextEditorStyle.allCases {
-            #expect(CosmosTextEditorAvailability.isAvailable(style, on: .tvos) == false)
-            #expect(CosmosTextEditorAvailability.isAvailable(style, on: .watchos) == false)
+    @Test(.tags(.selector), arguments: CosmosTextEditorStyle.allCases, CosmosPlatform.allCases)
+    func textEditorAvailabilityMatrix(_ style: CosmosTextEditorStyle, on platform: CosmosPlatform) {
+        let expected: Bool
+        switch (style, platform) {
+        case (.roundedBorder, .visionos): expected = true
+        case (.automatic, .ios), (.automatic, .macos), (.automatic, .visionos): expected = true
+        case (.plain, .ios), (.plain, .macos), (.plain, .visionos): expected = true
+        default: expected = false // tvOS/watchOS for all; .roundedBorder off visionOS
         }
-    }
-
-    @Test func textEditorAvailabilityIOS() {
-        #expect(CosmosTextEditorAvailability.isAvailable(.automatic, on: .ios))
-        #expect(CosmosTextEditorAvailability.isAvailable(.plain, on: .ios))
-        #expect(!CosmosTextEditorAvailability.isAvailable(.roundedBorder, on: .ios)) // visionOS-only
-    }
-
-    @Test func textEditorAvailabilityMacOS() {
-        #expect(CosmosTextEditorAvailability.isAvailable(.automatic, on: .macos))
-        #expect(CosmosTextEditorAvailability.isAvailable(.plain, on: .macos))
-        #expect(!CosmosTextEditorAvailability.isAvailable(.roundedBorder, on: .macos)) // visionOS-only
-    }
-
-    @Test func textEditorAvailabilityVisionOS() {
-        #expect(CosmosTextEditorAvailability.isAvailable(.automatic, on: .visionos))
-        #expect(CosmosTextEditorAvailability.isAvailable(.plain, on: .visionos))
-        #expect(CosmosTextEditorAvailability.isAvailable(.roundedBorder, on: .visionos)) // visionOS-only
+        #expect(
+            CosmosTextEditorAvailability.isAvailable(style, on: platform) == expected,
+            "\(style) on \(platform.rawValue)"
+        )
     }
 
     @Test func textEditorResolveFallsBackToAutomatic() {

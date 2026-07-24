@@ -73,48 +73,35 @@ struct CosmosWaveCAtomsTests {
     }
 
     // MARK: - CosmosDatePickerAvailability (full style × platform matrix)
+    //
+    // Parameterized over (style, platform) so the whole 6×5 matrix is asserted in one test on any
+    // host (T5). `DatePicker` is type-level unavailable on tvOS (every style false); `.field` and
+    // `.stepperField` are macOS-only; `.wheel` is macOS-unavailable; `.graphical`/`.compact` are
+    // watchOS-unavailable. `automatic` is available everywhere except tvOS.
 
-    @Test func datePickerAvailabilityOnTvOSIsAlwaysFalse() {
-        // DatePicker is type-level unavailable on tvOS — every style must be false there.
-        for style in CosmosDatePickerStyle.allCases {
-            #expect(CosmosDatePickerAvailability.isAvailable(style, on: .tvos) == false)
+    @Test(.tags(.selector), arguments: CosmosDatePickerStyle.allCases, CosmosPlatform.allCases)
+    func datePickerAvailabilityMatrix(_ style: CosmosDatePickerStyle, on platform: CosmosPlatform) {
+        let expected: Bool
+        switch (style, platform) {
+        case (.field, .macos), (.stepperField, .macos):
+            expected = true // field/stepperField are macOS-only
+        case (_, .tvos):
+            expected = false // DatePicker unavailable on tvOS for every style
+        case (.automatic, _):
+            expected = true // automatic available on ios/macos/watchos/visionos
+        case (.wheel, .ios), (.wheel, .watchos), (.wheel, .visionos):
+            expected = true // wheel unavailable on macOS + tvOS
+        case (.graphical, .ios), (.graphical, .macos), (.graphical, .visionos):
+            expected = true // graphical unavailable on watchOS + tvOS
+        case (.compact, .ios), (.compact, .macos), (.compact, .visionos):
+            expected = true // compact unavailable on watchOS + tvOS
+        default:
+            expected = false // wheel off macOS; graphical/compact off watchOS; field/stepperField off non-macOS
         }
-    }
-
-    @Test func datePickerAvailabilityIOS() {
-        #expect(CosmosDatePickerAvailability.isAvailable(.automatic, on: .ios))
-        #expect(CosmosDatePickerAvailability.isAvailable(.wheel, on: .ios))
-        #expect(CosmosDatePickerAvailability.isAvailable(.graphical, on: .ios))
-        #expect(CosmosDatePickerAvailability.isAvailable(.compact, on: .ios))
-        #expect(!CosmosDatePickerAvailability.isAvailable(.field, on: .ios))
-        #expect(!CosmosDatePickerAvailability.isAvailable(.stepperField, on: .ios))
-    }
-
-    @Test func datePickerAvailabilityMacOS() {
-        #expect(CosmosDatePickerAvailability.isAvailable(.automatic, on: .macos))
-        #expect(!CosmosDatePickerAvailability.isAvailable(.wheel, on: .macos))   // wheel is macOS-unavailable
-        #expect(CosmosDatePickerAvailability.isAvailable(.graphical, on: .macos))
-        #expect(CosmosDatePickerAvailability.isAvailable(.compact, on: .macos))
-        #expect(CosmosDatePickerAvailability.isAvailable(.field, on: .macos))    // field is macOS-only
-        #expect(CosmosDatePickerAvailability.isAvailable(.stepperField, on: .macos))
-    }
-
-    @Test func datePickerAvailabilityWatchOS() {
-        #expect(CosmosDatePickerAvailability.isAvailable(.automatic, on: .watchos))
-        #expect(CosmosDatePickerAvailability.isAvailable(.wheel, on: .watchos))
-        #expect(!CosmosDatePickerAvailability.isAvailable(.graphical, on: .watchos)) // graphical watchOS-unavailable
-        #expect(!CosmosDatePickerAvailability.isAvailable(.compact, on: .watchos))  // compact watchOS-unavailable
-        #expect(!CosmosDatePickerAvailability.isAvailable(.field, on: .watchos))
-        #expect(!CosmosDatePickerAvailability.isAvailable(.stepperField, on: .watchos))
-    }
-
-    @Test func datePickerAvailabilityVisionOS() {
-        #expect(CosmosDatePickerAvailability.isAvailable(.automatic, on: .visionos))
-        #expect(CosmosDatePickerAvailability.isAvailable(.wheel, on: .visionos))
-        #expect(CosmosDatePickerAvailability.isAvailable(.graphical, on: .visionos))
-        #expect(CosmosDatePickerAvailability.isAvailable(.compact, on: .visionos))
-        #expect(!CosmosDatePickerAvailability.isAvailable(.field, on: .visionos))     // field macOS-only
-        #expect(!CosmosDatePickerAvailability.isAvailable(.stepperField, on: .visionos))
+        #expect(
+            CosmosDatePickerAvailability.isAvailable(style, on: platform) == expected,
+            "\(style) on \(platform.rawValue)"
+        )
     }
 
     @Test func datePickerResolveFallsBackToAutomatic() {
