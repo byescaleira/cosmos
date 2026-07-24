@@ -174,9 +174,13 @@ private struct CosmosToggleSelectionHapticModifier: ViewModifier {
     let enabled: Bool
     let isOn: Bool
 
+    @ViewBuilder
     func body(content: Content) -> some View {
-        guard enabled else { return AnyView(content) }
-        return AnyView(content.cosmosHaptic(.selection, trigger: isOn))
+        if enabled {
+            content.cosmosHaptic(.selection, trigger: isOn)
+        } else {
+            content
+        }
     }
 }
 
