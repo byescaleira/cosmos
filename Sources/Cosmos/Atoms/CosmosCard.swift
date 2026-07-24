@@ -3,9 +3,15 @@ import SwiftUI
 /// A reference atom rendering a card container (header / body / footer) with token-driven
 /// chrome, adaptive layout, accessibility combination, and tracking.
 ///
+/// - Deprecated: ``CosmosCard`` is deprecated and will be removed in a future Cosmos major.
+///   There is no single native counterpart that works on all 5 platforms, but the same layout
+///   composes directly from `CosmosAdaptiveStack` + the theme's background/border/shadow tokens
+///   (the same primitives this atom wraps) — prefer composing those explicitly.
+///
 /// Implemented as a plain `View` (not `GroupBoxStyle`) because `GroupBox` is absent on
 /// tvOS/watchOS and `GroupBoxStyle` exposes no footer in its configuration. A plain view
 /// works on all 5 platforms.
+@available(*, deprecated, message: "CosmosCard is deprecated and will be removed in a future Cosmos major. Compose with CosmosAdaptiveStack + background tokens directly.")
 public struct CosmosCard<Header: View, Body: View, Footer: View>: View {
     @ViewBuilder private let header: () -> Header
     @ViewBuilder private let bodyContent: () -> Body
@@ -40,6 +46,7 @@ public struct CosmosCard<Header: View, Body: View, Footer: View>: View {
         )
     }
 
+    @available(*, deprecated, message: "CosmosCard is deprecated and will be removed in a future Cosmos major. Compose with CosmosAdaptiveStack + background tokens directly.")
     public init(
         @ViewBuilder header: @escaping () -> Header = { EmptyView() },
         @ViewBuilder body: @escaping () -> Body,
@@ -99,56 +106,5 @@ public struct CosmosCard<Header: View, Body: View, Footer: View>: View {
     private var cardBorder: some View {
         RoundedRectangle(cornerRadius: CosmosRadiusTokens.card, style: .continuous)
             .stroke(theme.colors.outline, lineWidth: increasesContrast ? 1.5 : 1)
-    }
-}
-
-// MARK: - Previews
-
-#Preview("Card simple") {
-    CosmosCard {
-        CosmosText("preview.title").cosmosFont(.headline)
-        CosmosText("preview.description").cosmosFont(.body)
-    }
-    .padding()
-}
-
-#Preview("Card header + footer") {
-    CosmosCard {
-        CosmosText("preview.title").cosmosFont(.headline)
-    } body: {
-        CosmosText("preview.description").cosmosFont(.body)
-    } footer: {
-        CosmosButton("welcome.continue") {}.cosmosButtonStyle(.secondary)
-    }
-    .padding()
-    .preferredColorScheme(.dark)
-}
-
-#Preview("Card landscape reflow") {
-    CosmosCard {
-        CosmosText("preview.title").cosmosFont(.headline)
-    } body: {
-        CosmosText("preview.description").cosmosFont(.body)
-    } footer: {
-        CosmosButton("welcome.continue") {}
-    }
-    .padding()
-    .environment(\.horizontalSizeClass, .regular)
-}
-
-#Preview("Card – mock content + reduce motion", traits: .sizeThatFitsLayout) {
-    CosmosPreviewContainer {
-        CosmosCard {
-            CosmosText(verbatim: CosmosMock.personName()).cosmosFont(.headline)
-        } body: {
-            VStack(alignment: .leading, spacing: 6) {
-                CosmosText(verbatim: CosmosMock.addressLine()).cosmosFont(.body)
-                CosmosText(verbatim: CosmosMock.phone()).cosmosFont(.body)
-            }
-        } footer: {
-            CosmosButton("welcome.continue") {}
-        }
-        .cosmosPreviewVariant(.reduceMotion)
-        .padding()
     }
 }
