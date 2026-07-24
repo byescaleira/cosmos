@@ -84,11 +84,9 @@ struct CosmosUncoveredAtomsBehaviorTests {
         _ = CosmosDatePicker(selection: .constant(Date()), in: range) { Text(verbatim: "In range") }
     }
 
-    @Test(.disabled(if: isTvOS))
-    func datePickerAcceptsEveryStyleVariant() {
-        for style in CosmosDatePickerStyle.allCases {
-            _ = CosmosDatePicker("preview.title", selection: .constant(Date())).cosmosDatePickerStyle(style)
-        }
+    @Test(.disabled(if: isTvOS), arguments: CosmosDatePickerStyle.allCases)
+    func datePickerAcceptsEveryStyleVariant(_ style: CosmosDatePickerStyle) {
+        _ = CosmosDatePicker("preview.title", selection: .constant(Date())).cosmosDatePickerStyle(style)
     }
 
     // MARK: - CosmosGroupBox (T2)
@@ -110,11 +108,10 @@ struct CosmosUncoveredAtomsBehaviorTests {
         _ = CosmosGroupBox(verbatim: "Group") { CosmosText(verbatim: "Content") }
     }
 
-    @Test func groupBoxAcceptsEveryStyleVariant() {
-        for style in CosmosGroupBoxStyle.allCases {
-            _ = CosmosGroupBox("preview.title") { CosmosText(verbatim: "Content") }
-                .cosmosGroupBoxStyle(style)
-        }
+    @Test(arguments: CosmosGroupBoxStyle.allCases)
+    func groupBoxAcceptsEveryStyleVariant(_ style: CosmosGroupBoxStyle) {
+        _ = CosmosGroupBox("preview.title") { CosmosText(verbatim: "Content") }
+            .cosmosGroupBoxStyle(style)
     }
 
     // MARK: - CosmosMenu (T2; Menu unavailable on watchOS — atom falls back to CosmosButton)
@@ -142,10 +139,9 @@ struct CosmosUncoveredAtomsBehaviorTests {
         _ = CosmosMenu("preview.title", systemImage: "ellipsis.circle") { CosmosText(verbatim: "Item") }
     }
 
-    @Test func menuAcceptsEveryStyleVariant() {
-        for style in CosmosMenuStyle.allCases {
-            _ = CosmosMenu("preview.title") { CosmosText(verbatim: "Item") }.cosmosMenuStyle(style)
-        }
+    @Test(arguments: CosmosMenuStyle.allCases)
+    func menuAcceptsEveryStyleVariant(_ style: CosmosMenuStyle) {
+        _ = CosmosMenu("preview.title") { CosmosText(verbatim: "Item") }.cosmosMenuStyle(style)
     }
 
     // MARK: - CosmosLabel (T2)
@@ -170,10 +166,9 @@ struct CosmosUncoveredAtomsBehaviorTests {
         _ = CosmosLabel(verbatim: "Label", image: "PlaceholderAsset")
     }
 
-    @Test func labelAcceptsEveryStyleVariant() {
-        for style in CosmosLabelStyle.allCases {
-            _ = CosmosLabel("preview.title", systemImage: "star").cosmosLabelStyle(style)
-        }
+    @Test(arguments: CosmosLabelStyle.allCases)
+    func labelAcceptsEveryStyleVariant(_ style: CosmosLabelStyle) {
+        _ = CosmosLabel("preview.title", systemImage: "star").cosmosLabelStyle(style)
     }
 
     // MARK: - CosmosList (T2)
@@ -194,10 +189,9 @@ struct CosmosUncoveredAtomsBehaviorTests {
         _ = CosmosList(0..<3) { CosmosText(verbatim: "Row \($0)") }
     }
 
-    @Test func listAcceptsEveryStyleVariant() {
-        for style in CosmosListStyle.allCases {
-            _ = CosmosList { CosmosText(verbatim: "Row") }.cosmosListStyle(style)
-        }
+    @Test(arguments: CosmosListStyle.allCases)
+    func listAcceptsEveryStyleVariant(_ style: CosmosListStyle) {
+        _ = CosmosList { CosmosText(verbatim: "Row") }.cosmosListStyle(style)
     }
 
     // MARK: - CosmosSelectableList (T2)
@@ -243,11 +237,10 @@ struct CosmosUncoveredAtomsBehaviorTests {
                          label: { Text(verbatim: "Pick") })
     }
 
-    @Test func pickerAcceptsEveryStyleVariant() {
-        for style in CosmosPickerStyle.allCases {
-            _ = CosmosPicker("preview.title", selection: .constant("a")) { Text(verbatim: "A").tag("a") }
-                .cosmosPickerStyle(style)
-        }
+    @Test(arguments: CosmosPickerStyle.allCases)
+    func pickerAcceptsEveryStyleVariant(_ style: CosmosPickerStyle) {
+        _ = CosmosPicker("preview.title", selection: .constant("a")) { Text(verbatim: "A").tag("a") }
+            .cosmosPickerStyle(style)
     }
 
     // MARK: - CosmosTabView (T2)
@@ -266,12 +259,11 @@ struct CosmosUncoveredAtomsBehaviorTests {
         }
     }
 
-    @Test func tabViewAcceptsEveryStyleVariant() {
-        for style in CosmosTabViewStyle.allCases {
-            _ = CosmosTabView(selection: .constant("a")) {
-                Tab("A", systemImage: "1.circle", value: "a") { CosmosText(verbatim: "A") }
-            }.cosmosTabViewStyle(style)
-        }
+    @Test(arguments: CosmosTabViewStyle.allCases)
+    func tabViewAcceptsEveryStyleVariant(_ style: CosmosTabViewStyle) {
+        _ = CosmosTabView(selection: .constant("a")) {
+            Tab("A", systemImage: "1.circle", value: "a") { CosmosText(verbatim: "A") }
+        }.cosmosTabViewStyle(style)
     }
 
     // MARK: - CosmosTextField (T2)
@@ -296,10 +288,9 @@ struct CosmosUncoveredAtomsBehaviorTests {
         _ = CosmosTextField(text: .constant(""), onSubmit: {}) { Text(verbatim: "Field") }
     }
 
-    @Test func textFieldAcceptsEveryStyleVariant() {
-        for style in CosmosTextFieldStyle.allCases {
-            _ = CosmosTextField("preview.title", text: .constant("")).cosmosTextFieldStyle(style)
-        }
+    @Test(arguments: CosmosTextFieldStyle.allCases)
+    func textFieldAcceptsEveryStyleVariant(_ style: CosmosTextFieldStyle) {
+        _ = CosmosTextField("preview.title", text: .constant("")).cosmosTextFieldStyle(style)
     }
 
     // MARK: - CosmosTextEditor (T2; gated off tvOS + watchOS — TextEditor unavailable there)
@@ -309,11 +300,9 @@ struct CosmosUncoveredAtomsBehaviorTests {
         _ = CosmosTextEditor(text: .constant(""))
     }
 
-    @Test(.disabled(if: isTvOS || isWatchOS))
-    func textEditorAcceptsEveryStyleVariant() {
-        for style in CosmosTextEditorStyle.allCases {
-            _ = CosmosTextEditor(text: .constant("")).cosmosTextEditorStyle(style)
-        }
+    @Test(.disabled(if: isTvOS || isWatchOS), arguments: CosmosTextEditorStyle.allCases)
+    func textEditorAcceptsEveryStyleVariant(_ style: CosmosTextEditorStyle) {
+        _ = CosmosTextEditor(text: .constant("")).cosmosTextEditorStyle(style)
     }
 
     // MARK: - CosmosToggle (T2 — per-init construction smoke)
@@ -334,10 +323,9 @@ struct CosmosUncoveredAtomsBehaviorTests {
         _ = CosmosToggle(isOn: .constant(false)) { Text(verbatim: "Custom") }
     }
 
-    @Test func toggleAcceptsEveryStyleVariant() {
-        for style in CosmosToggleStyle.allCases {
-            _ = CosmosToggle("preview.title", isOn: .constant(false)).cosmosToggleStyle(style)
-        }
+    @Test(arguments: CosmosToggleStyle.allCases)
+    func toggleAcceptsEveryStyleVariant(_ style: CosmosToggleStyle) {
+        _ = CosmosToggle("preview.title", isOn: .constant(false)).cosmosToggleStyle(style)
     }
 
     // MARK: - CosmosProgress (T2 — per-init construction smoke)
@@ -366,10 +354,9 @@ struct CosmosUncoveredAtomsBehaviorTests {
         _ = CosmosProgress("preview.title", value: 0.5)
     }
 
-    @Test func progressAcceptsEveryStyleVariant() {
-        for style in CosmosProgressStyle.allCases {
-            _ = CosmosProgress().cosmosProgressStyle(style)
-        }
+    @Test(arguments: CosmosProgressStyle.allCases)
+    func progressAcceptsEveryStyleVariant(_ style: CosmosProgressStyle) {
+        _ = CosmosProgress().cosmosProgressStyle(style)
     }
 
     // MARK: - CosmosSlider (T2; gated off tvOS — Slider unavailable there)

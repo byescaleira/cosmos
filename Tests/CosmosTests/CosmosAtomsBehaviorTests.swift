@@ -20,12 +20,11 @@ struct CosmosAtomsBehaviorTests {
         _ = CosmosButton("welcome.continue") {}
     }
 
-    @Test func buttonAcceptsEveryButtonStyleVariant() {
+    @Test(arguments: CosmosButtonStyle.allCases)
+    func buttonAcceptsEveryButtonStyleVariant(_ style: CosmosButtonStyle) {
         // The style applier routes each variant (incl. .glass on iOS/macOS 26); construction must
         // not crash for any selector. Override is subtree-scoped via the .cosmos* modifier.
-        for style in CosmosButtonStyle.allCases {
-            _ = CosmosButton("welcome.continue") {}.cosmosButtonStyle(style)
-        }
+        _ = CosmosButton("welcome.continue") {}.cosmosButtonStyle(style)
     }
 
     @Test func buttonAcceptsSwiftUIShapedOverrides() {
