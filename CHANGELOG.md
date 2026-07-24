@@ -7,6 +7,42 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- **`CosmosAccessibilityPolicy` chokepoint** — a pure, testable policy mirror of
+  `CosmosMotionPolicy` / `CosmosHapticsPolicy`: `shouldIncreaseContrast(…)`,
+  `shouldDifferentiateWithoutColor(…)`, `shouldShowBorders(…)`. Accessibility gates
+  can now be read config-aware rather than as bare environment values.
+- **`CosmosAccessibilityConfiguration` respect flags** — `respectIncreaseContrast`,
+  `respectDifferentiateWithoutColor`, `respectShowBorders` (all default `true`) with
+  init params, mirroring the motion/haptics `respect*` pattern. Pure config today;
+  per-atom wiring lands incrementally (toast first — see Fixed).
+- **Construction-smoke test coverage** for atoms that previously had only
+  selector/availability coverage, plus the three atoms with no tests at all
+  (`CosmosSecureField`, `CosmosAdaptiveStack`, `CosmosLocalizedText`). 339 tests
+  pass (was 258).
+
+### Changed
+- **Motion and haptics modifier bodies are now `@ViewBuilder`.** The four motion
+  modifier bodies (`CosmosAnimationModifier`, `CosmosTransitionModifier`,
+  `CosmosContentTransitionModifier`, the reduce-motion overlay) and the haptic
+  feedback / toggle selection-haptic modifier bodies drop `AnyView` erasure in
+  favor of `@ViewBuilder if/else`, preserving structural identity
+  (`_ConditionalContent`) so SwiftUI diffs the live branch (WWDC21-10022,
+  WWDC23-10160). Non-breaking; behavior is unchanged.
+
+### Fixed
+- **Toast role tint was never applied.** `CosmosToastRole.tint` was declared but
+  unused — `CosmosToastContent` rendered the role icon monochrome by accident. The
+  icon now resolves its tint through a new `CosmosToastTint.color(in:)` resolver
+  against the theme color tokens, and the `accessibilityDifferentiateWithoutColor`
+  gate (read config-aware via `CosmosAccessibilityPolicy`) renders the icon
+  monochrome / shape-only under the gate (WCAG 1.4.1).
+- **`blurReplace` was over-collapsed under Reduce Motion.** It is vestibular-safe
+  (no spatial component), so it now stays under reduce-motion `.substitute` /
+  `.preserve` and collapses only under `.instant` (or when motion is disabled),
+  keeping the crossfade feedback that reduce-motion `.substitute` is meant to
+  preserve.
+
 ## [0.6.0] - 2026-07-23
 
 ### Added
