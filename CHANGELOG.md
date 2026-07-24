@@ -7,6 +7,54 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.8.0] - 2026-07-24
+
+### Changed
+- **Test suite consolidated to a single per-atom axis.** The three competing test
+  axes (chronological Wave A–H, "uncovered behavior", and per-atom) are collapsed
+  into one file per atom (`Cosmos{Atom}Tests`) holding that atom's
+  construction-smoke + selector `allCases` + parameterized availability matrix +
+  style-applier + behavior tests, alongside the existing cross-cutting feature
+  suites. Cross-cutting tests were routed to their feature suite:
+  `CosmosTheme` per-atom selector defaults / fluent builders → `CosmosThemeTests`;
+  `CosmosMotionPolicy` / `CosmosHapticsPolicy` gating + the `valueChange` token →
+  `CosmosMotionTests` / `CosmosHapticsTests`; `CosmosPlatform` → new
+  `CosmosPlatformTests`; the `CosmosOpenURL` modifier → new `CosmosOpenURLTests`.
+  `CosmosStacksTests` was split into `CosmosHStackTests` / `CosmosVStackTests`;
+  the `CosmosToast` `@Suite` dropped its "Wave H" suffix. 11 retired files were
+  deleted. This is the org-audit cleanup (T1) — no test semantics rewritten or
+  dropped; the count goes 350 → 355 (the +5 is the new `CosmosViewThatFits`
+  coverage below).
+
+### Added
+- **`CosmosViewThatFitsTests`** — the one atom with zero test coverage now has
+  construction smoke (default / explicit-axes inits, row→stack reflow
+  alternatives, three-alternative and single-alternative paths). 5 tests.
+- **`CosmosTestSupport`** — shared `isTvOS` / `isWatchOS` host helpers and the
+  `ListRow` `Identifiable` fixture, declared `internal` so every per-atom file
+  reaches them without redeclaring.
+
+### Fixed
+- **`CosmosText` no longer emits a spurious `valueChange` motion event on
+  appear.** `onAppear` was firing
+  `configuration.motion.handler(.motion(.valueChange))` on initial appear — a
+  value-change motion event when no value had changed. The real change animation
+  is already driven by `.cosmosAnimation(.valueChange, value: resolvedText)`.
+  The appear tracking call (`tracking.track(.appear)`) is kept; the spurious
+  motion fire and the now-unused `accessibilityReduceMotion` environment read
+  are removed (zero-warnings binding).
+
+### Internal
+- 355 tests pass across 43 suites (was 350). `swift build -c release` green;
+  per-platform library builds green on iOS / tvOS / watchOS / visionOS (macOS
+  host via `swift test`); zero concurrency warnings.
+
+### Deferred
+- The optional P2 cosmetics (generalize the pure-`#if os()` `*StyleApplier`
+  modifiers into a shared availability-driven applier; add a
+  `.cosmosControlChrome()` helper for the `.tint` / `.controlSize` / `.font`
+  triplet) — partly cosmetic; can ship in a later patch.
+
 ## [0.7.0] - 2026-07-23
 
 ### Added
