@@ -7,6 +7,53 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.9.0] - 2026-07-24
+
+### Deprecated
+- **`CosmosCard` is deprecated** (`@available(*, deprecated)` on the struct and
+  its init) and will be removed in a future Cosmos major. It has no single native
+  counterpart on all 5 platforms, but the same layout composes directly from
+  `CosmosAdaptiveStack` + the theme's background / border / shadow tokens — the
+  same primitives the atom wraps. Migrate by composing those explicitly. The
+  implementation still compiles (one minor of migration runway); the in-file
+  `#Preview` blocks and `CosmosCardTests` were removed (constructing a deprecated
+  type would emit deprecation warnings under the zero-warnings binding).
+  `CosmosRadiusTokens.card` is kept (a generic, reusable public radius token).
+
+### Fixed
+- **`CosmosButton` press animation now routes through the `.cosmosAnimation`
+  chokepoint.** `ChromeBody` wrote a raw `.animation(_:value:)` that inlined
+  `CosmosMotionPolicy.shouldEmit` + `theme.motion.animation(for:)` and
+  duplicated `CosmosAnimationModifier`, breaking the "atoms never write raw
+  animation" rule. It now calls `.cosmosAnimation(.press, value:)`; the orphaned
+  `accessibilityReduceMotion` environment read was dropped. (W1.1)
+- **`CosmosToast` shadow no longer bypasses the motion config.** The
+  `|| reduceMotion` bare-env gate ignored `motion.isEnabled` and
+  `respectReduceMotion`; it now routes through `CosmosMotionPolicy.shouldEmit`
+  so a consumer with `respectReduceMotion = false` keeps the shadow and
+  `motion.isEnabled = false` still suppresses it. (W1.2)
+- **`.cosmosReduceMotion(_:)` no longer resets the whole motion config.** It
+  rebuilt `CosmosMotionConfiguration` from memberwise defaults, clobbering
+  `isEnabled`, `respectReduceTransparency`, both reduce-* policies, `stagger`,
+  and `handler` for the subtree. It now reads the env config, mutates only
+  `respectReduceMotion`, and reinjects via `withMotion` (mirrors
+  `CosmosEnabledModifier`). (W1.3)
+- **`CosmosToast` and `CosmosTextField` chrome now collapse under Reduce
+  Transparency.** `.glassEffect` (Liquid Glass) and `.ultraThinMaterial` do not
+  honor the Reduce Transparency accessibility setting on their own; both now
+  swap to the opaque `surface` token when
+  `CosmosMotionPolicy.shouldCollapseTransparency` says to (config- and
+  policy-aware), keeping the glass / material look otherwise. The dead
+  material-based `toastBackgroundStyle` was removed. (W1.4, W1.5)
+
+### Internal
+- 352 tests pass across 42 suites (was 355; the 3 `CosmosCardTests` were
+  removed with the deprecation). `swift build -c release` green; per-platform
+  library builds green on iOS / tvOS / watchOS / visionOS (macOS host via
+  `swift test`); zero concurrency warnings, zero deprecation warnings
+  internally. Wave 1 of the post-0.8.0 audit
+  (`vault/08-riscos/cosmos-audit-2026-07-24.md`); Waves 2–4 deferred.
+
 ## [0.8.0] - 2026-07-24
 
 ### Changed

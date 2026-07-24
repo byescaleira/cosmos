@@ -9,7 +9,7 @@ import SwiftUI
 ///
 /// High-contrast variants: the UIKit/AppKit-backed defaults (`.label`, `.systemBlue`, …) already
 /// adapt to `colorSchemeContrast` natively. Atoms that draw **synthetic** surfaces/outlines
-/// (``CosmosCard``, ``CosmosToastContent``, ``CosmosProgress``) additionally read
+/// (``CosmosToastContent``, ``CosmosProgress``) additionally read
 /// `@Environment(\.colorSchemeContrast)` and strengthen their chrome through
 /// ``CosmosAccessibilityPolicy/shouldIncreaseContrast(respectIncreaseContrast:contrast:)`` when
 /// Increased Contrast is on. App-layer asset catalogs remain the path to per-color high-contrast

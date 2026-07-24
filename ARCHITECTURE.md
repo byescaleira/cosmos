@@ -155,7 +155,10 @@ Two shapes, by what the underlying SwiftUI component allows:
   `CosmosHStack`, `CosmosVStack`, `CosmosAdaptiveStack`, `CosmosScrollView`, `CosmosSection`,
   `CosmosList`, `CosmosSelectableList`, `CosmosTabView`, `CosmosTextField`, `CosmosSecureField`,
   `CosmosTextEditor`, `CosmosSlider`, `CosmosStepper`, `CosmosDatePicker`, `CosmosPicker`,
-  `CosmosCard`, `CosmosToast`.
+  `CosmosToast`.
+
+  (`CosmosCard` is `@available(*, deprecated)` as of 0.9.0 — slated for removal in a future
+  Cosmos major; compose `CosmosAdaptiveStack` + background tokens directly.)
 
 Atoms have minimal, content-only initializers; state and configuration come from the environment.
 Input atoms that require `Binding` (`CosmosTextField`, `CosmosToggle`, `CosmosSlider`,
