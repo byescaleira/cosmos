@@ -16,6 +16,7 @@ public struct CosmosToastContent<Message: View>: View {
     @Environment(\.cosmosTheme) private var theme
     @Environment(\.cosmosConfiguration) private var configuration
     @Environment(\.accessibilityDifferentiateWithoutColor) private var differentiateWithoutColor
+    @Environment(\.colorSchemeContrast) private var colorSchemeContrast
 
     public init(role: CosmosToastRole, @ViewBuilder message: @escaping () -> Message) {
         self.role = role
@@ -42,6 +43,17 @@ public struct CosmosToastContent<Message: View>: View {
         )
     }
 
+    /// Under Increased Contrast (config-aware), the role icon renders monochrome against the
+    /// role tint at full opacity so the symbol shape stays the legible signal — the same
+    /// non-color intent as Differentiate Without Color, driven here by contrast rather than the
+    /// color-difference gate.
+    private var increasesContrast: Bool {
+        CosmosAccessibilityPolicy.shouldIncreaseContrast(
+            respectIncreaseContrast: configuration.accessibility.respectIncreaseContrast,
+            contrast: colorSchemeContrast
+        )
+    }
+
     public var body: some View {
         // Reflow by available width: the icon sits beside the message when there's room
         // (default, sighted), and stacks above it when the toast width is constrained
@@ -52,6 +64,14 @@ public struct CosmosToastContent<Message: View>: View {
             toastStack
         }
         .padding(5)
+        .overlay {
+            // Increased Contrast adds a hairline outline so the toast stays a distinct shape
+            // against the surface — the chrome part the role tint alone doesn't reinforce.
+            if increasesContrast {
+                RoundedRectangle(cornerRadius: CosmosRadiusTokens.small, style: .continuous)
+                    .stroke(theme.colors.outline, lineWidth: 1)
+            }
+        }
     }
 
     /// Horizontal layout — icon beside the message (default when width allows).

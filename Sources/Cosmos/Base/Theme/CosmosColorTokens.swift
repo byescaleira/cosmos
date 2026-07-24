@@ -7,10 +7,13 @@ import SwiftUI
 /// importing UIKit; on macOS the AppKit equivalents are used via `Color(nsColor:)`; on
 /// watchOS/visionOS, SwiftUI's adaptive `Color.primary`/`.secondary` and materials fill in.
 ///
-/// High-contrast variants are surfaced through an asset catalog at the app layer. Atoms do
-/// not yet adapt at runtime via `@Environment(\.colorSchemeContrast)` / `ShapeStyle.resolve(in:)`
-/// — that increased-contrast gate is a tracked gap (see the vault risks index), not a current
-/// behavior.
+/// High-contrast variants: the UIKit/AppKit-backed defaults (`.label`, `.systemBlue`, …) already
+/// adapt to `colorSchemeContrast` natively. Atoms that draw **synthetic** surfaces/outlines
+/// (``CosmosCard``, ``CosmosToastContent``, ``CosmosProgress``) additionally read
+/// `@Environment(\.colorSchemeContrast)` and strengthen their chrome through
+/// ``CosmosAccessibilityPolicy/shouldIncreaseContrast(respectIncreaseContrast:contrast:)`` when
+/// Increased Contrast is on. App-layer asset catalogs remain the path to per-color high-contrast
+/// variants; this is the in-library surface/border strengthening.
 public struct CosmosColorTokens: Sendable {
     /// Primary foreground content (high-emphasis text/icons).
     public var primary: Color

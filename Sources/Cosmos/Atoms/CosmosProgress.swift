@@ -142,12 +142,21 @@ private struct CosmosProgressChromeBody: View {
     @Environment(\.cosmosTheme) private var theme
     @Environment(\.cosmosConfiguration) private var cosmosConfiguration
     @Environment(\.accessibilityReduceTransparency) private var reduceTransparency
+    @Environment(\.colorSchemeContrast) private var colorSchemeContrast
 
     /// Collapses the translucent track to opaque when Reduce Transparency collapses materials
     /// (config- and policy-aware via ``CosmosMotionPolicy/shouldCollapseTransparency``, mirroring
-    /// the ``CosmosCard`` shadow-suppression pattern — not the bare env value).
+    /// the ``CosmosCard`` shadow-suppression pattern — not the bare env value), or when Increased
+    /// Contrast is on (config-aware via ``CosmosAccessibilityPolicy/shouldIncreaseContrast``) so the
+    /// unfilled track stays a clearly distinct shape rather than a faint tint.
     private var trackFillOpacity: Double {
-        CosmosMotionPolicy.shouldCollapseTransparency(
+        if CosmosAccessibilityPolicy.shouldIncreaseContrast(
+            respectIncreaseContrast: cosmosConfiguration.accessibility.respectIncreaseContrast,
+            contrast: colorSchemeContrast
+        ) {
+            return 1.0
+        }
+        return CosmosMotionPolicy.shouldCollapseTransparency(
             respectReduceTransparency: cosmosConfiguration.motion.respectReduceTransparency,
             reduceTransparency: reduceTransparency,
             policy: cosmosConfiguration.motion.reduceTransparencyPolicy
