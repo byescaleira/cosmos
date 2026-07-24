@@ -59,12 +59,12 @@ import Foundation
 /// **Accessibility.** Apply `.cosmosAccessibilityLabel` here for the image alt text; it flows onto
 /// the image surface via `applyCosmosAccessibility`. The default failure retry ``CosmosButton``
 /// carries its own accessibility. Dynamic Type flows through the slot views.
-public struct CosmosAsyncImage<Content: View>: View {
+public struct CosmosAsyncImage<Content: View, Placeholder: View, Failure: View>: View {
     private let url: URL?
     private let scale: CGFloat
     @ViewBuilder private let content: (Image) -> Content
-    @ViewBuilder private let placeholder: () -> AnyView
-    @ViewBuilder private let failure: (any Error, @escaping () -> Void) -> AnyView
+    @ViewBuilder private let placeholder: () -> Placeholder
+    @ViewBuilder private let failure: (any Error, @escaping () -> Void) -> Failure
 
     @Environment(\.cosmosConfiguration) private var configuration
     @Environment(\.cosmosTheme) private var theme
@@ -82,25 +82,46 @@ public struct CosmosAsyncImage<Content: View>: View {
         url: URL?,
         scale: CGFloat = 1,
         @ViewBuilder content: @escaping (Image) -> Content
+    ) where Placeholder == CosmosAsyncImagePlaceholder, Failure == CosmosAsyncImageFailure {
+        self.url = url
+        self.scale = scale
+        self.content = content
+        self.placeholder = { CosmosAsyncImagePlaceholder() }
+        self.failure = { error, retry in CosmosAsyncImageFailure(error: error, retry: retry) }
+    }
+
+    /// Creates an async image with custom, **typed** placeholder and failure slots. The `retry`
+    /// closure handed to `failure` increments the atom's retry token (re-fetches); a custom retry
+    /// affordance should call it so it shares the same re-fetch + haptic path. Slots are typed
+    /// generics (`Placeholder`/`Failure`), not `AnyView`-erased, so each slot keeps its structural
+    /// identity across phase swaps — the diffing win `AnyView` would forfeit (WWDC21-10022).
+    public init(
+        url: URL?,
+        scale: CGFloat = 1,
+        @ViewBuilder content: @escaping (Image) -> Content,
+        @ViewBuilder placeholder: @escaping () -> Placeholder,
+        @ViewBuilder failure: @escaping (_ error: any Error, _ retry: @escaping () -> Void) -> Failure
     ) {
         self.url = url
         self.scale = scale
         self.content = content
-        self.placeholder = { AnyView(CosmosAsyncImagePlaceholder()) }
-        self.failure = { error, retry in AnyView(CosmosAsyncImageFailure(error: error, retry: retry)) }
+        self.placeholder = placeholder
+        self.failure = failure
     }
 
-    /// Creates an async image with custom placeholder and failure slots. The `retry` closure handed
-    /// to `failure` increments the atom's retry token (re-fetches); a custom retry affordance should
-    /// call it so it shares the same re-fetch + haptic path. Slots are `AnyView`-erased so the atom
-    /// stays a single-generic (`Content` = loaded view type).
+    /// Creates an async image with `AnyView`-erased custom slots. **Deprecated** — kept for the
+    /// migration runway (per `VERSIONING.md`); prefer the typed generic-slot init above so the
+    /// placeholder/failure slots keep their view identity across phase swaps (WWDC21-10022). The
+    /// deprecated overload is the more-constrained one, so legacy `AnyView` call sites resolve here
+    /// and emit the migration warning; typed call sites resolve to the generic init.
+    @available(*, deprecated, message: "Use the typed generic slot inits (placeholder/failure as typed closures, not AnyView) to preserve slot view identity (WWDC21-10022)")
     public init(
         url: URL?,
         scale: CGFloat = 1,
         @ViewBuilder content: @escaping (Image) -> Content,
         @ViewBuilder placeholder: @escaping () -> AnyView,
         @ViewBuilder failure: @escaping (_ error: any Error, _ retry: @escaping () -> Void) -> AnyView
-    ) {
+    ) where Placeholder == AnyView, Failure == AnyView {
         self.url = url
         self.scale = scale
         self.content = content
@@ -151,7 +172,7 @@ public struct CosmosAsyncImage<Content: View>: View {
     }
 
     /// Builds the failure slot, handing it the `retry` closure (increments `retryToken` → re-fetch).
-    private func failureSlot(_ error: any Error) -> AnyView {
+    private func failureSlot(_ error: any Error) -> Failure {
         failure(error, { retryToken &+= 1 })
     }
 
@@ -171,12 +192,16 @@ public struct CosmosAsyncImage<Content: View>: View {
 
 // MARK: - Default slot views
 
-/// Default placeholder: an indeterminate ``CosmosProgress`` centered on a `theme.colors.surface`
-/// rounded rect. Reads the theme from the environment.
-private struct CosmosAsyncImagePlaceholder: View {
+/// The default placeholder slot: an indeterminate ``CosmosProgress`` centered on a
+/// `theme.colors.surface` rounded rect. Reads the theme from the environment. Public so it can
+/// serve as the constrained default `Placeholder` of ``CosmosAsyncImage`` and be reused as a
+/// custom slot.
+public struct CosmosAsyncImagePlaceholder: View {
     @Environment(\.cosmosTheme) private var theme
 
-    var body: some View {
+    public init() {}
+
+    public var body: some View {
         ZStack {
             RoundedRectangle(cornerRadius: CosmosRadiusTokens.medium, style: .continuous)
                 .fill(theme.colors.surface)
@@ -185,15 +210,22 @@ private struct CosmosAsyncImagePlaceholder: View {
     }
 }
 
-/// Default failure slot: an `exclamationmark.triangle` glyph in `theme.colors.error` (hierarchical
-/// rendering, floor) + a localized "Retry" ``CosmosButton`` wired to the atom's `retry` closure.
-private struct CosmosAsyncImageFailure: View {
+/// The default failure slot: an `exclamationmark.triangle` glyph in `theme.colors.error`
+/// (hierarchical rendering, floor) + a localized "Retry" ``CosmosButton`` wired to the atom's
+/// `retry` closure. Public so it can serve as the constrained default `Failure` of
+/// ``CosmosAsyncImage`` and be reused as a custom slot.
+public struct CosmosAsyncImageFailure: View {
     let error: any Error
     let retry: () -> Void
 
     @Environment(\.cosmosTheme) private var theme
 
-    var body: some View {
+    public init(error: any Error, retry: @escaping () -> Void) {
+        self.error = error
+        self.retry = retry
+    }
+
+    public var body: some View {
         VStack(spacing: CosmosSpacingTokens.small) {
             Image(systemName: "exclamationmark.triangle")
                 .symbolRenderingMode(.hierarchical)
@@ -313,16 +345,14 @@ public enum CosmosAsyncImageAvailability {
     CosmosAsyncImage(
         url: CosmosMock.imageURL(seed: "cosmos-custom", width: 480, height: 320),
         content: { $0.resizable().scaledToFill() },
-        placeholder: { AnyView(Color.gray.opacity(0.15)) },
+        placeholder: { Color.gray.opacity(0.15) },
         failure: { _, retry in
-            AnyView(
-                VStack(spacing: 8) {
-                    Image(systemName: "photo.badge.exclamation")
-                        .font(.system(size: 28))
-                    CosmosButton("cosmos.asyncimage.retry", action: retry)
-                        .cosmosButtonStyle(.secondary)
-                }
-            )
+            VStack(spacing: 8) {
+                Image(systemName: "photo.badge.exclamation")
+                    .font(.system(size: 28))
+                CosmosButton("cosmos.asyncimage.retry", action: retry)
+                    .cosmosButtonStyle(.secondary)
+            }
         }
     )
     .frame(width: 320, height: 220)

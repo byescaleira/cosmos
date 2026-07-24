@@ -163,11 +163,12 @@ struct CosmosAtomsBehaviorTests {
     @Test func asyncImageConstructsWithCustomPlaceholderAndFailure() {
         // The `retry` closure is non-Sendable; do not send it into another view — exercise the
         // failure slot with a static view and ignore `retry` (its wiring is covered by previews).
+        // Typed (non-AnyView) slot closures — the canonical generic form (WWDC21-10022 identity).
         _ = CosmosAsyncImage(
             url: URL(string: "https://example.com/image.png"),
             content: { image in image },
-            placeholder: { AnyView(CosmosText(verbatim: "Loading…")) },
-            failure: { _, _ in AnyView(CosmosText(verbatim: "Failed to load")) }
+            placeholder: { CosmosText(verbatim: "Loading…") },
+            failure: { _, _ in CosmosText(verbatim: "Failed to load") }
         )
     }
 }
