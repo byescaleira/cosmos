@@ -20,6 +20,15 @@ struct CosmosHapticsTests {
         #expect(CosmosHapticsPolicy.shouldEmit(isEnabled: true, respectReduceMotion: false, reduceMotion: true) == true)
     }
 
+    // MARK: - Policy truth-table sanity (Wave A atoms route through this)
+
+    @Test func hapticsPolicyGatesToggleSelectionHaptic() {
+        // The .button toggle variant's selection haptic is gated by the haptics policy.
+        #expect(CosmosHapticsPolicy.shouldEmit(isEnabled: false, respectReduceMotion: true, reduceMotion: false) == false)
+        #expect(CosmosHapticsPolicy.shouldEmit(isEnabled: true, respectReduceMotion: true, reduceMotion: true) == false)
+        #expect(CosmosHapticsPolicy.shouldEmit(isEnabled: true, respectReduceMotion: true, reduceMotion: false) == true)
+    }
+
     @Test func impactFactoryDefaultsIntensityToNil() {
         if case .impact(let weight, let intensity) = CosmosHapticsFeedback.impact(weight: .light) {
             #expect(weight == .light)

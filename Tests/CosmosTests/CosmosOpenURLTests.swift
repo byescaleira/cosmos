@@ -2,8 +2,8 @@ import Testing
 import Foundation
 @testable import Cosmos
 
-@Suite("Wave B Atoms")
-struct CosmosWaveBAtomsTests {
+@Suite("CosmosOpenURL")
+struct CosmosOpenURLTests {
 
     // MARK: - CosmosOpenURLResolution
 

@@ -3,7 +3,7 @@ import SwiftUI
 @testable import Cosmos
 
 @MainActor
-@Suite("CosmosToast (Wave H)")
+@Suite("CosmosToast")
 struct CosmosToastTests {
 
     // MARK: - CosmosToastPlacement

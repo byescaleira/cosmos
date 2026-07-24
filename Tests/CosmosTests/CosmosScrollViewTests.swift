@@ -2,8 +2,19 @@ import Testing
 import SwiftUI
 @testable import Cosmos
 
-@Suite("Wave F Atoms")
-struct CosmosWaveFAtomsTests {
+@MainActor
+@Suite("CosmosScrollView")
+struct CosmosScrollViewTests {
+
+    // MARK: - Construction
+
+    @Test func scrollViewConstructsWithDefaultAxes() {
+        _ = CosmosScrollView { CosmosText(verbatim: "Content") }
+    }
+
+    @Test func scrollViewConstructsWithHorizontalAxesAndNoIndicators() {
+        _ = CosmosScrollView(.horizontal, showsIndicators: false) { CosmosText(verbatim: "Content") }
+    }
 
     // MARK: - CosmosScrollAnchor selector enum
 
