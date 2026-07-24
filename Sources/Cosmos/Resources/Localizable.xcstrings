@@ -2,9 +2,25 @@
   "sourceLanguage" : "en",
   "strings" : {
     "Loading" : {
-
+      "comment" : "Generic progress / loading indicator label shown while content is being fetched.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Loading…"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Carregando…"
+          }
+        }
+      }
     },
     "cosmos.asyncimage.retry" : {
+      "comment" : "Button label on a failed async image load; retries the download.",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
@@ -22,6 +38,7 @@
       }
     },
     "preview.description" : {
+      "comment" : "Reference-component description used by design-system previews; long-form copy.",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
@@ -39,6 +56,7 @@
       }
     },
     "preview.name" : {
+      "comment" : "Proper-noun product name shown by design-system previews; identical across locales.",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
@@ -56,6 +74,7 @@
       }
     },
     "preview.title" : {
+      "comment" : "Title shown at the top of the design-system preview surface.",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
@@ -73,6 +92,7 @@
       }
     },
     "welcome.continue" : {
+      "comment" : "Primary call-to-action button label on a welcome / onboarding surface.",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
@@ -90,6 +110,7 @@
       }
     },
     "welcome.headline" : {
+      "comment" : "Headline greeting on a welcome / onboarding surface; sentence case.",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {

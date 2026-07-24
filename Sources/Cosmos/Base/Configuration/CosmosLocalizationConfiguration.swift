@@ -26,9 +26,15 @@ public struct CosmosLocalizationConfiguration: Sendable {
     public static let `default` = CosmosLocalizationConfiguration()
 
     /// Resolves a localized string for `key`, honoring the configured `locale` when present.
-    public func string(for key: String?) -> String? {
+    ///
+    /// `comment` is the translator context for the key (one of the four components of a localizable
+    /// string per WWDC23-10155); it is forwarded to `NSLocalizedString` so it exports into XLIFF
+    /// `<note>` when the catalog is extracted. It is **not** used by the `.xcstrings` parser route
+    /// (the catalog already carries its own `comment` field per key).
+    public func string(for key: String?, comment: String? = nil) -> String? {
         guard let key else { return nil }
         let resolvedBundle = bundle ?? Bundle.module
+        let nsComment = comment ?? ""
 
         // Route 1 — compiled `.lproj/Localizable.strings` (Xcode 27 / Swift 6.4 SwiftPM compiles
         // the `.xcstrings` into per-locale `.lproj` sub-bundles). When a locale is explicitly
@@ -38,7 +44,7 @@ public struct CosmosLocalizationConfiguration: Sendable {
         // route is the robust path.
         if let locale {
             if let lprojBundle = Self.lprojBundle(for: locale, in: resolvedBundle) {
-                return NSLocalizedString(key, tableName: tableName, bundle: lprojBundle, value: key, comment: "")
+                return NSLocalizedString(key, tableName: tableName, bundle: lprojBundle, value: key, comment: nsComment)
             }
         }
 
@@ -51,7 +57,7 @@ public struct CosmosLocalizationConfiguration: Sendable {
             return value
         }
 
-        return NSLocalizedString(key, tableName: tableName, bundle: resolvedBundle, value: key, comment: "")
+        return NSLocalizedString(key, tableName: tableName, bundle: resolvedBundle, value: key, comment: nsComment)
     }
 
     /// Returns the `.lproj` sub-bundle for `locale`, trying the full identifier first and then
