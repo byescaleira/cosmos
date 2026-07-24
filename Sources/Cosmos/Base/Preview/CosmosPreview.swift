@@ -60,17 +60,13 @@ public struct CosmosPreviewContainer<Content: View>: View {
     }
 
     public var body: some View {
-        // Type the accumulator as AnyView from the start so reassignment is legal. (Inferring the
-        // opaque type from `content()…` and then assigning `AnyView` to it is a type mismatch.)
-        var view: AnyView = AnyView(
-            content()
-                .environment(\.cosmosConfiguration, configuration)
-                .environment(\.cosmosTheme, theme)
-        )
-        if let locale {
-            view = AnyView(view.environment(\.locale, locale))
-        }
-        return view
+        // `@ViewBuilder` composition (via `ifLet`) preserves structural identity (`_ConditionalContent`)
+        // instead of `AnyView` erasure — view identity (focus/scroll/animation state) survives the
+        // optional `locale` override flipping, and SwiftUI diffing stays on the fast path.
+        content()
+            .environment(\.cosmosConfiguration, configuration)
+            .environment(\.cosmosTheme, theme)
+            .ifLet(locale) { $0.environment(\.locale, $1) }
     }
 }
 
@@ -98,6 +94,12 @@ extension View {
         showButtonShapes: Bool? = nil,
         colorSchemeContrast: ColorSchemeContrast? = nil
     ) -> some View {
+        // `AnyView` accumulator — pragmatic over a `@ViewBuilder` conditional chain. Twelve
+        // optional overrides composed with `ifLet` would produce a 12-deep `_ConditionalContent`
+        // threading the (possibly very complex) `Content` generic, which explodes the `-O`
+        // release-mode type-checker for heavy content (e.g. `CosmosTabView`'s tab builder).
+        // `AnyView` keeps each step's type simple; the identity loss is acceptable for a preview
+        // helper whose overrides don't flip at runtime per-call.
         var view: AnyView = AnyView(self)
         if let colorScheme { view = AnyView(view.environment(\.colorScheme, colorScheme)) }
         if let dynamicTypeSize { view = AnyView(view.environment(\.dynamicTypeSize, dynamicTypeSize)) }
@@ -115,6 +117,12 @@ extension View {
     }
 
     /// Applies a pre-baked bundle of environment overrides (see ``CosmosPreviewVariant``).
+    ///
+    /// Dispatch is a runtime `switch` over a fixed enum, so each call site resolves to exactly
+    /// one branch and never flips branches on re-evaluation — `AnyView` erasure here is the
+    /// pragmatic choice. (A wide `@ViewBuilder` switch over 10 distinct opaque branches crashes
+    /// the Xcode 27 beta SILGen; the per-override `ifLet` chain in ``cosmosPreviewEnv`` is where
+    /// structural identity actually matters, since stacked overrides flip at runtime.)
     public func cosmosPreviewVariant(_ variant: CosmosPreviewVariant) -> some View {
         switch variant {
         case .default:
@@ -137,6 +145,23 @@ extension View {
             return AnyView(self.cosmosPreviewEnv(differentiateWithoutColor: true))
         case .showBorders:
             return AnyView(self.cosmosPreviewEnv(showButtonShapes: true))
+        }
+    }
+}
+
+// MARK: - Conditional-apply helper (keeps structural identity, no `AnyView`)
+
+private extension View {
+    /// Applies `transform` only when `value` is non-`nil`, else passes `self` through unchanged.
+    /// `@ViewBuilder` produces `_ConditionalContent` (structural identity preserved) rather than
+    /// `AnyView` erasure — used by the preview env accumulator so optional overrides don't churn
+    /// view identity when toggled (WWDC21-10022: "Require. Infer. Use.").
+    @ViewBuilder
+    func ifLet<Value>(_ value: Value?, transform: (Self, Value) -> some View) -> some View {
+        if let value {
+            transform(self, value)
+        } else {
+            self
         }
     }
 }
