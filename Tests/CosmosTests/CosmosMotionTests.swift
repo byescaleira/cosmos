@@ -46,6 +46,29 @@ struct CosmosMotionTests {
         #expect(CosmosMotionPolicy.shouldEmit(isEnabled: true, respectReduceMotion: false, reduceMotion: true) == true)
     }
 
+    // MARK: - Policy truth-table sanity (Wave A atoms route through this)
+
+    @Test func motionPolicyGatesProgressAndToggleMotion() {
+        // valueChange motion is suppressed when motion is disabled or (reduce-motion && respected).
+        #expect(CosmosMotionPolicy.shouldEmit(isEnabled: false, respectReduceMotion: true, reduceMotion: false) == false)
+        #expect(CosmosMotionPolicy.shouldEmit(isEnabled: true, respectReduceMotion: true, reduceMotion: true) == false)
+        #expect(CosmosMotionPolicy.shouldEmit(isEnabled: true, respectReduceMotion: true, reduceMotion: false) == true)
+        // respectReduceMotion = false lets motion emit even under reduce-motion (intentional override).
+        #expect(CosmosMotionPolicy.shouldEmit(isEnabled: true, respectReduceMotion: false, reduceMotion: true) == true)
+    }
+
+    // MARK: - valueChange token resolution (used by CosmosProgressChrome)
+
+    @MainActor
+    @Test func valueChangeTokenResolves() {
+        let tokens = CosmosMotionTokens.default
+        let full = tokens.animation(for: .valueChange, reduceMotion: false, policy: .substitute)
+        #expect(full != nil)
+        // reduce-motion + .instant → nil (snap); .substitute → short easeInOut.
+        #expect(tokens.animation(for: .valueChange, reduceMotion: true, policy: .instant) == nil)
+        #expect(tokens.animation(for: .valueChange, reduceMotion: true, policy: .substitute) != nil)
+    }
+
     // MARK: - Reduce-transparency collapse (chokepoint)
 
     @Test func transparencyCollapseOnlyWhenActiveRespectedAndSubstituting() {
