@@ -23,10 +23,11 @@ public struct CosmosAccessibilityCustomContent: Sendable {
 /// - `accessibilityDifferentiateWithoutColor` — wired through
 ///   ``CosmosAccessibilityPolicy/shouldDifferentiateWithoutColor(respectDifferentiateWithoutColor:differentiateWithoutColor:)``
 ///   (e.g. ``CosmosToastContent`` falls to a monochrome, shape-only icon when active).
-/// - `colorSchemeContrast` / `accessibilityShowBorders` — the `respect*` flags are present
-///   and the policy chokepoints exist, but per-atom adaptive surfaces / borderless-button
-///   shapes are not yet wired (tracked — see the vault risks index). High-contrast color
-///   variants are surfaced through an asset catalog at the app layer.
+/// - `accessibilityShowBorders` — wired through
+///   ``CosmosAccessibilityPolicy/shouldShowBorders(respectShowBorders:showBorders:)``: the
+///   borderless `.ghost` button draws a capsule outline when the gate is on (see
+///   ``CosmosButton``). High-contrast `colorSchemeContrast` variants are surfaced through an
+///   asset catalog at the app layer.
 ///
 /// `AccessibilityTraits` and `AccessibilityCustomContentImportance` are SwiftUI `Sendable`
 /// types, so this struct is `Sendable` (SE-0302).
