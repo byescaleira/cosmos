@@ -216,12 +216,23 @@ private struct CosmosTextFieldStyleApplier: ViewModifier {
 /// Composes the `.cosmos` chrome (padding + `.ultraThinMaterial` background + clipShape) and the
 /// focus-aware accent border, animated through the single `.cosmosAnimation(.focus, value:)`
 /// chokepoint. Only renders for the `.cosmos` style; native styles keep their own chrome and
-/// focus ring. `Material` collapses under Reduce Transparency via SwiftUI (config-aware collapse
-/// is the caller's responsibility via the theme's material choice).
+/// focus ring. The `.ultraThinMaterial` background collapses to the opaque `surface` token under
+/// Reduce Transparency (config- and policy-aware via
+/// ``CosmosMotionPolicy/shouldCollapseTransparency``, not the bare env value).
 private struct CosmosTextFieldFocusBorderModifier: ViewModifier {
     let style: CosmosTextFieldStyle
     let isFocused: Bool
     @Environment(\.cosmosTheme) private var theme
+    @Environment(\.cosmosConfiguration) private var configuration
+    @Environment(\.accessibilityReduceTransparency) private var reduceTransparency
+
+    private var collapsesTransparency: Bool {
+        CosmosMotionPolicy.shouldCollapseTransparency(
+            respectReduceTransparency: configuration.motion.respectReduceTransparency,
+            reduceTransparency: reduceTransparency,
+            policy: configuration.motion.reduceTransparencyPolicy
+        )
+    }
 
     func body(content: Content) -> some View {
         switch style {
@@ -229,7 +240,10 @@ private struct CosmosTextFieldFocusBorderModifier: ViewModifier {
             content
                 .padding(.horizontal, CosmosSpacingTokens.small)
                 .padding(.vertical, CosmosSpacingTokens.xs)
-                .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: CosmosRadiusTokens.medium, style: .continuous))
+                .background(
+                    collapsesTransparency ? AnyShapeStyle(theme.colors.surface) : AnyShapeStyle(.ultraThinMaterial),
+                    in: RoundedRectangle(cornerRadius: CosmosRadiusTokens.medium, style: .continuous)
+                )
                 .overlay(
                     RoundedRectangle(cornerRadius: CosmosRadiusTokens.medium, style: .continuous)
                         .strokeBorder(theme.colors.accent.opacity(isFocused ? 1.0 : 0.0), lineWidth: 1.5)

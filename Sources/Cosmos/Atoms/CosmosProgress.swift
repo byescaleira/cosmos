@@ -130,7 +130,8 @@ public enum CosmosProgressAccessibility {
 /// string), delegating the indeterminate case to the native circular spinner. The native spinner
 /// is requested with an explicit `.progressViewStyle(.circular)` to avoid recursing into this style.
 /// The translucent track collapses to opaque when `accessibilityReduceTransparency` is active and
-/// `configuration.motion.respectReduceTransparency` is set (config-aware, mirroring ``CosmosCard``).
+/// `configuration.motion.respectReduceTransparency` is set (config-aware, via
+/// ``CosmosMotionPolicy/shouldCollapseTransparency``).
 public struct CosmosProgressChrome: ProgressViewStyle {
     public init() {}
     public func makeBody(configuration: Configuration) -> some View {
@@ -146,10 +147,10 @@ private struct CosmosProgressChromeBody: View {
     @Environment(\.colorSchemeContrast) private var colorSchemeContrast
 
     /// Collapses the translucent track to opaque when Reduce Transparency collapses materials
-    /// (config- and policy-aware via ``CosmosMotionPolicy/shouldCollapseTransparency``, mirroring
-    /// the ``CosmosCard`` shadow-suppression pattern — not the bare env value), or when Increased
-    /// Contrast is on (config-aware via ``CosmosAccessibilityPolicy/shouldIncreaseContrast``) so the
-    /// unfilled track stays a clearly distinct shape rather than a faint tint.
+    /// (config- and policy-aware via ``CosmosMotionPolicy/shouldCollapseTransparency`` — not the
+    /// bare env value), or when Increased Contrast is on (config-aware via
+    /// ``CosmosAccessibilityPolicy/shouldIncreaseContrast``) so the unfilled track stays a clearly
+    /// distinct shape rather than a faint tint.
     private var trackFillOpacity: Double {
         if CosmosAccessibilityPolicy.shouldIncreaseContrast(
             respectIncreaseContrast: cosmosConfiguration.accessibility.respectIncreaseContrast,

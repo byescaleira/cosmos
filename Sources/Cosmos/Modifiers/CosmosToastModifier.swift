@@ -95,12 +95,27 @@ private struct CosmosToastHost<Key: Hashable, ToastContent: View>: View {
     /// `Equatable`) and the toast content's `.id(presentToken)` so a re-present animates out/in.
     @State private var presentToken = 0
 
-    private var shadowHidden: Bool {
+    /// Reduce-transparency collapses materials to a solid token (config- and policy-aware via
+    /// ``CosmosMotionPolicy/shouldCollapseTransparency``, not the bare env value). Shared by the
+    /// shadow-suppression gate and the chrome-background swap so the two stay in sync.
+    private var collapsesTransparency: Bool {
         CosmosMotionPolicy.shouldCollapseTransparency(
             respectReduceTransparency: configuration.motion.respectReduceTransparency,
             reduceTransparency: reduceTransparency,
             policy: configuration.motion.reduceTransparencyPolicy
-        ) || reduceMotion
+        )
+    }
+
+    /// Shadow is suppressed when transparency collapses OR motion is not emitting (config-aware
+    /// via ``CosmosMotionPolicy/shouldEmit(isEnabled:respectReduceMotion:reduceMotion:)`` —
+    /// NOT the bare `reduceMotion` env value, so `respectReduceMotion = false` can keep the
+    /// shadow and `motion.isEnabled = false` still suppresses it).
+    private var shadowHidden: Bool {
+        collapsesTransparency || !CosmosMotionPolicy.shouldEmit(
+            isEnabled: configuration.motion.isEnabled,
+            respectReduceMotion: configuration.motion.respectReduceMotion,
+            reduceMotion: reduceMotion
+        )
     }
 
     /// Caps the toast width on regular width classes so it doesn't span the screen. Reads the
@@ -154,30 +169,34 @@ private struct CosmosToastHost<Key: Hashable, ToastContent: View>: View {
 
     @ViewBuilder
     private var toastChrome: some View {
+        Group {
+            // `.glassEffect` (Liquid Glass) does not honor Reduce Transparency — it stays
+            // translucent. Collapse to the opaque `surface` token when the policy says to
+            // (config-aware via ``CosmosMotionPolicy/shouldCollapseTransparency``); keep the
+            // glass look otherwise so there is no visual regression off the accessibility path.
+            if collapsesTransparency {
+                chromeContent
+                    .background(theme.colors.surface, in: .rect(cornerRadius: 32))
+            } else {
+                chromeContent
+                    .glassEffect(.regular, in: .rect(cornerRadius: 32))
+            }
+        }
+        .shadow(
+            color: theme.colors.primary.opacity(shadowHidden ? 0 : theme.motion.shadowOpacity),
+            radius: shadowHidden ? 0 : theme.motion.shadowRadius,
+            y: 4
+        )
+        .accessibilityElement(children: .combine)
+        .accessibilityAddTraits(.isStaticText)
+        .modifier(OptionalHapticModifier(feedback: haptic, trigger: presentToken))
+    }
+
+    @ViewBuilder
+    private var chromeContent: some View {
         content()
             .padding(CosmosSpacingTokens.value(for: theme.padding))
             .frame(maxWidth: maxToastWidth, alignment: .leading)
-            .glassEffect(.regular, in: .rect(cornerRadius: 32))
-            .shadow(
-                color: theme.colors.primary.opacity(shadowHidden ? 0 : theme.motion.shadowOpacity),
-                radius: shadowHidden ? 0 : theme.motion.shadowRadius,
-                y: 4
-            )
-            .accessibilityElement(children: .combine)
-            .accessibilityAddTraits(.isStaticText)
-            .modifier(OptionalHapticModifier(feedback: haptic, trigger: presentToken))
-    }
-
-    private var toastBackgroundStyle: AnyShapeStyle {
-        if CosmosMotionPolicy.shouldCollapseTransparency(
-            respectReduceTransparency: configuration.motion.respectReduceTransparency,
-            reduceTransparency: reduceTransparency,
-            policy: configuration.motion.reduceTransparencyPolicy
-        ) {
-            AnyShapeStyle(theme.colors.surface)
-        } else {
-            AnyShapeStyle(.regularMaterial)
-        }
     }
 
     private var transitionPreset: CosmosTransition {

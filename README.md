@@ -44,7 +44,7 @@ Add Cosmos to your `Package.swift`:
 
 ```swift
 dependencies: [
-    .package(url: "https://github.com/byescaleira/cosmos.git", from: "0.8.0")
+    .package(url: "https://github.com/byescaleira/cosmos.git", from: "0.9.0")
 ]
 ```
 
@@ -94,7 +94,6 @@ wrap a `View`.
 | `CosmosAdaptiveStack` | Reflows between `HStack` / `VStack` by size class + Dynamic Type, preserving view identity across rotation. |
 | `CosmosAsyncImage` | `AsyncImage` wrapper; placeholder / error / retry slots, retry via `.id`, OS-27 cache surface opt-in. |
 | `CosmosButton` | `ButtonStyle`-based; glass variant available on iOS 26. |
-| `CosmosCard` | Header / body / footer slots. |
 | `CosmosDatePicker` | `DatePicker` wrapper; gated on platforms where it exists. |
 | `CosmosDivider` | Native `Divider` wrapper; decorative, axis inferred from the enclosing stack. Not recolored (`Divider` ignores foreground/background). |
 | `CosmosGroupBox` | Custom `GroupBoxStyle` chrome via theme tokens. |
@@ -180,7 +179,7 @@ token-scaled padding to a specific edge set directly, use the edge form
 `.cosmosPadding(_:_:)`:
 
 ```swift
-CosmosCard { … }
+CosmosAdaptiveStack { … }
     .cosmosPadding(.horizontal, .large)   // large on leading/trailing only
     .cosmosPadding(.vertical, .medium)    // medium on top/bottom only
 ```

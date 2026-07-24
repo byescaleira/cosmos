@@ -6,8 +6,8 @@
    @Intro(title: "Your first Cosmos screen") {
       Cosmos atoms read state and theme from the SwiftUI environment, not per-component structs.
       In this tutorial you compose a welcome screen from `CosmosButton`, `CosmosText`, and
-      `CosmosCard`, then override the typography and tint for one subtree — without building a
-      whole `CosmosTheme`.
+      `CosmosAdaptiveStack`, then override the typography and tint for one subtree — without
+      building a whole `CosmosTheme`.
    }
 
    @Section(title: "Add the package and import Cosmos") {
