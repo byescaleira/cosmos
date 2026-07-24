@@ -1,0 +1,54 @@
+@Tutorials(tutorial: table:"cosmos:CosmosTutorialTable") {
+   intro: "Build a screen with Cosmos — set a theme, lay out atoms, and wire the cross-cutting concerns."
+}
+
+@Tutorial(tutorial: "cosmos:CosmosTutorialTable") {
+   @Intro(title: "Your first Cosmos screen") {
+      Cosmos atoms read state and theme from the SwiftUI environment, not per-component structs.
+      In this tutorial you compose a welcome screen from `CosmosButton`, `CosmosText`, and
+      `CosmosCard`, then override the typography and tint for one subtree — without building a
+      whole `CosmosTheme`.
+   }
+
+   @Section(title: "Add the package and import Cosmos") {
+      @ContentAndMedia {
+         Add `Cosmos` as a SwiftPM dependency and `import Cosmos` in your view file. The single
+         `Cosmos` target carries no third-party dependencies and builds on iOS, macOS, tvOS,
+         watchOS, and visionOS — all at the OS 26 baseline.
+      }
+      @Code(file: "cosmos:WelcomeScreen.swift")
+   }
+
+   @Section(title: "Compose atoms from the environment") {
+      @ContentAndMedia {
+         Every atom exposes content-only inits; state and theme arrive via the environment.
+         `CosmosButton("welcome.continue") {}` reads the accent tint, typography, and motion
+         tokens from `@Environment(\.cosmosTheme)` and the behavior gates from
+         `@Environment(\.cosmosConfiguration)`. No per-instance config struct needed.
+      }
+      @Code(file: "cosmos:WelcomeScreen.swift")
+   }
+
+   @Section(title: "Override a subtree without a whole theme") {
+      @ContentAndMedia {
+         The SwiftUI-idiomatic `.cosmosFont(_:weight:design:)`, `.cosmosTint(_:)`, and
+         `.cosmosForegroundStyle(_:)` modifiers re-inject a mutated theme copy into the subtree,
+         so one button can opt into a bold rounded serif look while the rest of the screen keeps
+         the design-language baseline.
+      }
+      @Code(file: "cosmos:WelcomeScreen.swift")
+   }
+
+   @Section(title: "Wire accessibility, haptics, and motion") {
+      @ContentAndMedia {
+         The cross-cutting concerns gate through config-aware chokepoints:
+         `CosmosAccessibilityPolicy.shouldShowBorders` reveals a capsule outline on the borderless
+         `.ghost` button when "Show button shapes" is on; `.sensoryFeedback` haptics fire on press;
+         motion springs resolve through `CosmosMotionTokens.animation(for:)` and respect Reduce
+         Motion. All of this is automatic once the atoms are on screen.
+      }
+      @Code(file: "cosmos:WelcomeScreen.swift")
+   }
+
+   @Conclusion(summary: "You composed a Cosmos screen and overrode one subtree — the environment did the rest.")
+}
