@@ -14,12 +14,19 @@ public struct CosmosAccessibilityCustomContent: Sendable {
 /// Accessibility contract.
 ///
 /// Atoms apply these only when non-nil (via the `cosmosAccessibility*` helpers), so an
-/// unset value never silences VoiceOver's fallback. Of the SwiftUI environment gates, only
-/// `accessibilityReduceMotion` and `accessibilityReduceTransparency` are currently read in
-/// atoms/modifiers (the latter via `CosmosMotionPolicy.shouldCollapseTransparency`); the
-/// increased-contrast / differentiate-without-color / button-shapes gates are not yet wired
-/// here (tracked gap — see the vault risks index). High-contrast color variants are surfaced
-/// through an asset catalog at the app layer.
+/// unset value never silences VoiceOver's fallback. The SwiftUI environment gates are
+/// routed through ``CosmosAccessibilityPolicy`` (the chokepoint mirroring
+/// ``CosmosMotionPolicy``) plus the `respect*` flags below, so each gate can be
+/// intentionally overridden:
+/// - `accessibilityReduceMotion` / `accessibilityReduceTransparency` — wired through
+///   ``CosmosMotionPolicy`` (`shouldEmit` / `shouldCollapseTransparency`).
+/// - `accessibilityDifferentiateWithoutColor` — wired through
+///   ``CosmosAccessibilityPolicy/shouldDifferentiateWithoutColor(respectDifferentiateWithoutColor:differentiateWithoutColor:)``
+///   (e.g. ``CosmosToastContent`` falls to a monochrome, shape-only icon when active).
+/// - `colorSchemeContrast` / `accessibilityShowBorders` — the `respect*` flags are present
+///   and the policy chokepoints exist, but per-atom adaptive surfaces / borderless-button
+///   shapes are not yet wired (tracked — see the vault risks index). High-contrast color
+///   variants are surfaced through an asset catalog at the app layer.
 ///
 /// `AccessibilityTraits` and `AccessibilityCustomContentImportance` are SwiftUI `Sendable`
 /// types, so this struct is `Sendable` (SE-0302).
@@ -33,6 +40,16 @@ public struct CosmosAccessibilityConfiguration: Sendable {
     public var sortPriority: Double?
     public var customContent: [CosmosAccessibilityCustomContent]
     public var respondsToUserInteraction: Bool?
+    /// When true, strengthens synthetic low-contrast surfaces/outlines if
+    /// `accessibilityReduceTransparency`-style increased contrast (`colorSchemeContrast`) is
+    /// active. Default `true` (mirror `CosmosMotionConfiguration.respectReduceMotion`).
+    public var respectIncreaseContrast: Bool
+    /// When true, stops conveying information by color alone if
+    /// `accessibilityDifferentiateWithoutColor` is active. Default `true`.
+    public var respectDifferentiateWithoutColor: Bool
+    /// When true, draws a visible border on borderless controls if `accessibilityShowBorders`
+    /// (née `accessibilityShowButtonShapes`) is active. Default `true`.
+    public var respectShowBorders: Bool
 
     public init(
         label: String? = nil,
@@ -43,7 +60,10 @@ public struct CosmosAccessibilityConfiguration: Sendable {
         isHidden: Bool = false,
         sortPriority: Double? = nil,
         customContent: [CosmosAccessibilityCustomContent] = [],
-        respondsToUserInteraction: Bool? = nil
+        respondsToUserInteraction: Bool? = nil,
+        respectIncreaseContrast: Bool = true,
+        respectDifferentiateWithoutColor: Bool = true,
+        respectShowBorders: Bool = true
     ) {
         self.label = label
         self.hint = hint
@@ -54,6 +74,9 @@ public struct CosmosAccessibilityConfiguration: Sendable {
         self.sortPriority = sortPriority
         self.customContent = customContent
         self.respondsToUserInteraction = respondsToUserInteraction
+        self.respectIncreaseContrast = respectIncreaseContrast
+        self.respectDifferentiateWithoutColor = respectDifferentiateWithoutColor
+        self.respectShowBorders = respectShowBorders
     }
 
     public static let `default` = CosmosAccessibilityConfiguration()
