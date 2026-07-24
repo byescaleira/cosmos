@@ -20,7 +20,10 @@ import SwiftUI
 /// atoms carry their own labels/traits; Dynamic Type reflows through the label/content (ordinary
 /// Views). **Haptics:** none — static grouping container. **Motion:** `none`; a custom style may
 /// add `.cosmosTransition(.containerTransform)` at the call site (caller-driven, single
-/// `withAnimation`). `GroupBoxStyle` is `@preconcurrency @MainActor`; the conforming
+/// `cosmosWithAnimation(.containerTransform, configuration:theme:reduceMotion:)` — the gated,
+/// token-driven chokepoint; see
+/// ``cosmosWithAnimation(_:configuration:theme:reduceMotion:completionCriteria:body:completion:)``).
+/// `GroupBoxStyle` is `@preconcurrency @MainActor`; the conforming
 /// ``CosmosGroupBoxChrome`` holds no non-Sendable state and its body is a `View` (MainActor).
 public struct CosmosGroupBox<Label: View, Content: View>: View {
     @ViewBuilder private let label: () -> Label

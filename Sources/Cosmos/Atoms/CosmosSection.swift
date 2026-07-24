@@ -41,7 +41,9 @@ import SwiftUI
 /// the same property with a differing curve and desync — CLAUDE.md). `listInsert`/`listRemove`
 /// belong to the List rows inside, not to Section. Callers wanting coordinated expand/collapse
 /// wrap their `Binding<Bool>` mutation in a single
-/// `withAnimation(theme.motion.spring(for: .containerTransform).animation)` at the call site.
+/// `cosmosWithAnimation(.containerTransform, configuration:theme:reduceMotion:)` at the call site
+/// (the gated, token-driven chokepoint — see
+/// ``cosmosWithAnimation(_:configuration:theme:reduceMotion:completionCriteria:body:completion:)``).
 ///
 /// **Tracking.** None — `Section` is structural/decorative, like ``CosmosDivider``: a `List` of
 /// many sections would otherwise emit a noisy appear event per section. Opt-in tracking belongs
@@ -390,6 +392,22 @@ extension View {
             })
         }
         .cosmosPreviewVariant(.dark)
+        .cosmosPreviewEnv(dynamicTypeSize: .accessibility3)
+    }
+}
+
+#Preview("Section – landscape reflow", traits: .landscapeLeft) {
+    CosmosPreviewContainer {
+        List {
+            CosmosSection(content: {
+                CosmosText("preview.row.one")
+                CosmosText("preview.row.two")
+            }, header: {
+                CosmosLocalizedText(key: "preview.title")
+            }, footer: {
+                CosmosText("preview.description")
+            })
+        }
         .cosmosPreviewEnv(dynamicTypeSize: .accessibility3)
     }
 }

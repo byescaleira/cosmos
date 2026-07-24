@@ -156,6 +156,55 @@ private struct CosmosStaggerModifier<V: Equatable & Sendable>: ViewModifier {
     }
 }
 
+/// Gated, token-driven `withAnimation` — the coordinated-transition chokepoint (WWDC23-10156).
+/// Wraps `withAnimation(_:completionCriteria:body:completion:)` so a coordinated state change
+/// resolves its curve through ``CosmosMotionTokens/animation(for:reduceMotion:policy:)`` (the
+/// single source of truth), gates through ``CosmosMotionPolicy/shouldEmit(isEnabled:respectReduceMotion:reduceMotion:)``
+/// (config-aware, not the bare env value), fires the motion `handler` once when motion emits, and
+/// honors a completion closure that fires exactly once.
+///
+/// When motion is suppressed (disabled or reduce-motion respected), `body` runs with **no**
+/// animation and `completion` fires **immediately** (SwiftUI invokes the completion of a
+/// `nil`-animation `withAnimation` synchronously), so callers never dead-lock waiting on a
+/// completion that an accessibility gate cancelled. CLAUDE.md mandates one `withAnimation` per
+/// coordinated state change — this is the Cosmos-sanctioned form.
+///
+/// - Parameters:
+///   - kind: the motion intent; resolves to the canonical spring for that intent.
+///   - configuration: the active `CosmosConfiguration` (motion behavior/policy + handler).
+///   - theme: the active `CosmosTheme` (motion visual tokens — the curve source of truth).
+///   - reduceMotion: the `@Environment(\.accessibilityReduceMotion)` value at the call site.
+///   - completionCriteria: `.logicallyComplete` (default) — when the completion fires.
+///   - body: the state mutation to animate.
+///   - completion: fires once when the coordinated change settles (immediately if suppressed).
+public func cosmosWithAnimation(
+    _ kind: CosmosMotionKind,
+    configuration: CosmosConfiguration,
+    theme: CosmosTheme,
+    reduceMotion: Bool,
+    completionCriteria: AnimationCompletionCriteria = .logicallyComplete,
+    body: () -> Void,
+    completion: (@Sendable () -> Void)? = nil
+) {
+    let motion = configuration.motion
+    let shouldEmit = CosmosMotionPolicy.shouldEmit(
+        isEnabled: motion.isEnabled,
+        respectReduceMotion: motion.respectReduceMotion,
+        reduceMotion: reduceMotion
+    )
+    let animation = shouldEmit
+        ? theme.motion.animation(for: kind, reduceMotion: reduceMotion, policy: motion.reduceMotionPolicy)
+        : nil
+    if let completion {
+        withAnimation(animation, completionCriteria: completionCriteria, body, completion: completion)
+    } else {
+        withAnimation(animation, body)
+    }
+    if shouldEmit {
+        motion.handler(.motion(kind))
+    }
+}
+
 extension View {
     /// Gated, token-driven animation. The single chokepoint for reduce-motion.
     public func cosmosAnimation<V: Equatable & Sendable>(_ kind: CosmosMotionKind, value: V) -> some View {

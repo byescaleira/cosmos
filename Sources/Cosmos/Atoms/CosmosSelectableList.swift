@@ -51,7 +51,9 @@ import SwiftUI
 /// `.cosmosAnimation(.valueChange, value:)` on the `List` (a differing curve would desync, same rule
 /// as ``CosmosPicker``/``CosmosSection``/``CosmosTabView``). Callers coordinate a programmatic
 /// selection write with a single
-/// `withAnimation(theme.motion.spring(for: .containerTransform).animation) { selection = newValue }`.
+/// `cosmosWithAnimation(.containerTransform, configuration:theme:reduceMotion:) { selection = newValue }`
+/// (the gated, token-driven chokepoint — see
+/// ``cosmosWithAnimation(_:configuration:theme:reduceMotion:completionCriteria:body:completion:)``).
 /// **Tracking:** `.valueChange` on selection change (`componentId = trackingId ?? accessibilityId`),
 /// opt-in/passive via ``CosmosTrackingConfiguration``.
 public struct CosmosSelectableList<Selection: Hashable & Sendable>: View {
@@ -256,6 +258,22 @@ private struct CosmosSelectableListPreviewRow: Identifiable, Hashable {
         }
         .cosmosListStyle(.insetGrouped)
         .cosmosPreviewVariant(.dark)
+        .cosmosPreviewEnv(dynamicTypeSize: .accessibility3)
+    }
+}
+
+#Preview("SelectableList – landscape reflow", traits: .landscapeLeft) {
+    @Previewable @State var selected: CosmosSelectableListPreviewRow.ID?
+    let rows = (0..<6).map { CosmosSelectableListPreviewRow(title: "Item \($0)") }
+    CosmosPreviewContainer {
+        CosmosSelectableList(selection: $selected, rows) { row in
+            HStack {
+                CosmosText(row.title)
+                Spacer()
+                Image(systemName: selected == row.id ? "checkmark.circle.fill" : "circle")
+            }
+        }
+        .cosmosListStyle(.insetGrouped)
         .cosmosPreviewEnv(dynamicTypeSize: .accessibility3)
     }
 }

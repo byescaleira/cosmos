@@ -9,8 +9,14 @@ public struct CosmosSpring: Hashable, Sendable {
     public init(duration: TimeInterval, bounce: Double = 0.0) {
         self.spring = Spring(duration: duration, bounce: bounce)
     }
+    /// Legacy `Spring(response:dampingFraction:)` form. Prefer ``init(duration:bounce:)`` — the
+    /// modern `Spring(duration:bounce:)` form (WWDC23-10158), which all other Cosmos presets use.
+    /// `dampingFraction` maps to `bounce` via `bounce = 1 - dampingFraction²`; `response` ≈
+    /// `duration` for moderate bounce. Deprecated with a migration runway (kept for the 26 minor;
+    /// obsoletion in a later major, per VERSIONING.md).
+    @available(*, deprecated, message: "Use init(duration:bounce:); bounce = 1 - dampingFraction²")
     public init(response: Double, dampingRatio: Double) {
-        self.spring = Spring(response: response, dampingRatio: dampingRatio)
+        self.spring = Spring(duration: response, bounce: 1 - dampingRatio * dampingRatio)
     }
     /// The `Animation` for this spring (via `Animation.spring(_:blendDuration:)`).
     public var animation: Animation { Animation.spring(spring) }
@@ -24,8 +30,10 @@ public struct CosmosSpring: Hashable, Sendable {
     public static let cosmosBouncy: CosmosSpring = .init(duration: 0.35, bounce: 0.3)
     /// Slow, soft — large container transforms, visionOS-safe relocation.
     public static let cosmosGentle: CosmosSpring = .init(duration: 0.6, bounce: 0.0)
-    /// Velocity-preserving — gestures, drag, slider/stepper thumb.
-    public static let cosmosInteractive: CosmosSpring = .init(response: 0.3, dampingRatio: 0.7)
+    /// Velocity-preserving — gestures, drag, slider/stepper thumb. The modern
+    /// `Spring(duration:bounce:)` form (WWDC23-10158); the legacy `init(response:dampingRatio:)`
+    /// is the deprecated escape hatch kept for the 26 minor.
+    public static let cosmosInteractive: CosmosSpring = .init(duration: 0.3, bounce: 0.3)
 }
 
 /// Default spring selector (parallels ``CosmosButtonStyle``), with SE-0299 dot-syntax.

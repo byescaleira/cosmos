@@ -62,8 +62,11 @@ import SwiftUI
 /// mapped kind, but the atom does **not** layer `.cosmosAnimation(.tabSwitch, value:)` on the
 /// `TabView` — native tab switching (and `PageTabViewStyle` swipe) is system-driven; a differing
 /// curve would desync (same rule as `CosmosPicker`/`CosmosSection`). Callers coordinate a tab
-/// switch with a single `withAnimation(theme.motion.spring(for: .containerTransform).animation)
-/// { selection = newValue }` around the binding write, or apply `.cosmosContentTransition(.tabSwitch)`
+/// switch with a single `cosmosWithAnimation(.containerTransform, configuration:theme:reduceMotion:)
+/// { selection = newValue }` around the binding write (the gated, token-driven chokepoint that
+/// resolves through `CosmosMotionTokens` and `CosmosMotionPolicy` — see
+/// ``cosmosWithAnimation(_:configuration:theme:reduceMotion:completionCriteria:body:completion:)``),
+/// or apply `.cosmosContentTransition(.tabSwitch)`
 /// to per-tab content — never per-view `.animation(_:value:)` with differing curves. **Tracking:**
 /// none at the container — tracking is per-tab via caller-set `.accessibilityIdentifier`
 /// (structural-container rule, like `CosmosSection`/`CosmosList`).
@@ -332,6 +335,17 @@ public enum CosmosTabViewBottomAccessoryEnabledAvailability {
             Tab("preview.tab.two", systemImage: "2.circle", value: 1) { CosmosText("preview.tab.two") }
         }
         .cosmosPreviewVariant(.dark)
+        .cosmosPreviewEnv(dynamicTypeSize: .accessibility3)
+    }
+}
+
+#Preview("TabView – landscape reflow", traits: .landscapeLeft) {
+    @Previewable @State var selected = 0
+    CosmosPreviewContainer {
+        CosmosTabView(selection: $selected) {
+            Tab("preview.tab.one", systemImage: "1.circle", value: 0) { CosmosText("preview.tab.one") }
+            Tab("preview.tab.two", systemImage: "2.circle", value: 1) { CosmosText("preview.tab.two") }
+        }
         .cosmosPreviewEnv(dynamicTypeSize: .accessibility3)
     }
 }
