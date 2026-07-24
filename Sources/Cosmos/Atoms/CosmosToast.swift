@@ -125,6 +125,16 @@ public struct CosmosToastContent<Message: View>: View {
     }
 }
 
+#Preview("Toast – landscape reflow", traits: .landscapeLeft) {
+    CosmosPreviewContainer {
+        CosmosText(verbatim: "Root content").padding()
+            .cosmosToast(isPresented: .constant(true)) {
+                CosmosToastContent(role: .warning) { CosmosText(verbatim: "Heads up — this action can't be undone.") }
+            }
+            .cosmosPreviewEnv(dynamicTypeSize: .accessibility3)
+    }
+}
+
 private struct ToastMessage: Identifiable {
     let id = UUID()
     let text: String

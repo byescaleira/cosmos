@@ -60,3 +60,38 @@ extension View {
         ) { self }
     }
 }
+
+// MARK: - Previews
+
+#Preview("AdaptiveStack – portrait (regular → HStack)", traits: .sizeThatFitsLayout) {
+    CosmosAdaptiveStack {
+        CosmosLabel("preview.title", systemImage: "star")
+        CosmosLabel("preview.description", systemImage: "circle")
+        CosmosButton("welcome.continue") {}
+    }
+    .padding()
+}
+
+#Preview("AdaptiveStack – landscape reflow", traits: .landscapeLeft) {
+    CosmosPreviewContainer {
+        CosmosAdaptiveStack {
+            CosmosLabel("preview.title", systemImage: "star")
+            CosmosLabel("preview.description", systemImage: "circle")
+            CosmosButton("welcome.continue") {}
+        }
+        .padding()
+        .cosmosPreviewEnv(dynamicTypeSize: .accessibility3)
+    }
+}
+
+#Preview("AdaptiveStack – dark + RTL landscape", traits: .landscapeLeft) {
+    CosmosPreviewContainer {
+        CosmosAdaptiveStack {
+            CosmosLabel("preview.title", systemImage: "star")
+            CosmosButton("welcome.continue") {}
+        }
+        .padding()
+        .cosmosPreviewVariant(.dark)
+        .cosmosPreviewEnv(layoutDirection: .rightToLeft)
+    }
+}

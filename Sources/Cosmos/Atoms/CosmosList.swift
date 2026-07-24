@@ -285,3 +285,15 @@ private struct CosmosListPreviewRow: Identifiable {
         .cosmosPreviewEnv(dynamicTypeSize: .accessibility3)
     }
 }
+
+#Preview("List – landscape reflow", traits: .landscapeLeft) {
+    CosmosPreviewContainer {
+        CosmosList {
+            ForEach(0..<6, id: \.self) { i in
+                CosmosText("preview.row.\(i)")
+            }
+        }
+        .cosmosListStyle(.insetGrouped)
+        .cosmosPreviewEnv(dynamicTypeSize: .accessibility3)
+    }
+}

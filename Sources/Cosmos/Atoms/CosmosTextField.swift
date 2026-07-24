@@ -270,3 +270,17 @@ private struct CosmosTextFieldFocusBorderModifier: ViewModifier {
         .cosmosPreviewEnv(dynamicTypeSize: .accessibility3)
     }
 }
+
+#Preview("Text field – landscape reflow", traits: .landscapeLeft) {
+    @Previewable @State var text = ""
+    CosmosPreviewContainer {
+        VStack(spacing: 16) {
+            CosmosTextField("preview.title", text: $text, prompt: Text("preview.description"))
+                .cosmosTextFieldStyle(.cosmos)
+            CosmosTextField(verbatim: CosmosMock.sentence(wordCount: 4), text: $text)
+                .cosmosTextFieldStyle(.cosmos)
+        }
+        .padding()
+        .cosmosPreviewEnv(dynamicTypeSize: .accessibility3)
+    }
+}

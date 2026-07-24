@@ -295,3 +295,17 @@ public enum CosmosScrollAvailability {
         .cosmosPreviewVariant(.rtl)
     }
 }
+
+#Preview("ScrollView – landscape reflow", traits: .landscapeLeft) {
+    CosmosPreviewContainer {
+        CosmosScrollView {
+            VStack(spacing: 12) {
+                ForEach(0..<8, id: \.self) { i in
+                    CosmosText("preview.row.\(i)").padding()
+                }
+            }
+            .padding()
+        }
+        .cosmosPreviewEnv(dynamicTypeSize: .accessibility3)
+    }
+}
