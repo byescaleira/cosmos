@@ -1,6 +1,12 @@
 import SwiftUI
 
 
+/// The content view rendered inside a ``CosmosToast``: a role-tinted SF Symbol beside (or, when
+/// the toast width is constrained, above) a title/description or a custom message. Honors
+/// Differentiate Without Color (collapses to a monochrome, shape-only icon) and reflows via
+/// ``CosmosViewThatFits`` so the icon and message stay legible at accessibility Dynamic Type /
+/// narrow placements. Drive it directly, or via the ``View/cosmosToast(_:isPresented:placement:)``
+/// family which wires the appear haptic in one call.
 public struct CosmosToastContent<Message: View>: View {
     let role: CosmosToastRole
     let title: String?
@@ -37,28 +43,58 @@ public struct CosmosToastContent<Message: View>: View {
     }
 
     public var body: some View {
-        HStack(spacing: CosmosSpacingTokens.medium) {
-            if let message {
-                message()
-            } else if let title, let description {
-                VStack(spacing: CosmosSpacingTokens.small) {
-                    CosmosText(verbatim: title)
-                        .cosmosFont(.footnote, weight: .bold)
-                        .cosmosForegroundStyle(.primary)
-
-                    CosmosText(verbatim: description)
-                        .cosmosFont(.footnote)
-                        .cosmosForegroundStyle(.secondary)
-                }
-            }
-
-            Image(systemName: role.icon)
-                .font(theme.typography.font(for: theme.textStyle))
-                .symbolRenderingMode(differentiatesWithoutColor ? .monochrome : .hierarchical)
-                .foregroundStyle(differentiatesWithoutColor ? theme.colors.primary : role.tint.color(in: theme.colors))
-                .accessibilityHidden(true)
+        // Reflow by available width: the icon sits beside the message when there's room
+        // (default, sighted), and stacks above it when the toast width is constrained
+        // (accessibility Dynamic Type, narrow placements). `ViewThatFits` preserves view
+        // identity across the choice — no state reset when the layout flips (WWDC21-10022).
+        CosmosViewThatFits(in: .horizontal) {
+            toastRow
+            toastStack
         }
         .padding(5)
+    }
+
+    /// Horizontal layout — icon beside the message (default when width allows).
+    @ViewBuilder
+    private var toastRow: some View {
+        HStack(spacing: CosmosSpacingTokens.medium) {
+            toastMessage
+            toastIcon
+        }
+    }
+
+    /// Vertical fallback — icon above the message (constrained width / accessibility sizes).
+    @ViewBuilder
+    private var toastStack: some View {
+        VStack(spacing: CosmosSpacingTokens.small) {
+            toastIcon
+            toastMessage
+        }
+    }
+
+    @ViewBuilder
+    private var toastMessage: some View {
+        if let message {
+            message()
+        } else if let title, let description {
+            VStack(spacing: CosmosSpacingTokens.small) {
+                CosmosText(verbatim: title)
+                    .cosmosFont(.footnote, weight: .bold)
+                    .cosmosForegroundStyle(.primary)
+
+                CosmosText(verbatim: description)
+                    .cosmosFont(.footnote)
+                    .cosmosForegroundStyle(.secondary)
+            }
+        }
+    }
+
+    private var toastIcon: some View {
+        Image(systemName: role.icon)
+            .font(theme.typography.font(for: theme.textStyle))
+            .symbolRenderingMode(differentiatesWithoutColor ? .monochrome : .hierarchical)
+            .foregroundStyle(differentiatesWithoutColor ? theme.colors.primary : role.tint.color(in: theme.colors))
+            .accessibilityHidden(true)
     }
 }
 
