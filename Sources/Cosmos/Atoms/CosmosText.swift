@@ -8,7 +8,6 @@ public struct CosmosText: View {
     @Environment(\.cosmosConfiguration) private var configuration
     @Environment(\.cosmosTheme) private var theme
     @Environment(\.cosmosTrackingId) private var trackingId
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     private enum Storage: Sendable {
         case key(String?)
@@ -59,19 +58,15 @@ public struct CosmosText: View {
                 .accessibilityCustomContentIfPresent(configuration.accessibility.customContent)
                 .modifier(CosmosRespondsModifier(responds: configuration.accessibility.respondsToUserInteraction))
                 .onAppear {
+                    // Track the appear event only. A value-change motion event is emitted by
+                    // `.cosmosAnimation(.valueChange, value: resolvedText)` when the text actually
+                    // changes — firing one on initial appear reported a change that never happened.
                     configuration.tracking.track(.init(
                         name: "text_appear",
                         component: "CosmosText",
                         componentId: trackingId ?? configuration.accessibility.identifier,
                         action: .appear
                     ))
-                    if CosmosMotionPolicy.shouldEmit(
-                        isEnabled: configuration.motion.isEnabled,
-                        respectReduceMotion: configuration.motion.respectReduceMotion,
-                        reduceMotion: reduceMotion
-                    ) {
-                        configuration.motion.handler(.motion(.valueChange))
-                    }
                 }
         }
     }
