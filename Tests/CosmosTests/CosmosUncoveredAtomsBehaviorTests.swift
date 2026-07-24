@@ -63,28 +63,28 @@ struct CosmosUncoveredAtomsBehaviorTests {
 
     // MARK: - CosmosDatePicker (T2; gated off tvOS — DatePicker type unavailable there)
 
-    @Test(.disabled(if: isTvOS))
+    @Test(.disabled(if: isTvOS), .tags(.availability))
     func datePickerConstructsFromLocalizedKey() {
         _ = CosmosDatePicker("preview.title", selection: .constant(Date()))
     }
 
-    @Test(.disabled(if: isTvOS))
+    @Test(.disabled(if: isTvOS), .tags(.availability))
     func datePickerConstructsFromVerbatimTitle() {
         _ = CosmosDatePicker(verbatim: "Pick a date", selection: .constant(Date()))
     }
 
-    @Test(.disabled(if: isTvOS))
+    @Test(.disabled(if: isTvOS), .tags(.availability))
     func datePickerConstructsWithCustomLabelAndComponents() {
         _ = CosmosDatePicker(selection: .constant(Date()), displayedComponents: .date) { Text(verbatim: "When") }
     }
 
-    @Test(.disabled(if: isTvOS))
+    @Test(.disabled(if: isTvOS), .tags(.availability))
     func datePickerConstructsWithClosedRange() {
         let range = Date()...Date().addingTimeInterval(3600)
         _ = CosmosDatePicker(selection: .constant(Date()), in: range) { Text(verbatim: "In range") }
     }
 
-    @Test(.disabled(if: isTvOS), arguments: CosmosDatePickerStyle.allCases)
+    @Test(.disabled(if: isTvOS), .tags(.availability, .selector), arguments: CosmosDatePickerStyle.allCases)
     func datePickerAcceptsEveryStyleVariant(_ style: CosmosDatePickerStyle) {
         _ = CosmosDatePicker("preview.title", selection: .constant(Date())).cosmosDatePickerStyle(style)
     }
@@ -108,7 +108,7 @@ struct CosmosUncoveredAtomsBehaviorTests {
         _ = CosmosGroupBox(verbatim: "Group") { CosmosText(verbatim: "Content") }
     }
 
-    @Test(arguments: CosmosGroupBoxStyle.allCases)
+    @Test(.tags(.selector), arguments: CosmosGroupBoxStyle.allCases)
     func groupBoxAcceptsEveryStyleVariant(_ style: CosmosGroupBoxStyle) {
         _ = CosmosGroupBox("preview.title") { CosmosText(verbatim: "Content") }
             .cosmosGroupBoxStyle(style)
@@ -139,7 +139,7 @@ struct CosmosUncoveredAtomsBehaviorTests {
         _ = CosmosMenu("preview.title", systemImage: "ellipsis.circle") { CosmosText(verbatim: "Item") }
     }
 
-    @Test(arguments: CosmosMenuStyle.allCases)
+    @Test(.tags(.selector), arguments: CosmosMenuStyle.allCases)
     func menuAcceptsEveryStyleVariant(_ style: CosmosMenuStyle) {
         _ = CosmosMenu("preview.title") { CosmosText(verbatim: "Item") }.cosmosMenuStyle(style)
     }
@@ -166,7 +166,7 @@ struct CosmosUncoveredAtomsBehaviorTests {
         _ = CosmosLabel(verbatim: "Label", image: "PlaceholderAsset")
     }
 
-    @Test(arguments: CosmosLabelStyle.allCases)
+    @Test(.tags(.selector), arguments: CosmosLabelStyle.allCases)
     func labelAcceptsEveryStyleVariant(_ style: CosmosLabelStyle) {
         _ = CosmosLabel("preview.title", systemImage: "star").cosmosLabelStyle(style)
     }
@@ -189,7 +189,7 @@ struct CosmosUncoveredAtomsBehaviorTests {
         _ = CosmosList(0..<3) { CosmosText(verbatim: "Row \($0)") }
     }
 
-    @Test(arguments: CosmosListStyle.allCases)
+    @Test(.tags(.selector), arguments: CosmosListStyle.allCases)
     func listAcceptsEveryStyleVariant(_ style: CosmosListStyle) {
         _ = CosmosList { CosmosText(verbatim: "Row") }.cosmosListStyle(style)
     }
@@ -208,12 +208,12 @@ struct CosmosUncoveredAtomsBehaviorTests {
         _ = CosmosSelectableList(selection: .constant(Int?.none), [ListRow(id: 1, text: "A")], id: \.id) { CosmosText(verbatim: $0.text) }
     }
 
-    @Test(.disabled(if: isWatchOS))
+    @Test(.disabled(if: isWatchOS), .tags(.availability))
     func selectableListConstructsSetWithContent() {
         _ = CosmosSelectableList(selection: .constant(Set<Int>())) { CosmosText(verbatim: "Row") }
     }
 
-    @Test(.disabled(if: isWatchOS))
+    @Test(.disabled(if: isWatchOS), .tags(.availability))
     func selectableListConstructsSetWithIdentifiableData() {
         _ = CosmosSelectableList(selection: .constant(Set<Int>()), [ListRow(id: 1, text: "A")]) { CosmosText(verbatim: $0.text) }
     }
@@ -237,7 +237,7 @@ struct CosmosUncoveredAtomsBehaviorTests {
                          label: { Text(verbatim: "Pick") })
     }
 
-    @Test(arguments: CosmosPickerStyle.allCases)
+    @Test(.tags(.selector), arguments: CosmosPickerStyle.allCases)
     func pickerAcceptsEveryStyleVariant(_ style: CosmosPickerStyle) {
         _ = CosmosPicker("preview.title", selection: .constant("a")) { Text(verbatim: "A").tag("a") }
             .cosmosPickerStyle(style)
@@ -259,7 +259,7 @@ struct CosmosUncoveredAtomsBehaviorTests {
         }
     }
 
-    @Test(arguments: CosmosTabViewStyle.allCases)
+    @Test(.tags(.selector), arguments: CosmosTabViewStyle.allCases)
     func tabViewAcceptsEveryStyleVariant(_ style: CosmosTabViewStyle) {
         _ = CosmosTabView(selection: .constant("a")) {
             Tab("A", systemImage: "1.circle", value: "a") { CosmosText(verbatim: "A") }
@@ -288,19 +288,19 @@ struct CosmosUncoveredAtomsBehaviorTests {
         _ = CosmosTextField(text: .constant(""), onSubmit: {}) { Text(verbatim: "Field") }
     }
 
-    @Test(arguments: CosmosTextFieldStyle.allCases)
+    @Test(.tags(.selector), arguments: CosmosTextFieldStyle.allCases)
     func textFieldAcceptsEveryStyleVariant(_ style: CosmosTextFieldStyle) {
         _ = CosmosTextField("preview.title", text: .constant("")).cosmosTextFieldStyle(style)
     }
 
     // MARK: - CosmosTextEditor (T2; gated off tvOS + watchOS — TextEditor unavailable there)
 
-    @Test(.disabled(if: isTvOS || isWatchOS))
+    @Test(.disabled(if: isTvOS || isWatchOS), .tags(.availability))
     func textEditorConstructsWithTextBinding() {
         _ = CosmosTextEditor(text: .constant(""))
     }
 
-    @Test(.disabled(if: isTvOS || isWatchOS), arguments: CosmosTextEditorStyle.allCases)
+    @Test(.disabled(if: isTvOS || isWatchOS), .tags(.availability, .selector), arguments: CosmosTextEditorStyle.allCases)
     func textEditorAcceptsEveryStyleVariant(_ style: CosmosTextEditorStyle) {
         _ = CosmosTextEditor(text: .constant("")).cosmosTextEditorStyle(style)
     }
@@ -323,7 +323,7 @@ struct CosmosUncoveredAtomsBehaviorTests {
         _ = CosmosToggle(isOn: .constant(false)) { Text(verbatim: "Custom") }
     }
 
-    @Test(arguments: CosmosToggleStyle.allCases)
+    @Test(.tags(.selector), arguments: CosmosToggleStyle.allCases)
     func toggleAcceptsEveryStyleVariant(_ style: CosmosToggleStyle) {
         _ = CosmosToggle("preview.title", isOn: .constant(false)).cosmosToggleStyle(style)
     }
@@ -354,14 +354,14 @@ struct CosmosUncoveredAtomsBehaviorTests {
         _ = CosmosProgress("preview.title", value: 0.5)
     }
 
-    @Test(arguments: CosmosProgressStyle.allCases)
+    @Test(.tags(.selector), arguments: CosmosProgressStyle.allCases)
     func progressAcceptsEveryStyleVariant(_ style: CosmosProgressStyle) {
         _ = CosmosProgress().cosmosProgressStyle(style)
     }
 
     // MARK: - CosmosSlider (T2; gated off tvOS — Slider unavailable there)
 
-    @Test(.disabled(if: isTvOS))
+    @Test(.disabled(if: isTvOS), .tags(.availability))
     func sliderConstructsWithCustomLabelAndValueLabels() {
         _ = CosmosSlider(value: .constant(0.5),
                           label: { Text(verbatim: "Slider") },
@@ -369,27 +369,27 @@ struct CosmosUncoveredAtomsBehaviorTests {
                           maximumValueLabel: { Text(verbatim: "1") })
     }
 
-    @Test(.disabled(if: isTvOS))
+    @Test(.disabled(if: isTvOS), .tags(.availability))
     func sliderConstructsWithLabelOnly() {
         _ = CosmosSlider(value: .constant(0.5), label: { Text(verbatim: "Slider") })
     }
 
-    @Test(.disabled(if: isTvOS))
+    @Test(.disabled(if: isTvOS), .tags(.availability))
     func sliderConstructsWithNoLabels() {
         _ = CosmosSlider(value: .constant(0.5))
     }
 
-    @Test(.disabled(if: isTvOS))
+    @Test(.disabled(if: isTvOS), .tags(.availability))
     func sliderConstructsFromLocalizedKeyAndStep() {
         _ = CosmosSlider("preview.title", value: .constant(0.5), step: 0.1)
     }
 
-    @Test(.disabled(if: isTvOS))
+    @Test(.disabled(if: isTvOS), .tags(.availability))
     func sliderConstructsFromVerbatimTitle() {
         _ = CosmosSlider(verbatim: "Slider", value: .constant(0.5))
     }
 
-    @Test(.disabled(if: isTvOS))
+    @Test(.disabled(if: isTvOS), .tags(.availability))
     func sliderConstructsClusterWithCurrentValueLabel() {
         _ = CosmosSlider(value: .constant(0.5),
                          label: { Text(verbatim: "Slider") },

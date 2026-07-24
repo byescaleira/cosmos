@@ -12,15 +12,15 @@ struct CosmosAtomsBehaviorTests {
 
     // MARK: - CosmosButton
 
-    @Test func buttonConstructsFromCustomLabel() {
+    @Test(.tags(.smoke)) func buttonConstructsFromCustomLabel() {
         _ = CosmosButton(action: {}) { Text(verbatim: "Save") }
     }
 
-    @Test func buttonConstructsFromLocalizedTitleKey() {
+    @Test(.tags(.smoke)) func buttonConstructsFromLocalizedTitleKey() {
         _ = CosmosButton("welcome.continue") {}
     }
 
-    @Test(arguments: CosmosButtonStyle.allCases)
+    @Test(.tags(.selector), arguments: CosmosButtonStyle.allCases)
     func buttonAcceptsEveryButtonStyleVariant(_ style: CosmosButtonStyle) {
         // The style applier routes each variant (incl. .glass on iOS/macOS 26); construction must
         // not crash for any selector. Override is subtree-scoped via the .cosmos* modifier.
