@@ -146,7 +146,6 @@ private struct ChromeBody: View {
     /// Distinctly named — the existing `let configuration: ButtonStyle.Configuration` (above)
     /// is the ButtonStyle config and has no `.motion`; this is the Cosmos behavior aggregate.
     @Environment(\.cosmosConfiguration) private var cosmosConfiguration
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     /// Read-only public env gate (`accessibilityShowBorders`, iOS 14+/macOS 11+/tvOS 14+/
     /// watchOS 7+, `@backDeployed` to 26.1 — née `accessibilityShowButtonShapes`; fully
     /// available at the Cosmos 26 floor on all 5 platforms). Drives the borderless `.ghost`
@@ -183,18 +182,12 @@ private struct ChromeBody: View {
             // card-nested content (concentricity), not for standalone prominent buttons.
             // Press scale is UNCONDITIONAL — press feedback is a state signal, not decorative
             // motion (reduce-motion ≠ no feedback). Only the `.animation` is gated, so the scale
-            // snaps instantly instead of animating under reduce-motion (vestibular-safe).
+            // snaps instantly instead of animating under reduce-motion (vestibular-safe). Routed
+            // through the single ``.cosmosAnimation(_:value:)`` chokepoint (reads reduce-motion +
+            // resolves the `.press` token via `CosmosMotionTokens.animation(for:)`); atoms never
+            // write raw `.animation(_:value:)`.
             .glassEffect(.regular.tint(chromeBackground), in: .capsule)
-            .animation(
-                CosmosMotionPolicy.shouldEmit(
-                    isEnabled: cosmosConfiguration.motion.isEnabled,
-                    respectReduceMotion: cosmosConfiguration.motion.respectReduceMotion,
-                    reduceMotion: reduceMotion
-                )
-                    ? theme.motion.animation(for: .press, reduceMotion: reduceMotion, policy: cosmosConfiguration.motion.reduceMotionPolicy)
-                    : nil,
-                value: configuration.isPressed
-            )
+            .cosmosAnimation(.press, value: configuration.isPressed)
             // Borderless `.ghost` reveals a capsule outline under "Show button shapes"
             // (config-aware via `showsGhostBorder`). The capsule matches the `.glassEffect`
             // shape above so the revealed shape is the real tappable shape, not an impostor.
