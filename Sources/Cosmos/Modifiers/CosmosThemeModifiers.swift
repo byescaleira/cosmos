@@ -177,4 +177,7 @@ extension View {
     public func cosmosMotionTokens(_ tokens: CosmosMotionTokens) -> some View { modifier(CosmosThemeModifier { $0.withMotion(tokens) }) }
     /// Overrides the default spring style for descendant components.
     public func cosmosSpringStyle(_ style: CosmosSpringStyle) -> some View { modifier(CosmosThemeModifier { $0.withSpringStyle(style) }) }
+    /// Overrides the maximum width a regular-width-class toast clamps to (the compact width class
+    /// uses `.infinity`). Replaces the prior hard-coded `420` magic number.
+    public func cosmosToastMaxWidth(_ width: CGFloat) -> some View { modifier(CosmosThemeModifier { $0.withToastMaxWidth(width) }) }
 }

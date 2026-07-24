@@ -103,9 +103,10 @@ private struct CosmosToastHost<Key: Hashable, ToastContent: View>: View {
         ) || reduceMotion
     }
 
-    /// Caps the toast width on regular width classes so it doesn't span the screen.
+    /// Caps the toast width on regular width classes so it doesn't span the screen. Reads the
+    /// themeable ``CosmosTheme/toastMaxWidth`` token (was a hard-coded `420` magic number).
     private var maxToastWidth: CGFloat {
-        horizontalSizeClass == .regular ? 420 : .infinity
+        horizontalSizeClass == .regular ? theme.toastMaxWidth : .infinity
     }
 
     @ViewBuilder

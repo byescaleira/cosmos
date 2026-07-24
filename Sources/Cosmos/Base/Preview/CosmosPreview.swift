@@ -35,6 +35,7 @@ public enum CosmosPreviewVariant: String, CaseIterable, Sendable {
     case reduceTransparency
     case increasedContrast
     case differentiateWithoutColor
+    case showBorders
 }
 
 /// Plain wrapper view injecting default `cosmosConfiguration` + `cosmosTheme` + an optional
@@ -134,6 +135,8 @@ extension View {
             return AnyView(self.cosmosPreviewEnv(colorSchemeContrast: .increased))
         case .differentiateWithoutColor:
             return AnyView(self.cosmosPreviewEnv(differentiateWithoutColor: true))
+        case .showBorders:
+            return AnyView(self.cosmosPreviewEnv(showButtonShapes: true))
         }
     }
 }
