@@ -19,6 +19,16 @@ public enum CosmosToastPlacement: Sendable, Hashable, CaseIterable {
 /// Which semantic color a role-tinted ``CosmosToastContent`` resolves its icon to.
 public enum CosmosToastTint: Sendable, Hashable, CaseIterable {
     case primary, success, warning, error
+
+    /// Resolves the tint to a semantic color token.
+    public func color(in tokens: CosmosColorTokens) -> Color {
+        switch self {
+        case .primary: return tokens.primary
+        case .success: return tokens.success
+        case .warning: return tokens.warning
+        case .error: return tokens.error
+        }
+    }
 }
 
 /// A toast role: bundles an SF Symbol, a semantic tint, and the appear haptic. Used by the role
@@ -198,9 +208,13 @@ private struct CosmosToastHost<Key: Hashable, ToastContent: View>: View {
 private struct OptionalHapticModifier<Trigger: Equatable & Sendable>: ViewModifier {
     let feedback: CosmosHapticsFeedback?
     let trigger: Trigger
+    @ViewBuilder
     func body(content: Content) -> some View {
-        guard let feedback else { return AnyView(content) }
-        return AnyView(content.cosmosHaptic(feedback, trigger: trigger))
+        if let feedback {
+            content.cosmosHaptic(feedback, trigger: trigger)
+        } else {
+            content
+        }
     }
 }
 

@@ -8,6 +8,8 @@ public struct CosmosToastContent<Message: View>: View {
     @ViewBuilder let message: (() -> Message)?
 
     @Environment(\.cosmosTheme) private var theme
+    @Environment(\.cosmosConfiguration) private var configuration
+    @Environment(\.accessibilityDifferentiateWithoutColor) private var differentiateWithoutColor
 
     public init(role: CosmosToastRole, @ViewBuilder message: @escaping () -> Message) {
         self.role = role
@@ -15,12 +17,23 @@ public struct CosmosToastContent<Message: View>: View {
         self.description = nil
         self.message = message
     }
-    
+
     public init(role: CosmosToastRole, title: String?, description: String?) {
         self.role = role
         self.title = title
         self.description = description
         self.message = nil
+    }
+
+    /// When the Differentiate Without Color gate is active (and respected), the role icon stops
+    /// communicating via color and relies on its distinct SF Symbol shape (`checkmark` /
+    /// `exclamationmark.triangle` / `xmark` / `info`) — the non-color differentiator the HIG
+    /// requires. Otherwise the role tint is applied (the default, sighted experience).
+    private var differentiatesWithoutColor: Bool {
+        CosmosAccessibilityPolicy.shouldDifferentiateWithoutColor(
+            respectDifferentiateWithoutColor: configuration.accessibility.respectDifferentiateWithoutColor,
+            differentiateWithoutColor: differentiateWithoutColor
+        )
     }
 
     public var body: some View {
@@ -32,16 +45,17 @@ public struct CosmosToastContent<Message: View>: View {
                     CosmosText(verbatim: title)
                         .cosmosFont(.footnote, weight: .bold)
                         .cosmosForegroundStyle(.primary)
-                    
+
                     CosmosText(verbatim: description)
                         .cosmosFont(.footnote)
                         .cosmosForegroundStyle(.secondary)
                 }
             }
-            
+
             Image(systemName: role.icon)
                 .font(theme.typography.font(for: theme.textStyle))
-                .symbolRenderingMode(.hierarchical)
+                .symbolRenderingMode(differentiatesWithoutColor ? .monochrome : .hierarchical)
+                .foregroundStyle(differentiatesWithoutColor ? theme.colors.primary : role.tint.color(in: theme.colors))
                 .accessibilityHidden(true)
         }
         .padding(5)
