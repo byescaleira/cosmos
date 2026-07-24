@@ -37,6 +37,138 @@
         }
       }
     },
+    "cosmos.action.select" : {
+      "comment" : "Tap/select verb adapted to the host device (touch vs. Siri Remote); used by previews to demonstrate a String Catalog device variation.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "variations" : {
+            "device" : {
+              "Apple TV" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Select"
+                }
+              },
+              "Apple Vision Pro" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Tap"
+                }
+              },
+              "Apple Watch" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Tap"
+                }
+              },
+              "iPad" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Tap"
+                }
+              },
+              "iPhone" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Tap"
+                }
+              },
+              "Mac" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Click"
+                }
+              }
+            }
+          }
+        },
+        "pt-BR" : {
+          "variations" : {
+            "device" : {
+              "Apple TV" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Selecionar"
+                }
+              },
+              "Apple Vision Pro" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Tocar"
+                }
+              },
+              "Apple Watch" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Tocar"
+                }
+              },
+              "iPad" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Tocar"
+                }
+              },
+              "iPhone" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Tocar"
+                }
+              },
+              "Mac" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Clicar"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "items.count" : {
+      "comment" : "Count of items in a list/cart, pluralized; demonstrates a String Catalog plural variation. %lld is the integer count.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld item"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld items"
+                }
+              }
+            }
+          }
+        },
+        "pt-BR" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld item"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld itens"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "preview.description" : {
       "comment" : "Reference-component description used by design-system previews; long-form copy.",
       "extractionState" : "manual",
