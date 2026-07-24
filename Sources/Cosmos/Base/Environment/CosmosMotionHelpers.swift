@@ -267,4 +267,21 @@ extension View {
     ) -> some View {
         modifier(CosmosSymbolEffectModifier(effect: effect, options: options, isActive: isActive))
     }
+
+    /// Liquid Glass zoom navigation transition (the OS 26 morph). Pair with a `matchedGeometryEffect`
+    /// source of the same `sourceID` + `namespace` on the destination so the pushed view grows from
+    /// the source's frame. Available on iOS/tvOS/watchOS/visionOS 18+ (the `.zoom` transition is
+    /// `@available(macOS, unavailable)`) — a no-op on macOS, where `NavigationStack` push morphs are
+    /// not part of the platform. No reduce-motion gating: navigation transitions are system-controlled
+    /// and auto-respect Reduce Motion (like the native date-picker wheel).
+    public func cosmosZoomNavigation(
+        sourceID: some Hashable,
+        in namespace: Namespace.ID
+    ) -> some View {
+        #if !os(macOS)
+        return self.navigationTransition(.zoom(sourceID: sourceID, in: namespace))
+        #else
+        return self
+        #endif
+    }
 }
