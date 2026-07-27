@@ -181,11 +181,9 @@ private struct ChromeBody: View {
             // non-glass variants. Use a discrete `RoundedRectangle` radius only for grouped /
             // card-nested content (concentricity), not for standalone prominent buttons.
             // Press scale is UNCONDITIONAL — press feedback is a state signal, not decorative
-            // motion (reduce-motion ≠ no feedback). Only the `.animation` is gated, so the scale
-            // snaps instantly instead of animating under reduce-motion (vestibular-safe). Routed
-            // through the single ``.cosmosAnimation(_:value:)`` chokepoint (reads reduce-motion +
-            // resolves the `.press` token via `CosmosMotionTokens.animation(for:)`); atoms never
-            // write raw `.animation(_:value:)`.
+            // motion (reduce-motion ≠ no feedback). Only the `.animation` is gated via the
+            // `.cosmosAnimation(_:value:)` chokepoint, so the scale snaps instantly instead of
+            // animating under reduce-motion (vestibular-safe).
             .glassEffect(.regular.tint(chromeBackground), in: .capsule)
             .cosmosAnimation(.press, value: configuration.isPressed)
             // Borderless `.ghost` reveals a capsule outline under "Show button shapes"
