@@ -57,8 +57,10 @@ public struct CosmosMenu<Label: View, Content: View>: View {
         if configuration.enable.isVisible {
             #if os(watchOS)
             // watchOS: Menu is unavailable — render a CosmosButton fallback (action = primary or no-op).
+            // No extra `.isButton` here: CosmosButton already conveys it (native Button trait + its
+            // own applyCosmosAccessibility extraTraits).
             CosmosButton(action: { primaryAction?() }, label: label)
-                .applyCosmosAccessibility(configuration.accessibility, extraTraits: .isButton)
+                .applyCosmosAccessibility(configuration.accessibility)
                 .onAppear { trackAppear() }
             #else
             menuBody

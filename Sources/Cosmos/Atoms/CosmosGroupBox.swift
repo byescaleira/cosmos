@@ -52,11 +52,13 @@ public struct CosmosGroupBox<Label: View, Content: View>: View {
     @ViewBuilder private var boxContent: some View {
         #if os(tvOS) || os(watchOS)
         // tvOS/watchOS: GroupBox is unavailable — render a plain themed fallback (label header
-        // above content). No GroupBox symbols are referenced here.
+        // above content). No GroupBox symbols are referenced here. The label carries `.isHeader`
+        // so VoiceOver announces it as a heading, matching the native GroupBox header semantics.
         VStack(alignment: .leading, spacing: CosmosSpacingTokens.small) {
             label()
                 .font(theme.typography.font(for: .headline))
                 .foregroundStyle(theme.colors.primary)
+                .accessibilityAddTraits(.isHeader)
             content()
         }
         .padding(CosmosSpacingTokens.value(for: theme.padding))
