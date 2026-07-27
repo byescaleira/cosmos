@@ -8,11 +8,12 @@ import SwiftUI
 /// comes from ``CosmosTheme/textFieldStyle`` (default `.automatic`).
 ///
 /// **Platform guard.** `TextField` is available on all 5 platforms at the Cosmos 26 floor
-/// (visionOS intentionally **not** guarded — it has `TextField` at 1.0). The keyboard modifiers
-/// (`.keyboardType`/`.textInputAutocapitalization`) are absent from the macOS/watchOS SDKs and
-/// are forwarded only on iOS/tvOS via `#if os(iOS) || os(tvOS)`. `.submitLabel` is available on
-/// all 5 (verified: it typechecks on the visionOS SDK; it is a no-op without a submit keyboard)
-/// and is applied unguarded.
+/// (visionOS intentionally **not** guarded — it has `TextField` at 1.0). The keyboard/content
+/// modifiers (`.keyboardType`/`.textInputAutocapitalization`/`.textContentType`) are absent from
+/// the macOS/watchOS SDKs; apply them directly on the atom from the caller (gated
+/// `#if os(iOS) || os(tvOS)`) — SwiftUI propagates them to the inner `TextField` (the atom does not
+/// re-forward them). `.submitLabel` is available on all 5 (verified: it typechecks on the visionOS
+/// SDK; a no-op without a submit keyboard) and is applied unguarded.
 ///
 /// **Runtime `#available`.** `.bordered` (`BorderedTextFieldStyle`) + `.textInputBorderShape` are
 /// `@available(anyAppleOS 27.0)` — the **next** OS above the Cosmos 26 floor (unlike
@@ -28,9 +29,9 @@ import SwiftUI
 /// `SecureField` has **no** conformable style protocol at all (``CosmosSecureField``).
 ///
 /// **Accessibility:** the title/prompt string is the default label; the native field auto-exposes
-/// editable-text traits and the current text as value. `.textContentType` is forwarded for
-/// autofill/QuickType. Dynamic Type via `.font(theme.typography.font(for:))`. Focus via
-/// `@FocusState` + `.focused(_:)`.
+/// editable-text traits and the current text as value. A caller-applied `.textContentType`
+/// (autofill/QuickType) propagates to the inner field. Dynamic Type via
+/// `.font(theme.typography.font(for:))`. Focus via `@FocusState` + `.focused(_:)`.
 ///
 /// **Haptics:** no native haptic for typing; an optional `.selection`-style `.impact(.light)`
 /// fires on `.onSubmit` (gated by config + reduce-motion via `.cosmosHaptic`). Default off unless

@@ -11,14 +11,15 @@ import SwiftUI
 /// `#if os(iOS) || os(tvOS)` guards).
 ///
 /// **Platform guard.** `SecureField` is available on all 5 platforms at the Cosmos 26 floor
-/// (visionOS not guarded). The keyboard modifiers are forwarded only on iOS/tvOS. `.submitLabel`
-/// is available on all 5 (verified: it typechecks on the visionOS SDK; a no-op without a submit
-/// keyboard) and is applied unguarded.
+/// (visionOS not guarded). The keyboard/content modifiers are caller-applied (iOS/tvOS only) and
+/// propagate to the inner field; the atom does not re-forward them. `.submitLabel` is available on
+/// all 5 (verified: it typechecks on the visionOS SDK; a no-op without a submit keyboard) and is
+/// applied unguarded.
 ///
 /// **Accessibility:** the title/prompt string is the default label; the native field auto-exposes
-/// secure editable-text traits and the current text length (not contents) as value. `.textContentType`
-/// is forwarded for autofill (e.g. passwords). Dynamic Type via `.font(theme.typography.font(for:))`.
-/// Focus via `@FocusState` + `.focused(_:)`.
+/// secure editable-text traits and the current text length (not contents) as value. A
+/// caller-applied `.textContentType` (e.g. passwords) propagates to the inner field. Dynamic Type
+/// via `.font(theme.typography.font(for:))`. Focus via `@FocusState` + `.focused(_:)`.
 ///
 /// **Haptics:** none — typing emits no native haptic and Cosmos adds none (a secure field firing
 /// haptics per keystroke would be vestibular-hostile; submit haptic is caller-driven via the
