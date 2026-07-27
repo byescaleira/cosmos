@@ -31,13 +31,6 @@ public struct CosmosText: View {
         }
     }
 
-    private var isHeading: Bool {
-        switch theme.textStyle {
-        case .largeTitle, .title, .title2, .title3: return true
-        default: return false
-        }
-    }
-
     @ViewBuilder
     public var body: some View {
         if let resolvedText {
@@ -54,7 +47,7 @@ public struct CosmosText: View {
                 .accessibilityIdentifierOrNil(configuration.accessibility.identifier)
                 .accessibilitySortPriorityOrNil(configuration.accessibility.sortPriority)
                 .accessibilityHiddenIf(configuration.accessibility.isHidden)
-                .accessibilityTraitsIfPresent(configuration.accessibility.traits.union(isHeading ? .isHeader : []))
+                .accessibilityTraitsIfPresent(configuration.accessibility.traits.union(theme.textStyle.isHeading ? .isHeader : []))
                 .accessibilityCustomContentIfPresent(configuration.accessibility.customContent)
                 .modifier(CosmosRespondsModifier(responds: configuration.accessibility.respondsToUserInteraction))
                 .onAppear {

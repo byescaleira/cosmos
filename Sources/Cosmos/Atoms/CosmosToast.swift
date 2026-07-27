@@ -72,6 +72,8 @@ public struct CosmosToastContent<Message: View>: View {
                     .stroke(theme.colors.outline, lineWidth: 1)
             }
         }
+        // Honor consumer accessibility overrides; the host chrome still combines the subtree.
+        .applyCosmosAccessibility(configuration.accessibility)
     }
 
     /// Horizontal layout — icon beside the message (default when width allows).

@@ -229,8 +229,13 @@ public struct CosmosAsyncImageFailure: View {
         VStack(spacing: CosmosSpacingTokens.small) {
             Image(systemName: "exclamationmark.triangle")
                 .symbolRenderingMode(.hierarchical)
-                .font(.system(size: 32))
+                // Dynamic Type via the typography token (was a fixed `.system(size: 32)` that
+                // bypassed accessibility text sizes).
+                .font(theme.typography.font(for: .largeTitle))
                 .foregroundStyle(theme.colors.error)
+                // Decorative glyph — the retry button carries the actionable label; hide the raw
+                // symbol name from VoiceOver (was announcing "exclamationmark.triangle").
+                .accessibilityHidden(true)
             CosmosButton("cosmos.asyncimage.retry", action: retry)
                 .cosmosButtonStyle(.secondary)
         }

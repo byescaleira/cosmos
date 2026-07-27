@@ -7,6 +7,50 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.10.0] - 2026-07-26
+
+### Added
+- **`CosmosTextStyle.isHeading` — single source of truth for the `.isHeader`
+  accessibility trait.** Title text styles (`largeTitle` / `title` / `title2` /
+  `title3`) report `isHeading == true`; atoms rendering text or labels in a
+  heading style now announce themselves as headings to VoiceOver so they are
+  navigable as such. Any future title atom picks up the trait automatically.
+  (W3.4)
+- **`CosmosIcon(decorativeSystemName:)` — a decorative SF Symbol hidden from
+  VoiceOver.** SwiftUI has no `Image(decorativeSystemName:)`; the atom hides the
+  symbol via the accessibility config when this init is used. The existing
+  decorative `Image`-bundle init already hid the symbol; this closes the SF
+  Symbol gap. (W3.7)
+
+### Fixed
+- **`CosmosToastContent` now folds the resolved accessibility configuration into
+  the content.** Consumer overrides set via `.cosmosAccessibility(...)` (label,
+  hint, value, identifier, traits, custom content) were dropped on the floor;
+  they are now honored by VoiceOver while the host chrome still combines the
+  subtree. (W3.1)
+- **`CosmosAsyncImage` failure glyph is now decorative and Dynamic-Type-aware.**
+  The fallback `exclamationmark.triangle` was an unlocalized 32pt system image
+  that VoiceOver read as an icon; it is now hidden from VoiceOver and sized
+  through the theme typography (`largeTitle`) so it scales with Dynamic Type.
+  (W3.2, W3.3)
+- **`CosmosLabel` marks heading text styles as headings.** A `CosmosLabel`
+  rendered in a title style now exposes the `.isHeader` trait via
+  `CosmosTextStyle.isHeading`. (W3.4)
+- **`CosmosGroupBox` tvOS/watchOS fallback header is now marked as a heading.**
+  The platform-fallback label path (no `GroupBoxStyle` conformance) was missing
+  the `.isHeader` trait; it is now added so VoiceOver can navigate it as a
+  heading. (W3.5)
+- **`CosmosMenu` watchOS fallback no longer double-announces `.isButton`.** The
+  fallback dropped an extra `.isButton` trait (the host `CosmosButton` already
+  conveys it); it now applies only the accessibility config. (W3.6)
+
+### Changed
+- **`CosmosTextField` / `CosmosSecureField` docs corrected.** The Platform guard
+  and Accessibility paragraphs over-claimed that the atom "forwards"
+  keyboard/content-type modifiers; those are caller-applied and propagate to the
+  inner field, not re-forwarded by the atom. No behavioral change. (W3.8)
+- Internal test count: 352 → 354.
+
 ## [0.9.0] - 2026-07-24
 
 ### Deprecated

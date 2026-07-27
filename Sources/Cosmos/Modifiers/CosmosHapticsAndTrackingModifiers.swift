@@ -27,12 +27,10 @@ private struct CosmosMotionConfigModifier: ViewModifier {
     }
 }
 
-/// Convenience modifier for ``View/cosmosReduceMotion(_:)``: flips only
-/// ``CosmosMotionConfiguration/respectReduceMotion`` while preserving every sibling field
-/// (`isEnabled`, `respectReduceTransparency`, the reduce-motion / reduce-transparency policies,
-/// `stagger`, `handler`). Mirrors ``CosmosEnabledModifier``'s read-env → mutate-one-field →
-/// reinject-via-``CosmosConfiguration/withMotion(_:)`` shape — does NOT rebuild the config from
-/// memberwise defaults (which would silently reset the whole motion contract for the subtree).
+/// Flips only ``CosmosMotionConfiguration/respectReduceMotion`` and reinjects via
+/// ``CosmosConfiguration/withMotion(_:)``, preserving every sibling field (mirrors
+/// ``CosmosEnabledModifier`` — does NOT rebuild from memberwise defaults, which would reset the
+/// whole motion contract for the subtree).
 private struct CosmosReduceMotionModifier: ViewModifier {
     let respect: Bool
     @Environment(\.cosmosConfiguration) private var configuration

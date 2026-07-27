@@ -32,7 +32,7 @@ public struct CosmosLabel<Title: View, Icon: View>: View {
                 .modifier(CosmosLabelStyleApplier(style: theme.labelStyle))
                 .foregroundStyle(theme.colors.primary)
                 .font(theme.typography.font(for: theme.textStyle))
-                .applyCosmosAccessibility(configuration.accessibility)
+                .applyCosmosAccessibility(configuration.accessibility, extraTraits: theme.textStyle.isHeading ? .isHeader : [])
                 .onAppear { trackAppear() }
         } else {
             EmptyView()

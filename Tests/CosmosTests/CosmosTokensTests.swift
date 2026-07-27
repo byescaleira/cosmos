@@ -77,6 +77,14 @@ struct CosmosTokensTests {
         }
     }
 
+    @Test func textStyleIsHeadingForTitleStylesOnly() {
+        // Single source of truth for the .isHeader accessibility trait: only the title family.
+        let heading: Set<CosmosTextStyle> = [.largeTitle, .title, .title2, .title3]
+        for style in CosmosTextStyle.allCases {
+            #expect(style.isHeading == heading.contains(style))
+        }
+    }
+
     // MARK: Typography — weight/design overrides (.cosmosFont backing tokens)
 
     @Test func typographyDefaultsAreNil() {

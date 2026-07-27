@@ -24,6 +24,10 @@ struct CosmosIconTests {
         _ = CosmosIcon(decorative: "PlaceholderAsset", bundle: nil)
     }
 
+    @Test func iconConstructsDecorativeSystemName() {
+        _ = CosmosIcon(decorativeSystemName: "star.fill")
+    }
+
     @Test func iconConstructsFromCustomImageView() {
         _ = CosmosIcon { Image(systemName: "sparkles") }
     }

@@ -19,13 +19,17 @@ import SwiftUI
 ///
 /// **Accessibility:** SF Symbols may announce the raw symbol name to VoiceOver — always set an
 /// explicit label via `.cosmosAccessibilityLabel(_:)` for meaningful symbols, or use the
-/// `decorative:` init (which natively hides the image) for purely decorative ones. The
+/// decorative inits (`decorativeSystemName:` for SF Symbols, `decorative:bundle:` for asset
+/// images) for purely decorative ones — both hide the image from VoiceOver. The
 /// `.isImage` trait is applied natively by `Image`; the atom does not double-apply it. **Motion:**
 /// `none`; `.symbolEffect` is caller-driven and auto-respects Reduce Motion (gate on
 /// `configuration.motion.isEnabled` only — do not double-gate). **Haptics:** none — when used as a
 /// Button/Toggle label, the controlling style owns the haptic.
 public struct CosmosIcon<Icon: View>: View {
     @ViewBuilder private let icon: () -> Icon
+    /// `true` for the decorative SF Symbol convenience (no native `Image(decorativeSystemName:)`
+    /// exists); the body hides it from VoiceOver regardless of the accessibility config.
+    private let isDecorativeSymbol: Bool
 
     @Environment(\.cosmosConfiguration) private var configuration
     @Environment(\.cosmosTheme) private var theme
@@ -34,6 +38,7 @@ public struct CosmosIcon<Icon: View>: View {
     /// Creates an icon from custom icon content (apply `.resizable`/`.renderingMode`/etc. inside).
     public init(@ViewBuilder icon: @escaping () -> Icon) {
         self.icon = icon
+        self.isDecorativeSymbol = false
     }
 
     public var body: some View {
@@ -41,6 +46,7 @@ public struct CosmosIcon<Icon: View>: View {
             icon()
                 .foregroundStyle(theme.colors.primary)
                 .font(theme.typography.font(for: theme.textStyle))
+                .accessibilityHiddenIf(isDecorativeSymbol)
                 .applyCosmosAccessibility(configuration.accessibility)
                 .onAppear { trackAppear() }
         } else {
@@ -65,21 +71,32 @@ extension CosmosIcon where Icon == Image {
     /// symbols (VoiceOver may otherwise announce the raw symbol name).
     public init(systemName: String) {
         self.icon = { Image(systemName: systemName) }
+        self.isDecorativeSymbol = false
     }
 
     /// Creates a variable-color SF Symbol icon (iOS 16+). `variableValue` in `[0, 1]`.
     public init(systemName: String, variableValue: Double) {
         self.icon = { Image(systemName: systemName, variableValue: variableValue) }
+        self.isDecorativeSymbol = false
+    }
+
+    /// Creates a decorative SF Symbol icon — hidden from VoiceOver (no label announced). SwiftUI
+    /// has no `Image(decorativeSystemName:)`, so the atom hides it via the accessibility config.
+    public init(decorativeSystemName name: String) {
+        self.icon = { Image(systemName: name) }
+        self.isDecorativeSymbol = true
     }
 
     /// Creates an icon from a bundled asset image name.
     public init(_ name: String, bundle: Bundle? = nil) {
         self.icon = { Image(name, bundle: bundle) }
+        self.isDecorativeSymbol = false
     }
 
     /// Creates a decorative asset image icon — natively hidden from VoiceOver (no label announced).
     public init(decorative name: String, bundle: Bundle? = nil) {
         self.icon = { Image(decorative: name, bundle: bundle) }
+        self.isDecorativeSymbol = false
     }
 }
 

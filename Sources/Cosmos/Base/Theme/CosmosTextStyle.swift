@@ -58,4 +58,14 @@ public enum CosmosTextStyle: String, Sendable, Codable, CaseIterable {
     public var systemFont: Font {
         .system(textStyle)
     }
+
+    /// Whether this style is a heading style. The single source of truth for the
+    /// `.isHeader` accessibility trait: atoms rendering text/labels in a heading style
+    /// announce themselves as headings to VoiceOver so they are navigable as such.
+    public var isHeading: Bool {
+        switch self {
+        case .largeTitle, .title, .title2, .title3: return true
+        default: return false
+        }
+    }
 }
