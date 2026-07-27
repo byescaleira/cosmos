@@ -178,8 +178,16 @@ private struct CosmosToastHost<Key: Hashable, ToastContent: View>: View {
                 chromeContent
                     .background(theme.colors.surface, in: .rect(cornerRadius: 32))
             } else {
+                #if os(visionOS)
+                // Liquid Glass (`glassEffect`) is unavailable on visionOS — fall back to the
+                // opaque `surface` token, matching the reduce-transparency path above.
+                // iOS/macOS/tvOS/watchOS 26 all expose `glassEffect`.
+                chromeContent
+                    .background(theme.colors.surface, in: .rect(cornerRadius: 32))
+                #else
                 chromeContent
                     .glassEffect(.regular, in: .rect(cornerRadius: 32))
+                #endif
             }
         }
         .shadow(

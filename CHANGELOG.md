@@ -36,6 +36,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     `.id`, error haptic, error reporting + passive tracking
     (`"image_appear"` / `"image_failure"`, component `"CosmosImage"`).
 
+### Fixed
+- **visionOS build: `glassEffect` is unavailable on visionOS and was used ungated.**
+  `CosmosButton` chrome (`.primary` / `.secondary` / `.danger` / `.ghost`) and the
+  `cosmosToast` host chrome applied `.glassEffect(...)` unconditionally; Liquid Glass is
+  not available on visionOS, so the visionOS cross-build failed. Both sites now gate with
+  `#if os(visionOS)` and fall back to an opaque `theme.colors.surface` / chrome-tint capsule
+  (matching the existing reduce-transparency fallback). iOS / macOS / tvOS / watchOS 26
+  keep the `glassEffect` path unchanged. This was latent because CI only runs the host
+  `swift build` (no per-platform cross-builds).
+
 ### Deprecated
 - **`CosmosIcon` is `@available(*, deprecated)` — superseded by `CosmosImage`.**
   One minor of migration runway before obsoletion in a future Cosmos major.
