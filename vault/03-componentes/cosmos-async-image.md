@@ -6,6 +6,12 @@ related: [cosmos-icon, cosmos-scroll-view, cosmos-progress, ios-27-swiftui-above
 
 # CosmosAsyncImage
 
+> **Deprecated 0.11.0** — superseded by the unified [[cosmos-image]]. The atom is
+> `@available(*, deprecated)` with one minor of migration runway; its implementation
+> compiles untouched, only the struct + inits carry the annotation. The shared OS-27
+> cache / `urlSession` surface below is **kept and reused by `CosmosImage`** (relocation
+> deferred to the obsoletion major). This note is kept as the historical Wave-G record.
+
 `AsyncImage` wrap-view — Wave G atom (second PHASE4 wave). File:
 `Sources/Cosmos/Atoms/CosmosAsyncImage.swift`.
 
@@ -132,15 +138,22 @@ per the structural discipline.
 The delay/minimumDisplayTime placeholder-flicker gate is a documented **Wave-G refinement**, not
 Wave G itself — matches the low-risk-first wave ordering. The phase is authoritative for the slot.
 
-## Forward compatibility — the later `CosmosImage`
+## Forward compatibility — the later `CosmosImage` (REALIZED 0.11.0)
 
-`content: (Image) -> Content` takes the loaded `Image` and returns a view, so this atom is a clean
-building block. The later unified `CosmosImage` (future wave) will be
-`enum CosmosImageSource { case system(String); case resource(String, Bundle?); case url(URL?) }` —
-`.system`/`.resource` delegate to [[cosmos-icon]] (already covers `systemName` /
-`Image(_:bundle:)` / `Image(decorative:bundle:)`); `.url` delegates to `CosmosAsyncImage`. No
-`CosmosImage` work in Wave G. `CosmosMock.imageURL(seed:width:height:)` + `badImageURL()` were added
-for previews and the future `CosmosImage`.
+`content: (Image) -> Content` takes the loaded `Image` and returns a view, so this atom was a clean
+building block. The unified [[cosmos-image]] shipped in **0.11.0** — not as the originally-sketched
+`CosmosImageSource { case system / case resource / case url }` forwarder delegating back to
+[[cosmos-icon]] and `CosmosAsyncImage`, but as a **fresh parallel implementation** with a private
+`Source` discriminator (`.direct` / `.remote`). The literal delegation was abandoned because
+constructing the deprecated types internally would emit deprecation warnings, breaking the
+zero-warnings binding. `CosmosAsyncImage` is now `@available(*, deprecated)` (one minor of runway)
+with its implementation left compiling untouched; the shared OS-27 surface
+(`CosmosImageCache` / `@Entry cosmosAsyncImageURLSession` / `cosmosAsyncImageURLSession` /
+`CosmosAsyncImageSessionApplier` / `CosmosAsyncImageAvailability` / `CosmosAsyncImagePlaceholder` /
+`CosmosAsyncImageFailure`) is **kept and reused by `CosmosImage`** — physical relocation to a
+non-deprecated home is deferred to the obsoletion major. The previews + `CosmosWaveGAtomsTests`
+machinery was re-homed into `CosmosImageTests`. `CosmosMock.imageURL(seed:width:height:)` +
+`badImageURL()` (added in Wave G) now serve `CosmosImage` previews.
 
 ## Testing
 

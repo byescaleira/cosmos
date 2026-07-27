@@ -151,14 +151,18 @@ Two shapes, by what the underlying SwiftUI component allows:
   `GroupBoxStyle`, `MenuStyle`) adopt the protocol + SE-0299 dot-syntax: `CosmosButton`,
   `CosmosToggle`, `CosmosLabel`, `CosmosProgress`, `CosmosGroupBox`, `CosmosMenu`.
 - **Wrap-`View` atoms** for the components with no conformable style protocol: `CosmosText`,
-  `CosmosLocalizedText`, `CosmosIcon`, `CosmosAsyncImage`, `CosmosLink`, `CosmosDivider`,
+  `CosmosLocalizedText`, `CosmosImage`, `CosmosLink`, `CosmosDivider`,
   `CosmosHStack`, `CosmosVStack`, `CosmosAdaptiveStack`, `CosmosScrollView`, `CosmosSection`,
   `CosmosList`, `CosmosSelectableList`, `CosmosTabView`, `CosmosTextField`, `CosmosSecureField`,
   `CosmosTextEditor`, `CosmosSlider`, `CosmosStepper`, `CosmosDatePicker`, `CosmosPicker`,
   `CosmosToast`.
 
   (`CosmosCard` is `@available(*, deprecated)` as of 0.9.0 — slated for removal in a future
-  Cosmos major; compose `CosmosAdaptiveStack` + background tokens directly.)
+  Cosmos major; compose `CosmosAdaptiveStack` + background tokens directly. `CosmosIcon` and
+  `CosmosAsyncImage` are `@available(*, deprecated)` as of 0.11.0 — superseded by the unified
+  `CosmosImage` (SF Symbols + typed `ImageResource` + asset images + remote URL in one atom);
+  migrate to `CosmosImage`. The shared `CosmosImageCache` / `cosmosAsyncImageURLSession` surface
+  is kept and reused by `CosmosImage`.)
 
 Atoms have minimal, content-only initializers; state and configuration come from the environment.
 Input atoms that require `Binding` (`CosmosTextField`, `CosmosToggle`, `CosmosSlider`,

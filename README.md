@@ -44,7 +44,7 @@ Add Cosmos to your `Package.swift`:
 
 ```swift
 dependencies: [
-    .package(url: "https://github.com/byescaleira/cosmos.git", from: "0.9.0")
+    .package(url: "https://github.com/byescaleira/cosmos.git", from: "0.11.0")
 ]
 ```
 
@@ -92,13 +92,14 @@ wrap a `View`.
 | Atom | Notes |
 |---|---|
 | `CosmosAdaptiveStack` | Reflows between `HStack` / `VStack` by size class + Dynamic Type, preserving view identity across rotation. |
-| `CosmosAsyncImage` | `AsyncImage` wrapper; placeholder / error / retry slots, retry via `.id`, OS-27 cache surface opt-in. |
+| `CosmosAsyncImage` | **Deprecated 0.11.0** — use `CosmosImage`. `AsyncImage` wrapper; placeholder / error / retry slots, retry via `.id`, OS-27 cache surface opt-in. |
 | `CosmosButton` | `ButtonStyle`-based; glass variant available on iOS 26. |
 | `CosmosDatePicker` | `DatePicker` wrapper; gated on platforms where it exists. |
 | `CosmosDivider` | Native `Divider` wrapper; decorative, axis inferred from the enclosing stack. Not recolored (`Divider` ignores foreground/background). |
 | `CosmosGroupBox` | Custom `GroupBoxStyle` chrome via theme tokens. |
 | `CosmosHStack` | `HStack` wrapper spacing children on the 4-pt grid (`CosmosPadding`). |
-| `CosmosIcon` | SF Symbol wrapper. |
+| `CosmosIcon` | **Deprecated 0.11.0** — use `CosmosImage`. SF Symbol wrapper. |
+| `CosmosImage` | Unified image atom: SF Symbols (`systemName:` / `variableValue:` / `decorativeSystemName:`), typed `ImageResource` (`init(_:)`), asset images (`init(_:bundle:)` + decorative), custom `@ViewBuilder` content, and remote (URL) images with placeholder / failure / retry slots, OS-27 cache surface. Supersedes `CosmosIcon` + `CosmosAsyncImage`. |
 | `CosmosLabel` | `LabelStyle`-based. |
 | `CosmosLink` | `Link` wrapper. |
 | `CosmosList` | `List` wrapper with theme list style. |

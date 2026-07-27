@@ -7,6 +7,62 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.11.0] - 2026-07-26
+
+### Added
+- **`CosmosImage` — the unified image atom.** Folds the SF Symbol / asset /
+  typed `ImageResource` surface of `CosmosIcon` and the remote-`AsyncImage` slot
+  architecture of `CosmosAsyncImage` into one atom via a private `Source`
+  discriminator (no `AnyView` erasure — slot structural identity preserved,
+  WWDC21-10022). Inits:
+  - SF Symbols: `init(systemName:)`, `init(systemName:variableValue:)`,
+    `init(decorativeSystemName:)` (VoiceOver-hidden; SwiftUI has no
+    `Image(decorativeSystemName:)`).
+  - Typed resource: `init(_ resource: ImageResource)` — the typed, non-string
+    asset source (codegen present on all 5 platforms at the `.v26` floor:
+    iOS 17 / macOS 14 / tvOS 17 / watchOS 10 / visionOS 1; no `#if os()` or
+    `@available` gate needed).
+  - Asset images: `init(_:bundle:)`, `init(decorative:bundle:)`.
+  - Custom `@ViewBuilder` content: `init(content:)`.
+  - Remote (URL): `init(url:scale:content:)` (default placeholder/failure
+    slots), `init(url:scale:content:placeholder:failure:)` (typed slots), and
+    the deprecated `AnyView`-erased overload carried over.
+  - String-URL convenience: `init(url:scale:content:)` (+ typed-slot +
+    deprecated-`AnyView` overloads) — parses `URL(string:)`, nil → placeholder
+    path (matching `AsyncImage(url: nil)`).
+  - Ergonomic aliases: `CosmosImagePlaceholder` / `CosmosImageFailure`
+    typealiases and `cosmosImageURLSession(_:)`. Motion-gated phase transitions
+    (`.cosmosTransition(.blurReplace)` + policy-aware `Transaction`), retry via
+    `.id`, error haptic, error reporting + passive tracking
+    (`"image_appear"` / `"image_failure"`, component `"CosmosImage"`).
+
+### Deprecated
+- **`CosmosIcon` is `@available(*, deprecated)` — superseded by `CosmosImage`.**
+  One minor of migration runway before obsoletion in a future Cosmos major.
+  Migrate: `CosmosIcon(systemName:)` → `CosmosImage(systemName:)`; the custom
+  `init(icon:)` → `init(content:)`; asset `init(_:bundle:)` →
+  `CosmosImage(_:bundle:)`; decorative variants map 1:1. `CosmosImage` also
+  covers typed `ImageResource` and remote (URL) images.
+- **`CosmosAsyncImage` is `@available(*, deprecated)` — superseded by
+  `CosmosImage`.** Migrate: `CosmosAsyncImage(url:content:)` →
+  `CosmosImage(url:content:)`; the typed-slot init maps 1:1; the default
+  placeholder/failure slots are reused via the `CosmosImagePlaceholder` /
+  `CosmosImageFailure` aliases. The shared `CosmosImageCache` /
+  `cosmosAsyncImageURLSession` surface is **kept and reused by `CosmosImage`**
+  (physical relocation to a non-deprecated home is deferred to the obsoletion
+  major). `CosmosIcon` and `CosmosAsyncImage` keep compiling untouched
+  (implementation unchanged); their previews and dedicated tests were removed
+  (constructing a deprecated type emits warnings — incompatible with the
+  zero-warnings build).
+
+### Changed
+- Internal Swift Testing count: 354 → 356 (deleted 9 `CosmosIcon` /
+  `CosmosAsyncImage` tests; added 16 `CosmosImage` construction + shared-machinery
+  tests; re-homed the `CosmosImageCache` once-token and availability-table tests).
+- `README.md` + `ARCHITECTURE.md` + `PHASE2.md` §2.5 synced: `CosmosImage` added
+  to the atom table / wrap-view list; the two atoms marked deprecated; install
+  floor bumped `from: "0.10.0"` → `from: "0.11.0"`.
+
 ## [0.10.0] - 2026-07-26
 
 ### Added
