@@ -4,26 +4,69 @@ import SwiftUI
 @testable import Cosmos
 
 @MainActor
-@Suite("CosmosAsyncImage")
-struct CosmosAsyncImageTests {
+@Suite("CosmosImage")
+struct CosmosImageTests {
 
-    // MARK: - Construction
+    // MARK: - Construction (static sources)
 
-    @Test func asyncImageConstructsWithUrlAndContent() {
-        _ = CosmosAsyncImage(url: URL(string: "https://example.com/image.png"),
-                             content: { image in image })
+    @Test func imageConstructsFromSystemName() {
+        _ = CosmosImage(systemName: "star.fill")
     }
 
-    @Test func asyncImageConstructsWithNilUrl() {
+    @Test func imageConstructsFromSystemNameAndVariableValue() {
+        _ = CosmosImage(systemName: "chart.bar.fill", variableValue: 0.75)
+    }
+
+    @Test func imageConstructsFromDecorativeSystemName() {
+        _ = CosmosImage(decorativeSystemName: "chevron.right")
+    }
+
+    // `init(_ resource: ImageResource)` is compile-verified only here: constructing an
+    // `ImageResource` requires a codegen'd constant from an asset catalog, and Cosmos ships no
+    // image assets (only a String Catalog). The init is part of the public surface and
+    // type-checks on all 5 platforms at the `.v26` floor (iOS 17 / macOS 14 / tvOS 17 / watchOS 10 /
+    // visionOS 1); consumers with asset catalogs construct it at runtime. No runtime construction
+    // test is possible without shipping a bundled asset.
+
+    @Test func imageConstructsFromBundledAssetName() {
+        _ = CosmosImage("PlaceholderAsset", bundle: nil)
+    }
+
+    @Test func imageConstructsFromDecorativeBundledAsset() {
+        _ = CosmosImage(decorative: "PlaceholderAsset", bundle: nil)
+    }
+
+    @Test func imageConstructsFromCustomContent() {
+        _ = CosmosImage { Image(systemName: "sparkles") }
+    }
+
+    // MARK: - Construction (remote / URL)
+
+    @Test func imageConstructsWithUrlAndContent() {
+        _ = CosmosImage(url: URL(string: "https://example.com/image.png"),
+                        content: { image in image })
+    }
+
+    @Test func imageConstructsWithNilUrl() {
         // A nil URL routes to the placeholder slot; construction must not crash.
-        _ = CosmosAsyncImage(url: nil, content: { image in image })
+        _ = CosmosImage(url: nil as URL?, content: { image in image })
     }
 
-    @Test func asyncImageConstructsWithCustomPlaceholderAndFailure() {
+    @Test func imageConstructsWithStringUrl() {
+        // A valid URL string parses and forwards to the typed URL init.
+        _ = CosmosImage(url: "https://example.com/image.png", content: { image in image })
+    }
+
+    @Test func imageConstructsWithInvalidStringUrl() {
+        // An unparseable string yields `URL(string:) == nil` → the placeholder slot, like a nil URL.
+        _ = CosmosImage(url: "not a url", content: { image in image })
+    }
+
+    @Test func imageConstructsWithCustomPlaceholderAndFailure() {
         // The `retry` closure is non-Sendable; do not send it into another view — exercise the
         // failure slot with a static view and ignore `retry` (its wiring is covered by previews).
         // Typed (non-AnyView) slot closures — the canonical generic form (WWDC21-10022 identity).
-        _ = CosmosAsyncImage(
+        _ = CosmosImage(
             url: URL(string: "https://example.com/image.png"),
             content: { image in image },
             placeholder: { CosmosText(verbatim: "Loading…") },
@@ -31,7 +74,7 @@ struct CosmosAsyncImageTests {
         )
     }
 
-    // MARK: - CosmosImageCache (tuned URLSession + URLCache)
+    // MARK: - CosmosImageCache (tuned URLSession + URLCache; shared with CosmosAsyncImage)
 
     @Test func imageCacheDefaultSessionHasTunedURLCache() {
         let session = CosmosImageCache.defaultSession

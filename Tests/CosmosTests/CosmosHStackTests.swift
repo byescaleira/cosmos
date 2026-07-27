@@ -43,7 +43,7 @@ struct CosmosHStackTests {
         // Heterogeneous content + nested Cosmos stacks compose (the generic Content parameter).
         _ = CosmosVStack(spacing: .medium) {
             CosmosHStack(spacing: .small) {
-                CosmosIcon("checkmark")
+                CosmosImage(systemName: "checkmark")
                 CosmosText(verbatim: "Done")
             }
             CosmosText(verbatim: "Second row")
