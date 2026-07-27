@@ -298,7 +298,11 @@ extension View {
 /// Dual-gated like the ``CosmosTextFieldStyle`` `.bordered` applier: `#if swift(>=6.4)` compiles the
 /// OS-27 SDK symbol in under Xcode 27 / Swift 6.4 and out on Xcode 26 / Swift 6.3; `if #available`
 /// degrades to passthrough on an OS-26 device under Xcode 27.
-private struct CosmosAsyncImageSessionApplier: ViewModifier {
+///
+/// Module-internal (not `private`) so ``CosmosImage`` reuses the same dual-gated path instead of
+/// duplicating it. Stays here for the deprecation runway; relocates when ``CosmosAsyncImage`` is
+/// obsoleted.
+struct CosmosAsyncImageSessionApplier: ViewModifier {
     let session: URLSession?
 
     func body(content: Content) -> some View {
