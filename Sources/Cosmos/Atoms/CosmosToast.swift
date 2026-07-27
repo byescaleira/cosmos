@@ -72,6 +72,12 @@ public struct CosmosToastContent<Message: View>: View {
                     .stroke(theme.colors.outline, lineWidth: 1)
             }
         }
+        // Fold the resolved accessibility configuration (label/hint/value/identifier/sortPriority/
+        // isHidden/traits/customContent/responds) into the content so consumer overrides set via
+        // `.cosmosAccessibility(...)` are honored by VoiceOver. The host chrome still combines the
+        // subtree (`.accessibilityElement(children: .combine)` + `.isStaticText`); an explicit
+        // label here overrides the derived icon/title text, matching the other atoms.
+        .applyCosmosAccessibility(configuration.accessibility)
     }
 
     /// Horizontal layout — icon beside the message (default when width allows).
