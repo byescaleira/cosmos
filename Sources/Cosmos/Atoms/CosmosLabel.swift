@@ -26,13 +26,22 @@ public struct CosmosLabel<Title: View, Icon: View>: View {
         self.icon = icon
     }
 
+    /// Mirrors ``CosmosText/isHeading``: a title text style announces the label as a heading to
+    /// VoiceOver (`.isHeader`), so a `CosmosLabel` used as a section heading is navigable as one.
+    private var isHeading: Bool {
+        switch theme.textStyle {
+        case .largeTitle, .title, .title2, .title3: return true
+        default: return false
+        }
+    }
+
     public var body: some View {
         if configuration.enable.isVisible {
             Label { title() } icon: { icon() }
                 .modifier(CosmosLabelStyleApplier(style: theme.labelStyle))
                 .foregroundStyle(theme.colors.primary)
                 .font(theme.typography.font(for: theme.textStyle))
-                .applyCosmosAccessibility(configuration.accessibility)
+                .applyCosmosAccessibility(configuration.accessibility, extraTraits: isHeading ? .isHeader : [])
                 .onAppear { trackAppear() }
         } else {
             EmptyView()
