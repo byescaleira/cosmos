@@ -99,25 +99,31 @@ Coerente, baixo-esforço, baixo-risco (muda comportamento só sob reduce-motion 
 - W2.8 `CosmosPlatform.current`/`localizedTextDeviceKey` `static var` getter →
   `static let` (one-shot). (perf #9, trivial)
 
-### Wave 3 — Gaps de VoiceOver / a11y
+### Wave 3 — Gaps de VoiceOver / a11y  ✅ ships in 0.10.0
 - W3.1 `CosmosToastContent` nunca chama `applyCosmosAccessibility` →
   label/hint/identifier/traits/role dropping no VoiceOver. Adicionar
-  `applyCosmosAccessibility` + label de role prefixado. (a11y #3)
+  `applyCosmosAccessibility` + label de role prefixado. (a11y #3) ✅
 - W3.2 `CosmosAsyncImageFailure` icon `exclamationmark.triangle` não
   `.accessibilityHidden(true)` → VoiceOver lê o nome do símbolo. (a11y #2,
-  trivial)
+  trivial) ✅
 - W3.3 `CosmosAsyncImageFailure` `.font(.system(size: 32))` fixo, sem Dynamic
-  Type → `theme.typography.font(for: .largeTitle)`. (a11y #4, trivial)
+  Type → `theme.typography.font(for: .largeTitle)`. (a11y #4, trivial) ✅
 - W3.4 `CosmosLabel` sem `.isHeader` para estilos de título (diferente de
-  `CosmosText`) → espelhar o check `isHeading`. (a11y #5)
-- W3.5 `CosmosGroupBox` fallback tvOS/watchOS sem `.isHeader`. (a11y #8, trivial)
+  `CosmosText`) → espelhar o check `isHeading`. (a11y #5) ✅ — resolvido
+  extraindo `CosmosTextStyle.isHeading` (fonte única de verdade do trait
+  `.isHeader`); `CosmosLabel` e `CosmosText` agora ambos consultam `theme
+  .textStyle.isHeading`, então qualquer átomo futuro de título herda o trait
+  automaticamente (ver [[cosmos-textheader-pattern]]).
+- W3.5 `CosmosGroupBox` fallback tvOS/watchOS sem `.isHeader`. (a11y #8, trivial) ✅
 - W3.6 `CosmosMenu` fallback watchOS double `.isButton` → dropar o externo. (a11y
-  #9, trivial)
+  #9, trivial) ✅
 - W3.7 (opcional) `CosmosIcon` sem forma decorative para SF Symbols →
-  `init(decorativeSystemName:)`. (a11y #7, API aditiva)
+  `init(decorativeSystemName:)`. (a11y #7, API aditiva) ✅
 - W3.8 (opcional) docs de TextField/SecureField afirmam `.textContentType`
   forwardado mas não há param → adicionar `textContentType:` (`#if os(iOS) ||
-  os(tvOS)`) ou corrigir docs. (a11y #10)
+  os(tvOS)`) ou corrigir docs. (a11y #10) ✅ — resolvido corrigindo os docs
+  (modifiers são caller-applied e propagam para o field interno, não
+  re-forwardados pelo átomo); nenhum parâmetro adicionado.
 
 ### Wave 4 — Ergonomia de API + bug funcional de haptic
 - W4.1 **`CosmosMenu:79`** — `primaryActionFeedback(isDestructive: false)`

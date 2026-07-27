@@ -41,6 +41,7 @@ Synthesis/navigation layer for the [[Cosmos]] SwiftUI design-system library. The
 - [[button-shapes-ios26-liquid-glass]] — research: Apple's Liquid Glass default button shape is **capsule** (WWDC25-323/284/356); `.glass`/`.glassProminent` default to `.buttonBorderShape(.capsule)`; `RoundedRectangle(cornerRadius:)` only for grouped/card/macOS-small-density; iOS 27 carries capsule forward (no new styles).
 - [[cosmos-toast]] — `cosmosToast` (Wave H): presentation modifier mirroring `.sheet`/`.alert` binding API (`isPresented` + `item` + `onDismiss`). **No native `.toast` exists in iOS 26/27** — composes overlay + `.regularMaterial` surface + `.cosmosTransition(.slide/.sheet)` gated by `CosmosMotionPolicy`. Haptic on appear (policy-gated), tracking appear/dismiss, reduce-transparency → solid `surface`, optional `dismissAfter` auto-dismiss (cancellable `Task`, no `DispatchQueue`). Reuses existing motion presets — no new token.
 - [[cosmos-card]] — `CosmosCard` (header/body/footer slots, plain `View` not `GroupBoxStyle`): **deprecated 0.9.0** (`@available(*, deprecated)`); slated for removal in a future major. Migrate to `CosmosAdaptiveStack` + background/border/shadow tokens. `CosmosRadiusTokens.card` kept.
+- [[cosmos-textheader-pattern]] — `CosmosTextStyle.isHeading` (0.10.0): single source of truth for the `.isHeader` VoiceOver trait — title styles announce as headings; any future title atom inherits it for free. Wave 3 / W3.4.
 
 ## Design-system comparison index
 
