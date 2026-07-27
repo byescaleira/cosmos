@@ -174,6 +174,12 @@ private struct ChromeBody: View {
             .padding(.horizontal, CosmosSpacingTokens.large)
             .padding(.vertical, CosmosSpacingTokens.medium)
             .foregroundStyle(chromeForeground)
+            #if os(visionOS)
+            // Liquid Glass (`glassEffect`) is unavailable on visionOS — fall back to an opaque
+            // capsule of the chrome tint (the pre-glass look; `.ghost` stays chromeless via
+            // `chromeBackground == .clear`). iOS/macOS/tvOS/watchOS 26 all expose `glassEffect`.
+            .background(chromeBackground, in: .capsule)
+            #else
             // Capsule is Apple's Liquid Glass default for filled/prominent buttons
             // (WWDC25-323: "Bordered buttons now have a capsule shape by default"). The native
             // `.glassProminent` already renders capsule; this fallback chrome matches it so the
@@ -185,6 +191,7 @@ private struct ChromeBody: View {
             // `.cosmosAnimation(_:value:)` chokepoint, so the scale snaps instantly instead of
             // animating under reduce-motion (vestibular-safe).
             .glassEffect(.regular.tint(chromeBackground), in: .capsule)
+            #endif
             .cosmosAnimation(.press, value: configuration.isPressed)
             // Borderless `.ghost` reveals a capsule outline under "Show button shapes"
             // (config-aware via `showsGhostBorder`). The capsule matches the `.glassEffect`

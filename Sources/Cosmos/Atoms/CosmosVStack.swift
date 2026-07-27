@@ -102,7 +102,7 @@ public struct CosmosVStack<Content: View>: View {
 #Preview("VStack – landscape", traits: .landscapeLeft) {
     CosmosPreviewContainer {
         CosmosVStack(spacing: .large) {
-            CosmosIcon("tray.full.fill")
+            CosmosImage(systemName: "tray.full.fill")
             CosmosText(verbatim: "Laid out for landscape")
         }
         .padding()

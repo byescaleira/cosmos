@@ -52,13 +52,20 @@ import Foundation
 /// via `URLSessionConfiguration.urlCache` on the session passed in.
 ///
 /// **Forward compatibility.** `content: (Image) -> Content` takes the loaded `Image` and returns a
-/// view, so this atom is a clean building block: the later unified `CosmosImage` (SF Symbols +
-/// resource + URL) will delegate its `.url` case to ``CosmosAsyncImage`` and its `.system` /
-/// `.resource` cases to ``CosmosIcon``. No `CosmosImage` work in this wave.
+/// view, so this atom was the remote-image building block. It is now superseded by the unified
+/// ``CosmosImage`` (which covers SF Symbols + typed `ImageResource` + asset images + remote URL
+/// in one atom) and is deprecated; migrate remote-image call sites to ``CosmosImage/init(url:scale:content:)``.
 ///
 /// **Accessibility.** Apply `.cosmosAccessibilityLabel` here for the image alt text; it flows onto
 /// the image surface via `applyCosmosAccessibility`. The default failure retry ``CosmosButton``
 /// carries its own accessibility. Dynamic Type flows through the slot views.
+///
+/// - Deprecated: ``CosmosAsyncImage`` is superseded by ``CosmosImage`` (the unified image atom) and
+///   will be removed in a future Cosmos major. Migrate: `CosmosAsyncImage(url:content:)` →
+///   `CosmosImage(url:content:)`; the typed-slot init maps 1:1; the default placeholder/failure
+///   slots are reused via the `CosmosImagePlaceholder`/`CosmosImageFailure` aliases. The shared
+///   `CosmosImageCache` / `cosmosAsyncImageURLSession` surface is kept (used by CosmosImage too).
+@available(*, deprecated, message: "CosmosAsyncImage is deprecated and will be removed in a future Cosmos major. Use CosmosImage(url:) for remote images (default + typed placeholder/failure slots).")
 public struct CosmosAsyncImage<Content: View, Placeholder: View, Failure: View>: View {
     private let url: URL?
     private let scale: CGFloat
@@ -78,6 +85,9 @@ public struct CosmosAsyncImage<Content: View, Placeholder: View, Failure: View>:
     /// Creates an async image with Cosmos default placeholder (indeterminate ``CosmosProgress`` on
     /// a `theme.colors.surface` rounded rect) and default failure slot (error glyph + a "Retry"
     /// ``CosmosButton``). `content` transforms the loaded `Image` (e.g. `.resizable().scaledToFill()`).
+    ///
+    /// - Deprecated: Use ``CosmosImage/init(url:scale:content:)``.
+    @available(*, deprecated, message: "CosmosAsyncImage is deprecated and will be removed in a future Cosmos major. Use CosmosImage(url:) for remote images (default + typed placeholder/failure slots).")
     public init(
         url: URL?,
         scale: CGFloat = 1,
@@ -95,6 +105,9 @@ public struct CosmosAsyncImage<Content: View, Placeholder: View, Failure: View>:
     /// affordance should call it so it shares the same re-fetch + haptic path. Slots are typed
     /// generics (`Placeholder`/`Failure`), not `AnyView`-erased, so each slot keeps its structural
     /// identity across phase swaps — the diffing win `AnyView` would forfeit (WWDC21-10022).
+    ///
+    /// - Deprecated: Use ``CosmosImage/init(url:scale:content:placeholder:failure:)``.
+    @available(*, deprecated, message: "CosmosAsyncImage is deprecated and will be removed in a future Cosmos major. Use CosmosImage(url:) for remote images (default + typed placeholder/failure slots).")
     public init(
         url: URL?,
         scale: CGFloat = 1,
@@ -109,12 +122,12 @@ public struct CosmosAsyncImage<Content: View, Placeholder: View, Failure: View>:
         self.failure = failure
     }
 
-    /// Creates an async image with `AnyView`-erased custom slots. **Deprecated** — kept for the
-    /// migration runway (per `VERSIONING.md`); prefer the typed generic-slot init above so the
-    /// placeholder/failure slots keep their view identity across phase swaps (WWDC21-10022). The
-    /// deprecated overload is the more-constrained one, so legacy `AnyView` call sites resolve here
-    /// and emit the migration warning; typed call sites resolve to the generic init.
-    @available(*, deprecated, message: "Use the typed generic slot inits (placeholder/failure as typed closures, not AnyView) to preserve slot view identity (WWDC21-10022)")
+    /// Creates an async image with `AnyView`-erased custom slots. **Deprecated** — `CosmosAsyncImage`
+    /// itself is deprecated (migrate to ``CosmosImage``), and `AnyView` slots forfeit view identity;
+    /// use ``CosmosImage``'s typed generic-slot inits so the placeholder/failure slots keep their
+    /// structural identity across phase swaps (WWDC21-10022). The deprecated overload is the more-
+    /// constrained one, so legacy `AnyView` call sites resolve here and emit the migration warning.
+    @available(*, deprecated, message: "CosmosAsyncImage is deprecated and will be removed in a future Cosmos major. Use CosmosImage(url:) with typed generic slots (not AnyView) to preserve slot view identity (WWDC21-10022).")
     public init(
         url: URL?,
         scale: CGFloat = 1,
@@ -298,7 +311,11 @@ extension View {
 /// Dual-gated like the ``CosmosTextFieldStyle`` `.bordered` applier: `#if swift(>=6.4)` compiles the
 /// OS-27 SDK symbol in under Xcode 27 / Swift 6.4 and out on Xcode 26 / Swift 6.3; `if #available`
 /// degrades to passthrough on an OS-26 device under Xcode 27.
-private struct CosmosAsyncImageSessionApplier: ViewModifier {
+///
+/// Module-internal (not `private`) so ``CosmosImage`` reuses the same dual-gated path instead of
+/// duplicating it. Stays here for the deprecation runway; relocates when ``CosmosAsyncImage`` is
+/// obsoleted.
+struct CosmosAsyncImageSessionApplier: ViewModifier {
     let session: URLSession?
 
     func body(content: Content) -> some View {
@@ -332,83 +349,5 @@ public enum CosmosAsyncImageAvailability {
     /// platform is excluded; the OS-27 version gate is runtime, in the session applier).
     public static func urlSessionInjectionAvailable(on platform: CosmosPlatform) -> Bool {
         true
-    }
-}
-
-// MARK: - Previews
-
-#Preview("AsyncImage – default load") {
-    CosmosAsyncImage(url: CosmosMock.imageURL(seed: "cosmos-g", width: 480, height: 320)) { image in
-        image.resizable().scaledToFill()
-    }
-    .frame(width: 320, height: 220)
-    .clipShape(RoundedRectangle(cornerRadius: CosmosRadiusTokens.medium, style: .continuous))
-    .padding()
-}
-
-#Preview("AsyncImage – custom slots") {
-    CosmosAsyncImage(
-        url: CosmosMock.imageURL(seed: "cosmos-custom", width: 480, height: 320),
-        content: { $0.resizable().scaledToFill() },
-        placeholder: { Color.gray.opacity(0.15) },
-        failure: { _, retry in
-            VStack(spacing: 8) {
-                Image(systemName: "photo.badge.exclamation")
-                    .font(.system(size: 28))
-                CosmosButton("cosmos.asyncimage.retry", action: retry)
-                    .cosmosButtonStyle(.secondary)
-            }
-        }
-    )
-    .frame(width: 320, height: 220)
-    .clipShape(RoundedRectangle(cornerRadius: CosmosRadiusTokens.medium, style: .continuous))
-    .padding()
-}
-
-#Preview("AsyncImage – error + retry", traits: .sizeThatFitsLayout) {
-    CosmosPreviewContainer {
-        CosmosAsyncImage(url: CosmosMock.badImageURL()) { image in
-            image.resizable().scaledToFill()
-        }
-        .frame(width: 280, height: 200)
-        .clipShape(RoundedRectangle(cornerRadius: CosmosRadiusTokens.medium, style: .continuous))
-        .padding()
-    }
-}
-
-#Preview("AsyncImage – dark + accessibility size", traits: .sizeThatFitsLayout) {
-    CosmosPreviewContainer {
-        CosmosAsyncImage(url: CosmosMock.imageURL(seed: "cosmos-dark", width: 480, height: 320)) { image in
-            image.resizable().scaledToFill()
-        }
-        .frame(width: 280, height: 200)
-        .clipShape(RoundedRectangle(cornerRadius: CosmosRadiusTokens.medium, style: .continuous))
-        .cosmosPreviewVariant(.dark)
-        .cosmosPreviewEnv(dynamicTypeSize: .accessibility3)
-        .padding()
-    }
-}
-
-#Preview("AsyncImage – reduce motion", traits: .sizeThatFitsLayout) {
-    CosmosPreviewContainer {
-        CosmosAsyncImage(url: CosmosMock.imageURL(seed: "cosmos-rm", width: 480, height: 320)) { image in
-            image.resizable().scaledToFill()
-        }
-        .frame(width: 280, height: 200)
-        .clipShape(RoundedRectangle(cornerRadius: CosmosRadiusTokens.medium, style: .continuous))
-        .cosmosPreviewVariant(.reduceMotion)
-        .padding()
-    }
-}
-
-#Preview("AsyncImage – RTL", traits: .sizeThatFitsLayout) {
-    CosmosPreviewContainer {
-        CosmosAsyncImage(url: CosmosMock.imageURL(seed: "cosmos-rtl", width: 480, height: 320)) { image in
-            image.resizable().scaledToFill()
-        }
-        .frame(width: 280, height: 200)
-        .clipShape(RoundedRectangle(cornerRadius: CosmosRadiusTokens.medium, style: .continuous))
-        .cosmosPreviewVariant(.rtl)
-        .padding()
     }
 }

@@ -9,7 +9,7 @@ import SwiftUI
 ///
 /// ```swift
 /// CosmosHStack(spacing: .large) {
-///     CosmosIcon("checkmark.circle.fill")
+///     CosmosImage(systemName: "checkmark.circle.fill")
 ///     CosmosText(verbatim: "Saved")
 /// }
 /// ```
@@ -96,7 +96,7 @@ public struct CosmosHStack<Content: View>: View {
 #Preview("HStack – dark + Dynamic Type", traits: .sizeThatFitsLayout) {
     CosmosPreviewContainer {
         CosmosHStack(spacing: .large) {
-            CosmosIcon("star.fill")
+            CosmosImage(systemName: "star.fill")
             CosmosText(verbatim: "Saved to your library")
         }
         .padding()
@@ -108,7 +108,7 @@ public struct CosmosHStack<Content: View>: View {
 #Preview("HStack – RTL", traits: .sizeThatFitsLayout) {
     CosmosPreviewContainer {
         CosmosHStack(spacing: .medium) {
-            CosmosIcon("arrow.forward")
+            CosmosImage(systemName: "arrow.forward")
             CosmosText(verbatim: "Next")
         }
         .padding()
@@ -119,7 +119,7 @@ public struct CosmosHStack<Content: View>: View {
 #Preview("HStack – landscape reflow", traits: .landscapeLeft) {
     CosmosPreviewContainer {
         CosmosHStack(spacing: .medium) {
-            CosmosIcon("arrow.forward")
+            CosmosImage(systemName: "arrow.forward")
             CosmosText(verbatim: "Next")
             CosmosButton("welcome.continue") {}
         }

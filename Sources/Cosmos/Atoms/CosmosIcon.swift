@@ -25,6 +25,13 @@ import SwiftUI
 /// `none`; `.symbolEffect` is caller-driven and auto-respects Reduce Motion (gate on
 /// `configuration.motion.isEnabled` only — do not double-gate). **Haptics:** none — when used as a
 /// Button/Toggle label, the controlling style owns the haptic.
+///
+/// - Deprecated: ``CosmosIcon`` is superseded by ``CosmosImage`` (the unified image atom) and
+///   will be removed in a future Cosmos major. Migrate: `CosmosIcon(systemName:)` →
+///   `CosmosImage(systemName:)`; the custom `init(icon:)` → `init(content:)`; asset `init(_:bundle:)`
+///   → `CosmosImage(_:bundle:)`; decorative variants map 1:1. CosmosImage also covers typed
+///   `ImageResource` and remote (URL) images.
+@available(*, deprecated, message: "CosmosIcon is deprecated and will be removed in a future Cosmos major. Use CosmosImage — init(systemName:) for SF Symbols, init(_:) for ImageResource, init(url:) for remote images.")
 public struct CosmosIcon<Icon: View>: View {
     @ViewBuilder private let icon: () -> Icon
     /// `true` for the decorative SF Symbol convenience (no native `Image(decorativeSystemName:)`
@@ -36,8 +43,58 @@ public struct CosmosIcon<Icon: View>: View {
     @Environment(\.cosmosTrackingId) private var trackingId
 
     /// Creates an icon from custom icon content (apply `.resizable`/`.renderingMode`/etc. inside).
+    ///
+    /// - Deprecated: Use ``CosmosImage/init(content:)``.
+    @available(*, deprecated, message: "CosmosIcon is deprecated and will be removed in a future Cosmos major. Use CosmosImage — init(systemName:) for SF Symbols, init(_:) for ImageResource, init(url:) for remote images.")
     public init(@ViewBuilder icon: @escaping () -> Icon) {
         self.icon = icon
+        self.isDecorativeSymbol = false
+    }
+
+    /// Creates an SF Symbol icon. Set an explicit `.cosmosAccessibilityLabel` for meaningful
+    /// symbols (VoiceOver may otherwise announce the raw symbol name).
+    ///
+    /// - Deprecated: Use ``CosmosImage/init(systemName:)``.
+    @available(*, deprecated, message: "CosmosIcon is deprecated and will be removed in a future Cosmos major. Use CosmosImage — init(systemName:) for SF Symbols, init(_:) for ImageResource, init(url:) for remote images.")
+    public init(systemName: String) where Icon == Image {
+        self.icon = { Image(systemName: systemName) }
+        self.isDecorativeSymbol = false
+    }
+
+    /// Creates a variable-color SF Symbol icon (iOS 16+). `variableValue` in `[0, 1]`.
+    ///
+    /// - Deprecated: Use ``CosmosImage/init(systemName:variableValue:)``.
+    @available(*, deprecated, message: "CosmosIcon is deprecated and will be removed in a future Cosmos major. Use CosmosImage — init(systemName:) for SF Symbols, init(_:) for ImageResource, init(url:) for remote images.")
+    public init(systemName: String, variableValue: Double) where Icon == Image {
+        self.icon = { Image(systemName: systemName, variableValue: variableValue) }
+        self.isDecorativeSymbol = false
+    }
+
+    /// Creates a decorative SF Symbol icon — hidden from VoiceOver (no label announced). SwiftUI
+    /// has no `Image(decorativeSystemName:)`, so the atom hides it via the accessibility config.
+    ///
+    /// - Deprecated: Use ``CosmosImage/init(decorativeSystemName:)``.
+    @available(*, deprecated, message: "CosmosIcon is deprecated and will be removed in a future Cosmos major. Use CosmosImage — init(systemName:) for SF Symbols, init(_:) for ImageResource, init(url:) for remote images.")
+    public init(decorativeSystemName name: String) where Icon == Image {
+        self.icon = { Image(systemName: name) }
+        self.isDecorativeSymbol = true
+    }
+
+    /// Creates an icon from a bundled asset image name.
+    ///
+    /// - Deprecated: Use ``CosmosImage/init(_:bundle:)``.
+    @available(*, deprecated, message: "CosmosIcon is deprecated and will be removed in a future Cosmos major. Use CosmosImage — init(systemName:) for SF Symbols, init(_:) for ImageResource, init(url:) for remote images.")
+    public init(_ name: String, bundle: Bundle? = nil) where Icon == Image {
+        self.icon = { Image(name, bundle: bundle) }
+        self.isDecorativeSymbol = false
+    }
+
+    /// Creates a decorative asset image icon — natively hidden from VoiceOver (no label announced).
+    ///
+    /// - Deprecated: Use ``CosmosImage/init(decorative:bundle:)``.
+    @available(*, deprecated, message: "CosmosIcon is deprecated and will be removed in a future Cosmos major. Use CosmosImage — init(systemName:) for SF Symbols, init(_:) for ImageResource, init(url:) for remote images.")
+    public init(decorative name: String, bundle: Bundle? = nil) where Icon == Image {
+        self.icon = { Image(decorative: name, bundle: bundle) }
         self.isDecorativeSymbol = false
     }
 
@@ -61,82 +118,5 @@ public struct CosmosIcon<Icon: View>: View {
             componentId: trackingId ?? configuration.accessibility.identifier,
             action: .appear
         ))
-    }
-}
-
-// MARK: - Convenience inits (Icon == Image)
-
-extension CosmosIcon where Icon == Image {
-    /// Creates an SF Symbol icon. Set an explicit `.cosmosAccessibilityLabel` for meaningful
-    /// symbols (VoiceOver may otherwise announce the raw symbol name).
-    public init(systemName: String) {
-        self.icon = { Image(systemName: systemName) }
-        self.isDecorativeSymbol = false
-    }
-
-    /// Creates a variable-color SF Symbol icon (iOS 16+). `variableValue` in `[0, 1]`.
-    public init(systemName: String, variableValue: Double) {
-        self.icon = { Image(systemName: systemName, variableValue: variableValue) }
-        self.isDecorativeSymbol = false
-    }
-
-    /// Creates a decorative SF Symbol icon — hidden from VoiceOver (no label announced). SwiftUI
-    /// has no `Image(decorativeSystemName:)`, so the atom hides it via the accessibility config.
-    public init(decorativeSystemName name: String) {
-        self.icon = { Image(systemName: name) }
-        self.isDecorativeSymbol = true
-    }
-
-    /// Creates an icon from a bundled asset image name.
-    public init(_ name: String, bundle: Bundle? = nil) {
-        self.icon = { Image(name, bundle: bundle) }
-        self.isDecorativeSymbol = false
-    }
-
-    /// Creates a decorative asset image icon — natively hidden from VoiceOver (no label announced).
-    public init(decorative name: String, bundle: Bundle? = nil) {
-        self.icon = { Image(decorative: name, bundle: bundle) }
-        self.isDecorativeSymbol = false
-    }
-}
-
-// MARK: - Previews
-
-#Preview("Icon – SF Symbols + text styles") {
-    VStack(spacing: 12) {
-        CosmosIcon(systemName: "star.fill").cosmosFont(.largeTitle)
-        CosmosIcon(systemName: "gearshape").cosmosFont(.title)
-        CosmosIcon(systemName: "bell.badge.fill").cosmosFont(.headline)
-        CosmosIcon(systemName: "battery.25", variableValue: 0.25).cosmosFont(.title)
-    }
-    .padding()
-}
-
-#Preview("Icon – color override inside content") {
-    VStack(spacing: 12) {
-        // Default theme color.
-        CosmosIcon(systemName: "heart.fill")
-        // Override wins (foregroundStyle inside the content is closer to the Image).
-        CosmosIcon { Image(systemName: "heart.fill").foregroundStyle(.red) }
-        // Resizable asset-style + symbol rendering mode, configured inside the content.
-        CosmosIcon { Image(systemName: "person.crop.circle.fill").resizable().symbolRenderingMode(.hierarchical) }
-            .frame(width: 48, height: 48)
-    }
-    .padding()
-}
-
-#Preview("Icon – dark + accessibility size + label", traits: .sizeThatFitsLayout) {
-    CosmosPreviewContainer {
-        VStack(spacing: 12) {
-            CosmosIcon(systemName: "wand.and.stars")
-                .cosmosFont(.title)
-                .cosmosAccessibilityLabel("Magic")
-            CosmosIcon(systemName: "sparkles").cosmosFont(.headline)
-            CosmosIcon { Image(systemName: "trophy.fill").foregroundStyle(.yellow) }
-                .cosmosFont(.largeTitle)
-        }
-        .padding()
-        .cosmosPreviewVariant(.dark)
-        .cosmosPreviewEnv(dynamicTypeSize: .accessibility3)
     }
 }
