@@ -126,7 +126,7 @@ public struct CosmosLocalizationConfiguration: Sendable {
         if let locale {
             let raw = locale.identifier
             candidateIds.append(raw)
-            candidateIds.append(raw.replacingOccurrences(of: "_", with: "-"))
+            candidateIds.append(raw.replacing("_", with: "-"))
             if let lang = locale.language.languageCode?.identifier {
                 candidateIds.append(lang)
                 if let region = locale.region?.identifier {

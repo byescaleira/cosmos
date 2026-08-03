@@ -85,19 +85,17 @@ private struct CosmosToastHost<Key: Hashable, ToastContent: View>: View {
     @ViewBuilder let content: () -> ToastContent
 
     @Environment(\.cosmosConfiguration) private var configuration
-    @Environment(\.cosmosTheme) private var theme
     @Environment(\.cosmosTrackingId) private var trackingId
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.accessibilityReduceTransparency) private var reduceTransparency
-    @Environment(\.horizontalSizeClass) private var horizontalSizeClass
 
     /// Bumped on every present (initial + re-present). Drives the appear haptic (`@Sendable`,
     /// `Equatable`) and the toast content's `.id(presentToken)` so a re-present animates out/in.
     @State private var presentToken = 0
 
     /// Reduce-transparency collapses materials to a solid token (config- and policy-aware via
-    /// ``CosmosMotionPolicy/shouldCollapseTransparency``, not the bare env value). Shared by the
-    /// shadow-suppression gate and the chrome-background swap so the two stay in sync.
+    /// ``CosmosMotionPolicy/shouldCollapseTransparency``, not the bare env value). Computed once
+    /// here and passed as a `Bool` to the extracted chrome structs so the gate has a single source.
     private var collapsesTransparency: Bool {
         CosmosMotionPolicy.shouldCollapseTransparency(
             respectReduceTransparency: configuration.motion.respectReduceTransparency,
@@ -118,12 +116,6 @@ private struct CosmosToastHost<Key: Hashable, ToastContent: View>: View {
         )
     }
 
-    /// Caps the toast width on regular width classes so it doesn't span the screen. Reads the
-    /// themeable ``CosmosTheme/toastMaxWidth`` token (was a hard-coded `420` magic number).
-    private var maxToastWidth: CGFloat {
-        horizontalSizeClass == .regular ? theme.toastMaxWidth : .infinity
-    }
-
     @ViewBuilder
     var body: some View {
         // Bind Sendable locals before the `.task` closure so it captures these, not `self`
@@ -133,7 +125,14 @@ private struct CosmosToastHost<Key: Hashable, ToastContent: View>: View {
         let autoDismiss = dismiss
         ZStack(alignment: placement.alignment) {
             if presentedKey != nil {
-                toastSurface
+                CosmosToastSurface(
+                    content: content,
+                    dismissOnTap: dismissOnTap,
+                    dismiss: dismiss,
+                    collapsesTransparency: collapsesTransparency,
+                    shadowHidden: shadowHidden,
+                    haptic: haptic,
+                    presentToken: presentToken)
                     .id(presentToken)
                     .cosmosTransition(transitionPreset)
                     .onAppear { bumpForPresent() }     // initial-present (host appeared already showing)
@@ -152,59 +151,6 @@ private struct CosmosToastHost<Key: Hashable, ToastContent: View>: View {
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: placement.alignment)
         .allowsHitTesting(presentedKey != nil)
         .padding(CosmosSpacingTokens.medium)
-    }
-
-    @ViewBuilder
-    private var toastSurface: some View {
-        let chrome = toastChrome
-        if dismissOnTap {
-            // `.plain` so the Button does not restyle the toast; nested inner buttons (caller's
-            // actions) win their own taps — tap-to-dismiss fires only on the surrounding chrome.
-            Button(action: dismiss) { chrome }
-                .buttonStyle(.plain)
-        } else {
-            chrome
-        }
-    }
-
-    @ViewBuilder
-    private var toastChrome: some View {
-        Group {
-            // `.glassEffect` (Liquid Glass) does not honor Reduce Transparency — it stays
-            // translucent. Collapse to the opaque `surface` token when the policy says to
-            // (config-aware via ``CosmosMotionPolicy/shouldCollapseTransparency``); keep the
-            // glass look otherwise so there is no visual regression off the accessibility path.
-            if collapsesTransparency {
-                chromeContent
-                    .background(theme.colors.surface, in: .rect(cornerRadius: 32))
-            } else {
-                #if os(visionOS)
-                // Liquid Glass (`glassEffect`) is unavailable on visionOS — fall back to the
-                // opaque `surface` token, matching the reduce-transparency path above.
-                // iOS/macOS/tvOS/watchOS 26 all expose `glassEffect`.
-                chromeContent
-                    .background(theme.colors.surface, in: .rect(cornerRadius: 32))
-                #else
-                chromeContent
-                    .glassEffect(.regular, in: .rect(cornerRadius: 32))
-                #endif
-            }
-        }
-        .shadow(
-            color: theme.colors.primary.opacity(shadowHidden ? 0 : theme.motion.shadowOpacity),
-            radius: shadowHidden ? 0 : theme.motion.shadowRadius,
-            y: 4
-        )
-        .accessibilityElement(children: .combine)
-        .accessibilityAddTraits(.isStaticText)
-        .modifier(OptionalHapticModifier(feedback: haptic, trigger: presentToken))
-    }
-
-    @ViewBuilder
-    private var chromeContent: some View {
-        content()
-            .padding(CosmosSpacingTokens.value(for: theme.padding))
-            .frame(maxWidth: maxToastWidth, alignment: .leading)
     }
 
     private var transitionPreset: CosmosTransition {
@@ -229,6 +175,104 @@ private struct CosmosToastHost<Key: Hashable, ToastContent: View>: View {
             componentId: trackingId ?? configuration.accessibility.identifier,
             action: .disappear
         ))
+    }
+}
+
+// MARK: - Extracted toast chrome (views.md: computed `some View` → dedicated View structs)
+
+/// The dismiss-on-tap wrapper around the toast chrome, extracted from ``CosmosToastHost``'s
+/// `body` (views.md). `.plain` so the Button does not restyle the toast; nested inner buttons
+/// (caller's actions) win their own taps — tap-to-dismiss fires only on the surrounding chrome.
+private struct CosmosToastSurface<ToastContent: View>: View {
+    let content: () -> ToastContent
+    let dismissOnTap: Bool
+    let dismiss: @Sendable () -> Void
+    let collapsesTransparency: Bool
+    let shadowHidden: Bool
+    let haptic: CosmosHapticsFeedback?
+    let presentToken: Int
+
+    var body: some View {
+        // Construct the chrome once as a local, then reference it in either branch (View is a
+        // value type, so each branch copies it — single construction).
+        let chrome = CosmosToastChrome(
+            content: content,
+            collapsesTransparency: collapsesTransparency,
+            shadowHidden: shadowHidden,
+            haptic: haptic,
+            presentToken: presentToken)
+        if dismissOnTap {
+            Button(action: dismiss) { chrome }
+                .buttonStyle(.plain)
+        } else {
+            chrome
+        }
+    }
+}
+
+/// The toast chrome — glass/surface background + shadow + accessibility + appear haptic, extracted
+/// from ``CosmosToastHost``'s `body` (views.md). The transparency/shadow gates are pre-computed by
+/// the host and passed as `Bool`s (single source); theme tokens are read via `@Environment`.
+private struct CosmosToastChrome<ToastContent: View>: View {
+    let content: () -> ToastContent
+    let collapsesTransparency: Bool
+    let shadowHidden: Bool
+    let haptic: CosmosHapticsFeedback?
+    let presentToken: Int
+
+    @Environment(\.cosmosTheme) private var theme
+
+    var body: some View {
+        Group {
+            // `.glassEffect` (Liquid Glass) does not honor Reduce Transparency — it stays
+            // translucent. Collapse to the opaque `surface` token when the policy says to
+            // (config-aware via ``CosmosMotionPolicy/shouldCollapseTransparency``); keep the
+            // glass look otherwise so there is no visual regression off the accessibility path.
+            if collapsesTransparency {
+                CosmosToastChromeContent(content: content)
+                    .background(theme.colors.surface, in: .rect(cornerRadius: CosmosRadiusTokens.toast))
+            } else {
+                #if os(visionOS)
+                // Liquid Glass (`glassEffect`) is unavailable on visionOS — fall back to the
+                // opaque `surface` token, matching the reduce-transparency path above.
+                // iOS/macOS/tvOS/watchOS 26 all expose `glassEffect`.
+                CosmosToastChromeContent(content: content)
+                    .background(theme.colors.surface, in: .rect(cornerRadius: CosmosRadiusTokens.toast))
+                #else
+                CosmosToastChromeContent(content: content)
+                    .glassEffect(.regular, in: .rect(cornerRadius: CosmosRadiusTokens.toast))
+                #endif
+            }
+        }
+        .shadow(
+            color: theme.colors.primary.opacity(shadowHidden ? 0 : theme.motion.shadowOpacity),
+            radius: shadowHidden ? 0 : theme.motion.shadowRadius,
+            y: 4
+        )
+        .accessibilityElement(children: .combine)
+        .accessibilityAddTraits(.isStaticText)
+        .modifier(OptionalHapticModifier(feedback: haptic, trigger: presentToken))
+    }
+}
+
+/// The toast content with padding + capped width, extracted from ``CosmosToastHost``'s `body`
+/// (views.md). Reads ``CosmosTheme`` + `horizontalSizeClass` to cap the width on regular widths
+/// (the themeable ``CosmosTheme/toastMaxWidth`` token — was a hard-coded `420` magic number).
+private struct CosmosToastChromeContent<ToastContent: View>: View {
+    let content: () -> ToastContent
+
+    @Environment(\.cosmosTheme) private var theme
+    @Environment(\.horizontalSizeClass) private var horizontalSizeClass
+
+    /// Caps the toast width on regular width classes so it doesn't span the screen.
+    private var maxToastWidth: CGFloat {
+        horizontalSizeClass == .regular ? theme.toastMaxWidth : .infinity
+    }
+
+    var body: some View {
+        content()
+            .padding(CosmosSpacingTokens.value(for: theme.padding))
+            .frame(maxWidth: maxToastWidth, alignment: .leading)
     }
 }
 

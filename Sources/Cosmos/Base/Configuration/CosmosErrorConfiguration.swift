@@ -11,7 +11,7 @@ public struct CosmosErrorEvent: Sendable {
     public var code: Int?
     public var date: Date
 
-    public init(category: String, message: String, code: Int? = nil, date: Date = Date()) {
+    public init(category: String, message: String, code: Int? = nil, date: Date = Date.now) {
         self.category = category
         self.message = message
         self.code = code

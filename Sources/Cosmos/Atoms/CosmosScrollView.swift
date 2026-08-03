@@ -91,7 +91,11 @@ public struct CosmosScrollView<Content: View>: View {
 
     public var body: some View {
         if configuration.enable.isVisible {
-            ScrollView(axes, showsIndicators: showsIndicators, content: content)
+            // `.scrollIndicators(_:)` over the legacy `showsIndicators:` initializer argument
+            // (api.md: prefer the modifier; available on all 5 platforms at the Cosmos 26 floor —
+            // listed in the doc comment above). The bool maps to `.visible` / `.hidden`.
+            ScrollView(axes, content: content)
+                .scrollIndicators(showsIndicators ? .visible : .hidden)
                 .applyCosmosAccessibility(configuration.accessibility)
         } else {
             EmptyView()

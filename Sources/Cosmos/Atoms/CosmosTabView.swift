@@ -38,11 +38,12 @@ import SwiftUI
 /// **Generic shape.** `CosmosTabView<SelectionValue, Content>`: `SelectionValue` is constrained
 /// **`Hashable & Sendable`** (matching native `TabView`'s `Hashable`, plus `Sendable` to drive
 /// `.cosmosHaptic(.selection, trigger:)`). The non-selectable init pins `SelectionValue == Never`.
-/// Because the selectable and non-selectable `TabView` inits construct structurally different view
-/// types (a `Binding`-driven `TabView<SelectionValue, _>` vs a `TabView<Never, _>`), the native
-/// `TabView` is built in each init — where the per-init constraints are concrete — and type-erased
-/// to `AnyView`; env-driven modifiers and the selection haptic are applied in `body` (where the
-/// trigger is read fresh each render).
+/// Both inits build the native `TabView` in the init — where the per-init constraints are concrete —
+/// and store it as a typed `TabView<SelectionValue, Content>` (the atom's own generics), **not**
+/// `AnyView`-erased: the selectable init yields `TabView<SelectionValue, Content>` and the
+/// non-selectable init yields `TabView<Never, Content>` (with `SelectionValue == Never`), so the
+/// built view is directly expressible. Env-driven modifiers and the selection haptic are applied in
+/// `body` (where the trigger is read fresh each render).
 ///
 /// **Customization limits.** No custom tab bar — `TabViewStyle` is not conformable. Tab bar
 /// appearance (background, item fonts, bar height, indicator) is opaque; rely on `.tint` (applied
@@ -71,8 +72,11 @@ import SwiftUI
 /// none at the container — tracking is per-tab via caller-set `.accessibilityIdentifier`
 /// (structural-container rule, like `CosmosSection`/`CosmosList`).
 public struct CosmosTabView<SelectionValue: Hashable & Sendable, Content: View>: View {
-    /// Type-erased native `TabView` built in the init (selectable vs non-selectable differ in type).
-    private let resolved: AnyView
+    /// The native `TabView` built in the init, stored as a typed generic — **not** `AnyView`-erased
+    /// (performance.md). Both inits produce a `TabView<SelectionValue, Content>` (the non-selectable
+    /// init pins `SelectionValue == Never`), so the built native view is expressible directly as the
+    /// atom's own generics — no erasure and no `Render` discriminator enum needed.
+    private let resolved: TabView<SelectionValue, Content>
     /// `nil` for the non-selectable variant; the selection haptic fires only when non-nil.
     private let selection: Binding<SelectionValue>?
 
@@ -86,7 +90,7 @@ public struct CosmosTabView<SelectionValue: Hashable & Sendable, Content: View>:
         @TabContentBuilder<SelectionValue> content: @escaping () -> C
     ) where Content == TabContentBuilder<SelectionValue>.Content<C>, C: TabContent {
         self.selection = selection
-        self.resolved = AnyView(TabView(selection: selection, content: content))
+        self.resolved = TabView(selection: selection, content: content)
     }
 
     /// Creates a non-selectable tab view (e.g. a paged view) with modern `Tab`/`TabSection` content
@@ -95,7 +99,7 @@ public struct CosmosTabView<SelectionValue: Hashable & Sendable, Content: View>:
         @TabContentBuilder<Never> content: @escaping () -> C
     ) where SelectionValue == Never, Content == TabContentBuilder<Never>.Content<C>, C: TabContent {
         self.selection = nil
-        self.resolved = AnyView(TabView(content: content))
+        self.resolved = TabView(content: content)
     }
 
     public var body: some View {

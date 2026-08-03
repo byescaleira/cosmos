@@ -7,6 +7,117 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.12.0] - 2026-08-03
+
+Strict `/swiftui-pro` alignment release: a whole-library audit (the A1–F plan + a
+33-agent exhaustive re-sweep producing 14 confirmed findings across api / design /
+accessibility / swift / hygiene). No public symbols removed; no deprecations added.
+Public-surface additions are additive-only. Cosmos 26 floor unchanged.
+
+### Added
+- **`CosmosRadiusTokens.toast` — single source of truth for toast chrome
+  rounding.** A new `static let toast: CGFloat = 32` on the existing
+  `CosmosRadiusTokens` enum (on the 4-pt grid), replacing the hard-coded `32`
+  repeated three times in the toast host chrome so the corner radius flows
+  through one token.
+- **`CosmosButton` accepts a `LocalizedStringResource`.** New public
+  `init(_:action:)` overload (where `Label == Text`) resolves via
+  `Text(resource)`, so consumers can pass Xcode String-Catalog-generated symbols
+  directly. A string literal still resolves to the existing `String` titleKey
+  overload, so the two inits coexist without ambiguity. Documented in
+  `Localization.md`: `swift build` does not run Xcode's Generate String Catalog
+  Symbols codegen, so generated `LocalizedStringResource` symbols are unavailable
+  in-library; this init lets apps pass their own app's generated symbols.
+  Smoke-tested in `CosmosButtonTests`.
+- **`CosmosLocalizedText` co-located previews** — key, pt-BR locale,
+  dark + accessibility size, and RTL variants (the live atom previously had none).
+- **CI cross-build matrix.** `.github/workflows/ci.yml` gains a
+  `fail-fast: false` matrix that runs
+  `xcodebuild -destination 'generic/platform=<OS>'` for iOS, tvOS, watchOS, and
+  visionOS, closing the 0.11.0 gap that let ungated platform-absent symbols
+  (e.g. visionOS `glassEffect`) land green. Skips gracefully (visible `::warning::`,
+  exit 0) when a platform component is missing on the runner — an environment
+  limit, not a code defect — while a real `#if os()` regression resolves the
+  destination and fails. Also validates the Xcode String Catalog codegen path
+  that `swift build` skips.
+
+### Fixed
+- **Deprecated-atom previews and tests restored — reversing the 0.11.0
+  removal.** 0.11.0 removed the co-located `#Preview` blocks and dedicated
+  construction tests for `CosmosIcon` / `CosmosAsyncImage` / `CosmosCard`
+  because constructing a deprecated type emits warnings, incompatible with the
+  zero-warnings build. This release restores them: each `#Preview` block and
+  each test function is annotated with an `@available(*, deprecated)`
+  passthrough so the deprecated call sites stay warning-free through the
+  deprecation runway. Previews and tests are tooling, not exported public API;
+  the restoration is a non-API reversal of the 0.11.0 removal, recorded here
+  honestly.
+- **`CosmosCard` shadow now gates through `CosmosMotionPolicy.shouldEmit`**
+  (respecting `motion.isEnabled` and `respectReduceMotion`) instead of the bare
+  `accessibilityReduceMotion` env value, so a `respectReduceMotion` override is
+  honored — matching `CosmosToastHost`. Card background and border are also
+  extracted into dedicated `View` structs.
+- **`CosmosRedactedModifier` localized `Loading` VoiceOver label.** The
+  redacted placeholder's VoiceOver label now routes through
+  `CosmosLocalizationConfiguration.string(for:)` (the `"Loading"` key exists in
+  `Localizable.xcstrings` with en `Loading…` / pt-BR `Carregando…`), so
+  non-English users hear the localized form, falling back to the literal when
+  unresolved.
+
+### Changed
+- **`AnyView` eliminated from atom init paths via typed storage.** `CosmosSlider`
+  stores the built native `Slider<Label, ValueLabel>`, `CosmosTabView` stores
+  `TabView<SelectionValue, Content>`, and `CosmosSelectableList` stores the
+  native `List` typed via a new `Content: View` generic parameter with per-init
+  `where Content == List<…>` clauses — removing the erasure from every init and
+  preserving slot structural identity (WWDC21-10022). `CosmosSelectableList`'s
+  change is source-compatible in the documented usage pattern: `Content` is
+  always inferred from the init and never written by callers, and the new
+  `where` clauses are additive constraints satisfied at existing call sites, so
+  all inferred call sites compile unchanged. (Borderline source-breaking only
+  for callers that explicitly annotate the type with the old single-generic
+  arity, e.g. `var x: CosmosSelectableList<Element?>`; such usage is not part of
+  the documented API surface.)
+- **`CosmosProgress`: `GeometryReader` → `Layout` protocol.** The determinate
+  fill is now laid out by a custom `CosmosProgressFillLayout` instead of a
+  `GeometryReader` used only to read width, and the content is extracted into a
+  dedicated `View` struct.
+- **17 computed `some View` → `View`-struct extraction.** Internal renderers
+  lifted onto dedicated private `View` structs that own their state and env:
+  `CosmosCard` background/border, `CosmosDatePickerField` (+ `fileprivate Range`
+  enum), `CosmosGroupBoxContent` (tvOS/watchOS fallback), `CosmosMenuBody` /
+  `CosmosMenuFallback` (watchOS `CosmosButton` fallback), `CosmosProgress`
+  content, `CosmosSectionContent` (isExpanded branch), `CosmosNativeStepper` /
+  `CosmosSteppertvOSFallback`, `CosmosTextFieldField` (+ focus-border overlay →
+  trailing-closure syntax), `CosmosToastIcon` / `CosmosToastMessage`, and the
+  toast host chrome (`CosmosToastSurface` / `CosmosToastChrome` /
+  `CosmosToastChromeContent` with pre-computed transparency/shadow `Bool` gates
+  and corner radius via `CosmosRadiusTokens.toast`).
+- **`CosmosScrollView`: `.scrollIndicators(_:)` modifier** on all platforms,
+  replacing the legacy `showsIndicators` initializer argument (the modifier is
+  floor on all 5 platforms at `.v26`).
+- **`CosmosToast` padding tokenized** — the hard-coded `padding(5)` (off the 4-pt
+  grid, the only literal numeric padding in the library) is now
+  `CosmosSpacingTokens.small`; row/stack layouts inlined.
+- **`Date()` → `Date.now`** as the default `date` parameter in
+  `CosmosErrorEvent.init`, `CosmosLogEvent.init`, and `CosmosTrackEvent.init` —
+  behavior-equivalent modernization (both yield the current instant); the
+  parameter signature is unchanged (default-value expressions are not part of
+  the mangled signature), so this is not an API break.
+- **`replacingOccurrences(of:with:)` → `replacing(_:with:)`** in
+  `CosmosLocalizationConfiguration` locale-identifier normalization (Swift-native
+  string API).
+- **`cosmosPreviewEnv` refactor** — the 7 directly-settable env keys now compose
+  via identity-preserving `ifLet` (`_ConditionalContent`), erasing to `AnyView`
+  only for the 5 get-only underscore-SPI accessibility keys to cap generic depth
+  and keep the release type-checker healthy. The `accessibilityCustomContentIfPresent`
+  `AnyView` retention is documented inline as a compiler-limit carve-out (a
+  recursive generic `View` applying one `accessibilityCustomContent` per level is
+  unexpressible in Swift today), and `CosmosPreviewStrings` documents why preview
+  string keys stay hand-authored `String` constants (SwiftPM runs no String
+  Catalog codegen; redeclaring the generated `LocalizedStringResource` extension
+  would collide under `xcodebuild`).
+
 ## [0.11.0] - 2026-07-26
 
 ### Added

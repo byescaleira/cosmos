@@ -88,7 +88,7 @@ public struct CosmosTextField<Label: View>: View {
 
     public var body: some View {
         if configuration.enable.isVisible {
-            field
+            CosmosTextFieldField(text: text, prompt: prompt, axis: axis, label: label)
                 .modifier(CosmosTextFieldStyleApplier(style: theme.textFieldStyle))
                 .tint(theme.colors.accent)
                 .font(theme.typography.font(for: theme.textStyle))
@@ -105,14 +105,6 @@ public struct CosmosTextField<Label: View>: View {
                 .onAppear { trackAppear() }
         } else {
             EmptyView()
-        }
-    }
-
-    @ViewBuilder private var field: some View {
-        if let axis {
-            TextField(text: text, prompt: prompt, axis: axis, label: label)
-        } else {
-            TextField(text: text, prompt: prompt, label: label)
         }
     }
 
@@ -174,6 +166,26 @@ extension CosmosTextField where Label == Text {
         self.axis = axis
         self.submitHandler = nil
         self.label = { Text(verbatim: String(title)) }
+    }
+}
+
+// MARK: - Extracted field (views.md: computed `some View` → dedicated View struct)
+
+/// The native `TextField`, switching on the optional `axis`, extracted from ``CosmosTextField``'s
+/// `body` (views.md). Carries the `Label` slot; no `@Environment` (the focus/submit state and chrome
+/// modifiers stay on the atom, where `@FocusState` is visible).
+private struct CosmosTextFieldField<Label: View>: View {
+    let text: Binding<String>
+    let prompt: Text?
+    let axis: Axis?
+    let label: () -> Label
+
+    var body: some View {
+        if let axis {
+            TextField(text: text, prompt: prompt, axis: axis, label: label)
+        } else {
+            TextField(text: text, prompt: prompt, label: label)
+        }
     }
 }
 
@@ -245,10 +257,10 @@ private struct CosmosTextFieldFocusBorderModifier: ViewModifier {
                     collapsesTransparency ? AnyShapeStyle(theme.colors.surface) : AnyShapeStyle(.ultraThinMaterial),
                     in: RoundedRectangle(cornerRadius: CosmosRadiusTokens.medium, style: .continuous)
                 )
-                .overlay(
+                .overlay {
                     RoundedRectangle(cornerRadius: CosmosRadiusTokens.medium, style: .continuous)
                         .strokeBorder(theme.colors.accent.opacity(isFocused ? 1.0 : 0.0), lineWidth: 1.5)
-                )
+                }
                 .cosmosAnimation(.focus, value: isFocused)
         case .automatic, .plain, .bordered:
             content

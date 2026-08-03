@@ -21,7 +21,7 @@ public struct CosmosProgress<Label: View>: View {
     @Environment(\.cosmosTheme) private var theme
     @Environment(\.cosmosTrackingId) private var trackingId
 
-    private enum Storage {
+    fileprivate enum Storage {
         case indeterminate(label: Label?)
         case determinate(value: Double, total: Double, label: Label?)
     }
@@ -62,24 +62,13 @@ public struct CosmosProgress<Label: View>: View {
 
     public var body: some View {
         if configuration.enable.isVisible {
-            progressView
+            CosmosProgressContent(storage: storage)
                 .modifier(CosmosProgressStyleApplier(style: theme.progressStyle))
                 .tint(theme.colors.accent)
                 .applyCosmosAccessibility(configuration.accessibility)
                 .onAppear { trackAppear() }
         } else {
             EmptyView()
-        }
-    }
-
-    @ViewBuilder private var progressView: some View {
-        switch storage {
-        case .indeterminate(let label):
-            if let label { ProgressView { label } }
-            else { ProgressView() }
-        case .determinate(let value, let total, let label):
-            if let label { ProgressView(value: value, total: total) { label } }
-            else { ProgressView(value: value, total: total) }
         }
     }
 
@@ -90,6 +79,26 @@ public struct CosmosProgress<Label: View>: View {
             componentId: trackingId ?? configuration.accessibility.identifier,
             action: .appear
         ))
+    }
+}
+
+// MARK: - Extracted content (views.md: computed `some View` → dedicated View struct)
+
+/// The native `ProgressView` for the indeterminate/determinate `Storage` case, extracted from
+/// ``CosmosProgress``'s `body` (views.md: prefer a dedicated `View` struct over a computed
+/// `some View` property). Carries the `Label` slot so the label keeps its view identity.
+private struct CosmosProgressContent<Label: View>: View {
+    let storage: CosmosProgress<Label>.Storage
+
+    var body: some View {
+        switch storage {
+        case .indeterminate(let label):
+            if let label { ProgressView { label } }
+            else { ProgressView() }
+        case .determinate(let value, let total, let label):
+            if let label { ProgressView(value: value, total: total) { label } }
+            else { ProgressView(value: value, total: total) }
+        }
     }
 }
 
@@ -170,17 +179,17 @@ private struct CosmosProgressChromeBody: View {
             // Indeterminate: delegate to the native circular spinner (auto-respects Reduce Motion).
             ProgressView(configuration).progressViewStyle(.circular)
         } else {
-            // Determinate: custom token-driven bar.
+            // Determinate: custom token-driven bar. The fill is laid out at `fraction × width` via a
+            // `Layout` (api.md: prefer the Layout protocol over `GeometryReader`) — the layout places
+            // the track (full width) and the fill (fraction × width) at the leading edge, preserving
+            // the original rounded-bar look without reading geometry in the view tree.
             let fraction = configuration.fractionCompleted ?? 0
             VStack(alignment: .leading, spacing: CosmosSpacingTokens.xs) {
-                GeometryReader { geo in
-                    ZStack(alignment: .leading) {
-                        RoundedRectangle(cornerRadius: CosmosRadiusTokens.small, style: .continuous)
-                            .fill(theme.colors.outline.opacity(trackFillOpacity))
-                        RoundedRectangle(cornerRadius: CosmosRadiusTokens.small, style: .continuous)
-                            .fill(theme.colors.accent)
-                            .frame(width: max(0, geo.size.width * CGFloat(max(0, min(1, fraction)))))
-                    }
+                CosmosProgressFillLayout(fraction: fraction) {
+                    RoundedRectangle(cornerRadius: CosmosRadiusTokens.small, style: .continuous)
+                        .fill(theme.colors.outline.opacity(trackFillOpacity))
+                    RoundedRectangle(cornerRadius: CosmosRadiusTokens.small, style: .continuous)
+                        .fill(theme.colors.accent)
                 }
                 .frame(height: 6)
                 if let label = configuration.label { label }
@@ -189,6 +198,30 @@ private struct CosmosProgressChromeBody: View {
             .accessibilityValue(Text(CosmosProgressAccessibility.valueString(fractionCompleted: fraction)))
             .accessibilityAddTraits(.updatesFrequently)
         }
+    }
+}
+
+/// A `Layout` that lays out the determinate progress bar: the first subview (the unfilled track)
+/// spans the full width, the second subview (the filled portion) is sized to `fraction × width` and
+/// placed at the leading edge. Replaces the prior `GeometryReader`-based width read (api.md: prefer
+/// the `Layout` protocol over `GeometryReader`). `Layout` is iOS 16+, within the Cosmos 26 floor
+/// on all 5 platforms — no `#if`/`@available` gate is needed.
+private struct CosmosProgressFillLayout: Layout {
+    let fraction: Double
+
+    func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout Void) -> CGSize {
+        let width = proposal.width ?? .zero
+        let height = proposal.height ?? .zero
+        return CGSize(width: width, height: height)
+    }
+
+    func placeSubviews(in bounds: CGRect, proposal: ProposedViewSize, subviews: Subviews, cache: inout Void) {
+        // subviews[0] = track (full width); subviews[1] = fill (fraction × width, leading-aligned).
+        subviews[0].place(at: bounds.origin, anchor: .topLeading,
+                          proposal: ProposedViewSize(width: bounds.width, height: bounds.height))
+        let fillWidth = max(0, bounds.width * CGFloat(max(0, min(1, fraction))))
+        subviews[1].place(at: bounds.origin, anchor: .topLeading,
+                          proposal: ProposedViewSize(width: fillWidth, height: bounds.height))
     }
 }
 

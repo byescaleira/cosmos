@@ -26,17 +26,18 @@ import SwiftUI
 /// data-bearing variant adds tvOS 18) and is **deliberately dropped** — too narrow to expose
 /// cross-platform; callers who need it use a native `List(selection:)` directly.
 ///
-/// **Generic shape — one `Selection` type unifies both shapes.** `CosmosSelectableList<Selection:
-/// Hashable & Sendable>` is **inferred from the binding**: an optional-single caller passes
-/// `Binding<Element?>` → `Selection == Element?`; a `Set` caller passes `Binding<Set<Element>>` →
-/// `Selection == Set<Element>`. Each init pins the shape with a `where Selection == E?` /
-/// `where Selection == Set<E>` constraint (mutually exclusive, so the overloads resolve
-/// unambiguously from the binding). `Hashable` matches native `List`; `Sendable` is added so the
-/// selection drives `.cosmosHaptic(.selection, trigger:)`. Because the optional-single and `Set`
-/// inits construct structurally different native `List` types (different `Content`), the native
-/// `List` is built in each init — where the per-init constraints are concrete — and type-erased to
-/// `AnyView`; the **concrete** `Selection` trigger is read in `body` (`selection.wrappedValue`) so
-/// the haptic and `.onChange` stay fresh each render (same pattern as ``CosmosTabView``).
+/// **Generic shape — `Selection` + `Content`.** `CosmosSelectableList<Selection: Hashable & Sendable,
+/// Content: View>` is **inferred from the binding and the content**: an optional-single caller
+/// passes `Binding<Element?>` → `Selection == Element?`; a `Set` caller passes
+/// `Binding<Set<Element>>` → `Selection == Set<Element>`. `Content` is the built native `List`'s
+/// content type, inferred at the call site (callers never write it). Each init pins the shape with a
+/// `where Selection == E?` / `where Selection == Set<E>` constraint (mutually exclusive, so the
+/// overloads resolve unambiguously from the binding) **and** a `where Content == List<…>` clause
+/// naming the concrete native `List` type the init builds, so the built `List` is stored as a typed
+/// generic — **not** `AnyView`-erased (performance.md). `Hashable` matches native `List`; `Sendable`
+/// is added so the selection drives `.cosmosHaptic(.selection, trigger:)`. The **concrete**
+/// `Selection` trigger is read in `body` (`selection.wrappedValue`) so the haptic and `.onChange`
+/// stay fresh each render (same pattern as ``CosmosTabView``).
 ///
 /// **Customization limits.** Same as ``CosmosList``: no wholly custom list renderer; row/section
 /// chrome is caller-driven via the ``cosmosListSectionSpacing`` / ``cosmosSwipeActions`` / etc.
@@ -56,10 +57,12 @@ import SwiftUI
 /// ``cosmosWithAnimation(_:configuration:theme:reduceMotion:completionCriteria:body:completion:)``).
 /// **Tracking:** `.valueChange` on selection change (`componentId = trackingId ?? accessibilityId`),
 /// opt-in/passive via ``CosmosTrackingConfiguration``.
-public struct CosmosSelectableList<Selection: Hashable & Sendable>: View {
-    /// Type-erased native `List(selection:)` built in the init (optional-single vs `Set` differ in
-    /// type, and data-bearing inits build `ForEach`-rooted content).
-    private let resolved: AnyView
+public struct CosmosSelectableList<Selection: Hashable & Sendable, Content: View>: View {
+    /// The native `List(selection:)` built in the init, stored as a typed `Content` generic —
+    /// **not** `AnyView`-erased (performance.md). Each init pins `Content` to the concrete native
+    /// `List<SelectionValue, …>` type it builds via a `where Content == List<…>` clause, so the built
+    /// view keeps its concrete type. `Content` is inferred at the call site (callers never write it).
+    private let resolved: Content
     /// The selection binding — its wrapped value (`Selection`) is the concrete haptic + tracking
     /// trigger read in `body`. `Selection` is `Optional<E>` or `Set<E>` per the init used.
     private let selection: Binding<Selection>
@@ -74,9 +77,9 @@ public struct CosmosSelectableList<Selection: Hashable & Sendable>: View {
     public init<E: Hashable & Sendable, C: View>(
         selection: Binding<Selection>,
         @ViewBuilder content: @escaping () -> C
-    ) where Selection == E? {
+    ) where Selection == E?, Content == List<E, C> {
         self.selection = selection
-        self.resolved = AnyView(List(selection: selection, content: content))
+        self.resolved = List(selection: selection, content: content)
     }
 
     /// Creates a selectable list from a collection of `Identifiable` data, with optional
@@ -85,9 +88,9 @@ public struct CosmosSelectableList<Selection: Hashable & Sendable>: View {
         selection: Binding<Selection>,
         _ data: Data,
         @ViewBuilder rowContent: @escaping (Data.Element) -> RowContent
-    ) where Selection == Data.Element.ID?, Data: RandomAccessCollection, Data.Element: Identifiable, RowContent: View {
+    ) where Selection == Data.Element.ID?, Content == List<Data.Element.ID, ForEach<Data, Data.Element.ID, RowContent>>, Data: RandomAccessCollection, Data.Element: Identifiable, RowContent: View {
         self.selection = selection
-        self.resolved = AnyView(List(data, selection: selection) { rowContent($0) })
+        self.resolved = List(data, selection: selection) { rowContent($0) }
     }
 
     /// Creates a selectable list from a collection of data keyed by `id`, with optional
@@ -97,9 +100,9 @@ public struct CosmosSelectableList<Selection: Hashable & Sendable>: View {
         _ data: Data,
         id: KeyPath<Data.Element, ID>,
         @ViewBuilder rowContent: @escaping (Data.Element) -> RowContent
-    ) where Selection == ID?, Data: RandomAccessCollection, ID: Hashable & Sendable, RowContent: View {
+    ) where Selection == ID?, Content == List<ID, ForEach<Data, ID, RowContent>>, Data: RandomAccessCollection, ID: Hashable & Sendable, RowContent: View {
         self.selection = selection
-        self.resolved = AnyView(List(data, id: id, selection: selection) { rowContent($0) })
+        self.resolved = List(data, id: id, selection: selection) { rowContent($0) }
     }
 
     // MARK: Set-based multi-selection (watchOS-unavailable — compile-time `#if !os(watchOS)`)
@@ -112,9 +115,9 @@ public struct CosmosSelectableList<Selection: Hashable & Sendable>: View {
     public init<E: Hashable & Sendable, C: View>(
         selection: Binding<Selection>,
         @ViewBuilder content: @escaping () -> C
-    ) where Selection == Set<E> {
+    ) where Selection == Set<E>, Content == List<E, C> {
         self.selection = selection
-        self.resolved = AnyView(List(selection: selection, content: content))
+        self.resolved = List(selection: selection, content: content)
     }
 
     /// Creates a multi-selectable list from a collection of `Identifiable` data, with `Set`-based
@@ -123,9 +126,9 @@ public struct CosmosSelectableList<Selection: Hashable & Sendable>: View {
         selection: Binding<Selection>,
         _ data: Data,
         @ViewBuilder rowContent: @escaping (Data.Element) -> RowContent
-    ) where Selection == Set<Data.Element.ID>, Data: RandomAccessCollection, Data.Element: Identifiable, RowContent: View {
+    ) where Selection == Set<Data.Element.ID>, Content == List<Data.Element.ID, ForEach<Data, Data.Element.ID, RowContent>>, Data: RandomAccessCollection, Data.Element: Identifiable, RowContent: View {
         self.selection = selection
-        self.resolved = AnyView(List(data, selection: selection) { rowContent($0) })
+        self.resolved = List(data, selection: selection) { rowContent($0) }
     }
 
     /// Creates a multi-selectable list from a collection of data keyed by `id`, with `Set`-based
@@ -135,9 +138,9 @@ public struct CosmosSelectableList<Selection: Hashable & Sendable>: View {
         _ data: Data,
         id: KeyPath<Data.Element, ID>,
         @ViewBuilder rowContent: @escaping (Data.Element) -> RowContent
-    ) where Selection == Set<ID>, Data: RandomAccessCollection, ID: Hashable & Sendable, RowContent: View {
+    ) where Selection == Set<ID>, Content == List<ID, ForEach<Data, ID, RowContent>>, Data: RandomAccessCollection, ID: Hashable & Sendable, RowContent: View {
         self.selection = selection
-        self.resolved = AnyView(List(data, id: id, selection: selection) { rowContent($0) })
+        self.resolved = List(data, id: id, selection: selection) { rowContent($0) }
     }
     #endif
 

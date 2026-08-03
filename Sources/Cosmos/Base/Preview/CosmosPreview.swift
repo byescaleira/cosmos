@@ -94,20 +94,23 @@ extension View {
         showButtonShapes: Bool? = nil,
         colorSchemeContrast: ColorSchemeContrast? = nil
     ) -> some View {
-        // `AnyView` accumulator — pragmatic over a `@ViewBuilder` conditional chain. Twelve
-        // optional overrides composed with `ifLet` would produce a 12-deep `_ConditionalContent`
-        // threading the (possibly very complex) `Content` generic, which explodes the `-O`
-        // release-mode type-checker for heavy content (e.g. `CosmosTabView`'s tab builder).
-        // `AnyView` keeps each step's type simple; the identity loss is acceptable for a preview
-        // helper whose overrides don't flip at runtime per-call.
-        var view: AnyView = AnyView(self)
-        if let colorScheme { view = AnyView(view.environment(\.colorScheme, colorScheme)) }
-        if let dynamicTypeSize { view = AnyView(view.environment(\.dynamicTypeSize, dynamicTypeSize)) }
-        if let locale { view = AnyView(view.environment(\.locale, locale)) }
-        if let layoutDirection { view = AnyView(view.environment(\.layoutDirection, layoutDirection)) }
-        if let horizontalSizeClass { view = AnyView(view.environment(\.horizontalSizeClass, horizontalSizeClass)) }
-        if let verticalSizeClass { view = AnyView(view.environment(\.verticalSizeClass, verticalSizeClass)) }
-        if let legibilityWeight { view = AnyView(view.environment(\.legibilityWeight, legibilityWeight)) }
+        // The 7 directly-settable keys compose via `ifLet` (`_ConditionalContent`) so structural
+        // identity survives an override flipping (WWDC21-10022) — these are the keys callers
+        // actually toggle (colorScheme/dynamicTypeSize/locale/…). The 5 get-only underscore-SPI
+        // accessibility keys are applied *after* erasing to `AnyView`, which caps the generic depth
+        // at 7 (a full 12-deep `_ConditionalContent` threading a heavy `Content` explodes the `-O`
+        // release type-checker — e.g. `CosmosTabView`'s tab builder). The SPI keys are get-only and
+        // rarely toggled, so the `AnyView` erasure on that tail costs nothing meaningful.
+        let chained = self
+            .ifLet(colorScheme) { $0.environment(\.colorScheme, $1) }
+            .ifLet(dynamicTypeSize) { $0.environment(\.dynamicTypeSize, $1) }
+            .ifLet(locale) { $0.environment(\.locale, $1) }
+            .ifLet(layoutDirection) { $0.environment(\.layoutDirection, $1) }
+            .ifLet(horizontalSizeClass) { $0.environment(\.horizontalSizeClass, $1) }
+            .ifLet(verticalSizeClass) { $0.environment(\.verticalSizeClass, $1) }
+            .ifLet(legibilityWeight) { $0.environment(\.legibilityWeight, $1) }
+        // Erase to cap generic depth, then apply the 5 SPI accessibility keys shallowly.
+        var view: AnyView = AnyView(chained)
         if let reduceMotion { view = AnyView(view.environment(\._accessibilityReduceMotion, reduceMotion)) }
         if let reduceTransparency { view = AnyView(view.environment(\._accessibilityReduceTransparency, reduceTransparency)) }
         if let differentiateWithoutColor { view = AnyView(view.environment(\._accessibilityDifferentiateWithoutColor, differentiateWithoutColor)) }
