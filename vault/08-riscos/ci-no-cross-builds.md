@@ -59,5 +59,21 @@ undetected because CI never cross-built.
 
 ## Status
 
-Open (CI gap). The `glassEffect` visionOS regression itself is **fixed** in 0.11.0;
-this note tracks the systemic CI gap that let it through.
+**Mitigated (2026-08-03, swiftui-pro task E).** `.github/workflows/ci.yml` now has a
+`cross-build` job with a `fail-fast: false` matrix that runs `xcodebuild -scheme Cosmos
+-destination 'generic/platform=<OS>' build` for iOS / tvOS / watchOS / visionOS (SDK builds,
+no simulator-runtime coupling). The macOS host slice stays gated by the existing
+`build-and-test` job (`swift build && swift test --enable-code-coverage`). The cross-build
+step skips gracefully (visible `::warning::`, exit 0) when a platform component isn't
+installed on the runner — an environment limit, not a code defect — while a real `#if os()`
+compile regression resolves the destination and fails compilation, propagating as a real
+failure. This also validates the Xcode build path that runs the "Generate String Catalog
+Symbols" codegen `swift build` doesn't (see [[swiftpm-no-string-catalog-symbol-codegen]]),
+confirming the generated `LocalizedStringResource` extension compiles alongside the
+hand-authored `CosmosPreviewStrings` with no redeclaration conflict. Locally verified:
+iOS + tvOS build green; watchOS + visionOS skip (platform component not downloaded on this
+dev machine) — hosted `macos-latest` runners ship all platform components, so all four gate
+in CI.
+
+The `glassEffect` visionOS regression itself was **fixed** in 0.11.0; this note now tracks the
+former systemic CI gap, which is closed by the matrix.

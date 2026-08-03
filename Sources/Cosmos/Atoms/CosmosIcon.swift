@@ -120,3 +120,36 @@ public struct CosmosIcon<Icon: View>: View {
         ))
     }
 }
+
+// MARK: - Previews
+//
+// `CosmosIcon` is `@available(*, deprecated)` (migrate to ``CosmosImage`` — `init(systemName:)` for
+// SF Symbols, `init(_:)` for `ImageResource`, `init(url:)` for remote images). Each preview carries
+// the matching `@available(*, deprecated)` passthrough so constructing the deprecated atom doesn't
+// emit a warning — keeps the build warning-free for the removal runway (same pattern as
+// ``CosmosIconTests``).
+
+@available(*, deprecated, message: "Preview exercises deprecated CosmosIcon during the removal runway.")
+#Preview("CosmosIcon – deprecated", traits: .sizeThatFitsLayout) {
+    CosmosPreviewContainer {
+        HStack(spacing: CosmosSpacingTokens.medium) {
+            CosmosIcon(systemName: "checkmark.circle.fill")
+            CosmosIcon(systemName: "exclamationmark.triangle")
+            CosmosIcon(systemName: "info.circle")
+            CosmosIcon(decorativeSystemName: "sparkles")
+        }
+        .cosmosFont(.title)
+    }
+}
+
+@available(*, deprecated, message: "Preview exercises deprecated CosmosIcon during the removal runway.")
+#Preview("CosmosIcon – dark + accessibility", traits: .sizeThatFitsLayout) {
+    CosmosPreviewContainer {
+        HStack(spacing: CosmosSpacingTokens.medium) {
+            CosmosIcon(systemName: "star.fill")
+            CosmosIcon(systemName: "heart.fill")
+        }
+        .cosmosFont(.largeTitle)
+        .cosmosPreviewEnv(colorScheme: .dark, dynamicTypeSize: .accessibility3)
+    }
+}

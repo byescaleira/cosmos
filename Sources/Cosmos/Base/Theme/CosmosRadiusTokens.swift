@@ -13,4 +13,9 @@ public enum CosmosRadiusTokens {
 
     /// Convenience alias used by container atoms (cards, menus).
     public static let card: CGFloat = large
+
+    /// Toast chrome radius. Larger than `card` (16) so the floating toast reads as a distinct,
+    /// softer surface; kept on the 4-pt grid (32 = `CosmosSpacingTokens.xxl`). Single source of
+    /// truth for the toast chrome rounding (used by `CosmosToastHost`'s glass + surface backgrounds).
+    public static let toast: CGFloat = 32
 }

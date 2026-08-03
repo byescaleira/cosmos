@@ -30,7 +30,6 @@ public struct CosmosGroupBox<Label: View, Content: View>: View {
     @ViewBuilder private let content: () -> Content
 
     @Environment(\.cosmosConfiguration) private var configuration
-    @Environment(\.cosmosTheme) private var theme
     @Environment(\.cosmosTrackingId) private var trackingId
 
     /// Creates a group box with custom content and a custom label view.
@@ -41,7 +40,7 @@ public struct CosmosGroupBox<Label: View, Content: View>: View {
 
     public var body: some View {
         if configuration.enable.isVisible {
-            boxContent
+            CosmosGroupBoxContent(label: label, content: content)
                 .applyCosmosAccessibility(configuration.accessibility)
                 .onAppear { trackAppear() }
         } else {
@@ -49,7 +48,26 @@ public struct CosmosGroupBox<Label: View, Content: View>: View {
         }
     }
 
-    @ViewBuilder private var boxContent: some View {
+    private func trackAppear() {
+        configuration.tracking.track(.init(
+            name: "groupbox_appear",
+            component: "CosmosGroupBox",
+            componentId: trackingId ?? configuration.accessibility.identifier,
+            action: .appear
+        ))
+    }
+}
+
+// MARK: - Extracted content (views.md: computed `some View` → dedicated View struct)
+
+/// The native `GroupBox` (or tvOS/watchOS plain themed fallback) renderer, extracted from
+/// ``CosmosGroupBox``'s `body` (views.md). Reads ``CosmosTheme`` directly for the chrome tokens.
+private struct CosmosGroupBoxContent<Label: View, Content: View>: View {
+    let label: () -> Label
+    let content: () -> Content
+    @Environment(\.cosmosTheme) private var theme
+
+    var body: some View {
         #if os(tvOS) || os(watchOS)
         // tvOS/watchOS: GroupBox is unavailable — render a plain themed fallback (label header
         // above content). No GroupBox symbols are referenced here. The label carries `.isHeader`
@@ -67,15 +85,6 @@ public struct CosmosGroupBox<Label: View, Content: View>: View {
         GroupBox(content: content, label: label)
             .modifier(CosmosGroupBoxStyleApplier(style: theme.groupBoxStyle))
         #endif
-    }
-
-    private func trackAppear() {
-        configuration.tracking.track(.init(
-            name: "groupbox_appear",
-            component: "CosmosGroupBox",
-            componentId: trackingId ?? configuration.accessibility.identifier,
-            action: .appear
-        ))
     }
 }
 

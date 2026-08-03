@@ -60,3 +60,49 @@ jobs:
           token: ${{ secrets.CODECOV_TOKEN }}
           files: ./coverage.lcov
           fail_ci_if_error: false   # coverage is observability, not a build gate
+
+  # Per-platform cross-build matrix. CLAUDE.md is binding: "Build for each target platform to
+  # confirm `#if os()` coverage." `swift build` only exercises the macOS host slice; this job
+  # cross-compiles the library for iOS / tvOS / watchOS / visionOS via `xcodebuild` against the
+  # SwiftPM `Package.swift` (no simulator-runtime coupling — `generic/platform=<OS>` is an SDK
+  # build). It also validates the Xcode build path, which runs the "Generate String Catalog
+  # Symbols" codegen that `swift build` does not (see vault/08-riscos/swiftpm-no-string-catalog-
+  # symbol-codegen.md) — confirming the generated `LocalizedStringResource` extension compiles
+  # alongside the hand-authored `CosmosPreviewStrings` without a redeclaration conflict.
+  # `fail-fast: false` so a single-platform regression is reported, not masked by a faster job.
+  cross-build:
+    runs-on: macos-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - platform: iOS
+            destination: generic/platform=iOS
+          - platform: tvOS
+            destination: generic/platform=tvOS
+          - platform: watchOS
+            destination: generic/platform=watchOS
+          - platform: visionOS
+            destination: generic/platform=xros
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Cross-build (${{ matrix.platform }})
+        run: |
+          set -uo pipefail
+          # Build for the platform SDK — no simulator-runtime coupling (`generic/platform=<OS>`
+          # is an SDK build). Hosted `macos-latest` runners ship all platform components with
+          # Xcode, so every entry gates here. A stripped runner (or a dev machine) that hasn't
+          # downloaded a platform component (e.g. watchOS/visionOS via Xcode > Settings >
+          # Components) fails *destination resolution* before any compilation — that is an
+          # environment limit, not a code defect, so skip it with a visible warning instead of
+          # turning CI red. A real `#if os()` regression resolves the destination and then fails
+          # compilation (no "Unable to find a destination" line) — it propagates as a real failure.
+          output="$(xcrun xcodebuild -scheme Cosmos -destination '${{ matrix.destination }}' build 2>&1)"
+          echo "$output"
+          if echo "$output" | grep -qE '\*\* BUILD SUCCEEDED \*\*'; then exit 0; fi
+          if echo "$output" | grep -qE 'Unable to find a destination matching'; then
+            echo "::warning::${{ matrix.platform }} platform component not installed on this runner — skipping cross-build"
+            exit 0
+          fi
+          exit 1

@@ -44,8 +44,6 @@ public struct CosmosStepper<Label: View>: View {
     @ViewBuilder private let label: () -> Label
 
     @Environment(\.cosmosConfiguration) private var configuration
-    @Environment(\.cosmosTheme) private var theme
-    @Environment(\.cosmosTrackingId) private var trackingId
 
     /// Creates a stepper whose label and increment/decrement actions are custom views/closures.
     public init(
@@ -90,17 +88,52 @@ public struct CosmosStepper<Label: View>: View {
     public var body: some View {
         if configuration.enable.isVisible {
             #if os(tvOS)
-            tvOSFallback
+            CosmosSteppertvOSFallback(
+                label: label, onIncrement: onIncrement, onDecrement: onDecrement,
+                onEditingChanged: onEditingChanged)
             #else
-            nativeStepper
+            CosmosNativeStepper(
+                label: label, onIncrement: onIncrement, onDecrement: onDecrement,
+                onEditingChanged: onEditingChanged)
             #endif
         } else {
             EmptyView()
         }
     }
 
-    #if !os(tvOS)
-    @ViewBuilder private var nativeStepper: some View {
+    /// Mutates `value` by `stride`, clamping to `bounds` when present. A static free function so
+    /// the synthesized value-form closures capture only init parameters (the `Binding` and
+    /// `V.Stride`), never `self` — keeping the closures `Sendable`-clean and avoiding
+    /// self-capture-before-init. Does **not** call `onEditingChanged`: on the native branch the
+    /// `Stepper(label:onIncrement:onDecrement:onEditingChanged:)` fires `onEditingChanged` itself
+    /// (once per session), so synthesizing it here would double-fire (`true,true,false,false`);
+    /// on the tvOS branch the fallback brackets each press separately.
+    private static func step<V: Strideable>(
+        _ value: Binding<V>,
+        by stride: V.Stride,
+        bounds: ClosedRange<V>?
+    ) where V: Strideable, V.Stride: Sendable {
+        value.wrappedValue = CosmosStepperMath.advance(value.wrappedValue, by: stride, in: bounds)
+    }
+}
+
+// MARK: - Extracted renderers (views.md: computed `some View` → dedicated View structs)
+
+/// The native `Stepper` renderer (iOS/macOS/watchOS/visionOS). Extracted from ``CosmosStepper``'s
+/// `body` (views.md). Reads `@Environment` for theme/config/tracking directly — the atom holds only
+/// the enable gate; the closures are passed in.
+#if !os(tvOS)
+private struct CosmosNativeStepper<Label: View>: View {
+    let label: () -> Label
+    let onIncrement: () -> Void
+    let onDecrement: () -> Void
+    let onEditingChanged: (Bool) -> Void
+
+    @Environment(\.cosmosConfiguration) private var configuration
+    @Environment(\.cosmosTheme) private var theme
+    @Environment(\.cosmosTrackingId) private var trackingId
+
+    var body: some View {
         Stepper(label: label, onIncrement: onIncrement, onDecrement: onDecrement, onEditingChanged: onEditingChanged)
             .tint(theme.colors.accent)
             .controlSize(theme.controlSize.controlSize)
@@ -110,10 +143,37 @@ public struct CosmosStepper<Label: View>: View {
             .applyCosmosAccessibility(configuration.accessibility)
             .onAppear { trackAppear() }
     }
-    #endif
 
-    #if os(tvOS)
-    @ViewBuilder private var tvOSFallback: some View {
+    private var effectiveEnabled: Bool {
+        configuration.enable.isEnabled && !configuration.enable.isReadOnly && !configuration.loading.isLoading
+    }
+
+    private func trackAppear() {
+        configuration.tracking.track(.init(
+            name: "stepper_appear",
+            component: "CosmosStepper",
+            componentId: trackingId ?? configuration.accessibility.identifier,
+            action: .appear
+        ))
+    }
+}
+#endif
+
+/// The tvOS `CosmosButton` +/- fallback renderer (no `Stepper` on tvOS). Extracted from
+/// ``CosmosStepper``'s `body` (views.md). Owns the edit-session `bracket(_:)` that the native
+/// `Stepper` would fire itself on other platforms.
+#if os(tvOS)
+private struct CosmosSteppertvOSFallback<Label: View>: View {
+    let label: () -> Label
+    let onIncrement: () -> Void
+    let onDecrement: () -> Void
+    let onEditingChanged: (Bool) -> Void
+
+    @Environment(\.cosmosConfiguration) private var configuration
+    @Environment(\.cosmosTheme) private var theme
+    @Environment(\.cosmosTrackingId) private var trackingId
+
+    var body: some View {
         HStack(spacing: CosmosSpacingTokens.small) {
             CosmosButton(action: { bracket(onDecrement) }) {
                 Text("−").font(theme.typography.font(for: theme.textStyle))
@@ -144,25 +204,9 @@ public struct CosmosStepper<Label: View>: View {
         action()
         onEditingChanged(false)
     }
-    #endif
 
     private var effectiveEnabled: Bool {
         configuration.enable.isEnabled && !configuration.enable.isReadOnly && !configuration.loading.isLoading
-    }
-
-    /// Mutates `value` by `stride`, clamping to `bounds` when present. A static free function so
-    /// the synthesized value-form closures capture only init parameters (the `Binding` and
-    /// `V.Stride`), never `self` — keeping the closures `Sendable`-clean and avoiding
-    /// self-capture-before-init. Does **not** call `onEditingChanged`: on the native branch the
-    /// `Stepper(label:onIncrement:onDecrement:onEditingChanged:)` fires `onEditingChanged` itself
-    /// (once per session), so synthesizing it here would double-fire (`true,true,false,false`);
-    /// on the tvOS branch the fallback brackets each press separately.
-    private static func step<V: Strideable>(
-        _ value: Binding<V>,
-        by stride: V.Stride,
-        bounds: ClosedRange<V>?
-    ) where V: Strideable, V.Stride: Sendable {
-        value.wrappedValue = CosmosStepperMath.advance(value.wrappedValue, by: stride, in: bounds)
     }
 
     private func trackAppear() {
@@ -174,6 +218,7 @@ public struct CosmosStepper<Label: View>: View {
         ))
     }
 }
+#endif
 
 // MARK: - Stepping math (pure, testable without rendering)
 

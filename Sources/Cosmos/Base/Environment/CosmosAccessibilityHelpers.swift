@@ -66,6 +66,17 @@ extension View {
     }
 
     /// Folds custom content entries into the element, skipping when empty.
+    ///
+    /// `AnyView` is retained here as a **documented compiler-limit carve-out** (analogous to the
+    /// `cosmosPreviewVariant` case): the identity-preserving alternative — a recursive generic
+    /// `View` struct applying one `accessibilityCustomContent` per level — does not compile, because
+    /// an unqualified recursive reference to the enclosing generic type reuses the same `Base` type
+    /// parameter (Swift avoids infinite type recursion), so neither direct recursion nor an
+    /// opaque-parameter boundary can bind a fresh `Base` per level. The `AnyView`-free form is
+    /// therefore unexpressible in Swift today. The cost here is negligible in practice: custom
+    /// content attaches accessibility *metadata* (not a diffable view subtree), so structural
+    /// identity across re-renders is not at stake the way it is for visible content. performance.md
+    /// allows `AnyView` "unless absolutely required" — this is that case.
     @ViewBuilder func accessibilityCustomContentIfPresent(_ content: [CosmosAccessibilityCustomContent]) -> some View {
         if content.isEmpty {
             self

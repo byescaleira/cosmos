@@ -17,13 +17,14 @@ import SwiftUI
 /// generic contract. Cosmos pins `V = Double` (Double conforms) so the atom stays non-generic in
 /// its value type.
 ///
-/// **AnyView-in-init.** The native `Slider` cluster inits (iOS 26) take an opaque
-/// `@SliderTickBuilder` tick content (`() -> some SliderTickContent<V>`) that cannot be stored
-/// without a new generic parameter. So — like ``CosmosTabView`` — every init builds its concrete
-/// native `Slider` **in the init** (where the per-init generic constraints are concrete), type-erases
-/// to `AnyView`, and `body` applies the env-driven modifiers (tint, control size, accessibility,
-/// motion, haptics, tracking). Modifiers read `@Environment` lazily at render, so building in the
-/// init is safe.
+/// **Typed built `Slider` — no `AnyView`.** The native `Slider` is `Slider<Label, ValueLabel>` only
+/// (two view generics — `currentValueLabel` and the `@SliderTickBuilder` tick content are baked into
+/// the instance by the iOS 26 cluster inits, **not** exposed as Slider generics). So every init
+/// builds its concrete native `Slider` **in the init** (where the per-init generic constraints are
+/// concrete) and stores it as a typed `Slider<Label, ValueLabel>` — the atom's own generics —
+/// **not** `AnyView`-erased (performance.md, same pattern as ``CosmosTabView``). `body` applies the
+/// env-driven modifiers (tint, control size, accessibility, motion, haptics, tracking); modifiers
+/// read `@Environment` lazily at render, so building in the init is safe.
 ///
 /// **Customization limits.** No style protocol — cannot customize track height/shape, thumb
 /// size/shape/image, or max-track color independently. Only the min (filled) track is tintable.
@@ -66,7 +67,7 @@ public struct CosmosSlider<Label: View, ValueLabel: View>: View {
     private let step: Double.Stride
     private let neutralValue: Double?
     private let enabledBounds: ClosedRange<Double>?
-    private let resolved: AnyView
+    private let resolved: Slider<Label, ValueLabel>
 
     @Environment(\.cosmosConfiguration) private var configuration
     @Environment(\.cosmosTheme) private var theme
@@ -90,15 +91,15 @@ public struct CosmosSlider<Label: View, ValueLabel: View>: View {
         self.neutralValue = nil
         self.enabledBounds = nil
         if step > 0 {
-            self.resolved = AnyView(Slider(value: value, in: bounds, step: step, label: label,
-                                           minimumValueLabel: minimumValueLabel, maximumValueLabel: maximumValueLabel,
-                                           onEditingChanged: onEditingChanged))
+            self.resolved = Slider(value: value, in: bounds, step: step, label: label,
+                                    minimumValueLabel: minimumValueLabel, maximumValueLabel: maximumValueLabel,
+                                    onEditingChanged: onEditingChanged)
         } else {
             // Continuous (no step): use the no-step `Slider` init so the thumb is not quantized —
             // matching native `Slider(value:in:)`. `steppedValue` is a passthrough when step <= 0.
-            self.resolved = AnyView(Slider(value: value, in: bounds, label: label,
-                                           minimumValueLabel: minimumValueLabel, maximumValueLabel: maximumValueLabel,
-                                           onEditingChanged: onEditingChanged))
+            self.resolved = Slider(value: value, in: bounds, label: label,
+                                    minimumValueLabel: minimumValueLabel, maximumValueLabel: maximumValueLabel,
+                                    onEditingChanged: onEditingChanged)
         }
     }
 
@@ -140,10 +141,11 @@ public struct CosmosSlider<Label: View, ValueLabel: View>: View {
     // `.ticks(_:)` modifier); the step variant takes `tick: (V) -> SliderTick<V>?`. There is NO
     // `TickConfiguration` type. Forwarded with `V = Double` (Double conforms) — no generic rewrite.
     //
-    // Each cluster init builds the native `Slider` in the init and type-erases to `AnyView` so the
-    // opaque `@SliderTickBuilder` tick content needs no stored generic parameter (AnyView-in-init,
-    // cf. ``CosmosTabView``). `currentValueLabel` is an opaque `() -> some View` baked into the
-    // erased view — not a struct generic.
+    // Each cluster init builds the native `Slider` in the init and stores it as a typed
+    // `Slider<Label, ValueLabel>` — `Slider` exposes only `Label`/`ValueLabel` as generics, so the
+    // opaque `@SliderTickBuilder` tick content and `currentValueLabel` need no stored generic
+    // parameters (cf. ``CosmosTabView``). `currentValueLabel` is an opaque `() -> some View` baked
+    // into the instance — not a struct generic.
 
     /// Creates a slider with the iOS 26 cluster: `neutralValue`, `enabledBounds`, a current-value
     /// label, and min/max value labels (no ticks, no step). Available since Cosmos 26.
@@ -163,11 +165,11 @@ public struct CosmosSlider<Label: View, ValueLabel: View>: View {
         self.step = 0
         self.neutralValue = neutralValue
         self.enabledBounds = enabledBounds
-        self.resolved = AnyView(Slider(value: value, in: bounds, neutralValue: neutralValue,
-                                       enabledBounds: enabledBounds, label: label,
-                                       currentValueLabel: currentValueLabel,
-                                       minimumValueLabel: minimumValueLabel, maximumValueLabel: maximumValueLabel,
-                                       onEditingChanged: onEditingChanged))
+        self.resolved = Slider(value: value, in: bounds, neutralValue: neutralValue,
+                                enabledBounds: enabledBounds, label: label,
+                                currentValueLabel: currentValueLabel,
+                                minimumValueLabel: minimumValueLabel, maximumValueLabel: maximumValueLabel,
+                                onEditingChanged: onEditingChanged)
     }
 
     /// Creates a slider with the iOS 26 cluster and declarative ticks via `@SliderTickBuilder`
@@ -189,11 +191,11 @@ public struct CosmosSlider<Label: View, ValueLabel: View>: View {
         self.step = 0
         self.neutralValue = neutralValue
         self.enabledBounds = enabledBounds
-        self.resolved = AnyView(Slider(value: value, in: bounds, neutralValue: neutralValue,
-                                       enabledBounds: enabledBounds, label: label,
-                                       currentValueLabel: currentValueLabel,
-                                       minimumValueLabel: minimumValueLabel, maximumValueLabel: maximumValueLabel,
-                                       ticks: ticks, onEditingChanged: onEditingChanged))
+        self.resolved = Slider(value: value, in: bounds, neutralValue: neutralValue,
+                                enabledBounds: enabledBounds, label: label,
+                                currentValueLabel: currentValueLabel,
+                                minimumValueLabel: minimumValueLabel, maximumValueLabel: maximumValueLabel,
+                                ticks: ticks, onEditingChanged: onEditingChanged)
     }
 
     /// Creates a slider with the iOS 26 cluster, a discrete `step`, and a per-value `tick` closure.
@@ -216,11 +218,11 @@ public struct CosmosSlider<Label: View, ValueLabel: View>: View {
         self.step = step
         self.neutralValue = neutralValue
         self.enabledBounds = enabledBounds
-        self.resolved = AnyView(Slider(value: value, in: bounds, step: step, neutralValue: neutralValue,
-                                       enabledBounds: enabledBounds, label: label,
-                                       currentValueLabel: currentValueLabel,
-                                       minimumValueLabel: minimumValueLabel, maximumValueLabel: maximumValueLabel,
-                                       tick: tick, onEditingChanged: onEditingChanged))
+        self.resolved = Slider(value: value, in: bounds, step: step, neutralValue: neutralValue,
+                                enabledBounds: enabledBounds, label: label,
+                                currentValueLabel: currentValueLabel,
+                                minimumValueLabel: minimumValueLabel, maximumValueLabel: maximumValueLabel,
+                                tick: tick, onEditingChanged: onEditingChanged)
     }
 
     /// Creates a slider with the iOS 26 cluster and a custom label (no min/max value labels); the
@@ -239,10 +241,10 @@ public struct CosmosSlider<Label: View, ValueLabel: View>: View {
         self.step = 0
         self.neutralValue = neutralValue
         self.enabledBounds = enabledBounds
-        self.resolved = AnyView(Slider(value: value, in: bounds, neutralValue: neutralValue,
-                                       enabledBounds: enabledBounds, label: label,
-                                       currentValueLabel: currentValueLabel,
-                                       onEditingChanged: onEditingChanged))
+        self.resolved = Slider(value: value, in: bounds, neutralValue: neutralValue,
+                                enabledBounds: enabledBounds, label: label,
+                                currentValueLabel: currentValueLabel,
+                                onEditingChanged: onEditingChanged)
     }
 
     /// Creates a slider with the iOS 26 cluster, declarative ticks via `@SliderTickBuilder`, and a
@@ -263,10 +265,10 @@ public struct CosmosSlider<Label: View, ValueLabel: View>: View {
         self.step = 0
         self.neutralValue = neutralValue
         self.enabledBounds = enabledBounds
-        self.resolved = AnyView(Slider(value: value, in: bounds, neutralValue: neutralValue,
-                                       enabledBounds: enabledBounds, label: label,
-                                       currentValueLabel: currentValueLabel,
-                                       ticks: ticks, onEditingChanged: onEditingChanged))
+        self.resolved = Slider(value: value, in: bounds, neutralValue: neutralValue,
+                                enabledBounds: enabledBounds, label: label,
+                                currentValueLabel: currentValueLabel,
+                                ticks: ticks, onEditingChanged: onEditingChanged)
     }
 
     /// Creates a slider with the iOS 26 cluster, a discrete `step`, a per-value `tick` closure, and
@@ -288,10 +290,10 @@ public struct CosmosSlider<Label: View, ValueLabel: View>: View {
         self.step = step
         self.neutralValue = neutralValue
         self.enabledBounds = enabledBounds
-        self.resolved = AnyView(Slider(value: value, in: bounds, step: step, neutralValue: neutralValue,
-                                       enabledBounds: enabledBounds, label: label,
-                                       currentValueLabel: currentValueLabel,
-                                       tick: tick, onEditingChanged: onEditingChanged))
+        self.resolved = Slider(value: value, in: bounds, step: step, neutralValue: neutralValue,
+                                enabledBounds: enabledBounds, label: label,
+                                currentValueLabel: currentValueLabel,
+                                tick: tick, onEditingChanged: onEditingChanged)
     }
 
     public var body: some View {

@@ -15,7 +15,6 @@ public struct CosmosToastContent<Message: View>: View {
 
     @Environment(\.cosmosTheme) private var theme
     @Environment(\.cosmosConfiguration) private var configuration
-    @Environment(\.accessibilityDifferentiateWithoutColor) private var differentiateWithoutColor
     @Environment(\.colorSchemeContrast) private var colorSchemeContrast
 
     public init(role: CosmosToastRole, @ViewBuilder message: @escaping () -> Message) {
@@ -30,17 +29,6 @@ public struct CosmosToastContent<Message: View>: View {
         self.title = title
         self.description = description
         self.message = nil
-    }
-
-    /// When the Differentiate Without Color gate is active (and respected), the role icon stops
-    /// communicating via color and relies on its distinct SF Symbol shape (`checkmark` /
-    /// `exclamationmark.triangle` / `xmark` / `info`) — the non-color differentiator the HIG
-    /// requires. Otherwise the role tint is applied (the default, sighted experience).
-    private var differentiatesWithoutColor: Bool {
-        CosmosAccessibilityPolicy.shouldDifferentiateWithoutColor(
-            respectDifferentiateWithoutColor: configuration.accessibility.respectDifferentiateWithoutColor,
-            differentiateWithoutColor: differentiateWithoutColor
-        )
     }
 
     /// Under Increased Contrast (config-aware), the role icon renders monochrome against the
@@ -59,11 +47,20 @@ public struct CosmosToastContent<Message: View>: View {
         // (default, sighted), and stacks above it when the toast width is constrained
         // (accessibility Dynamic Type, narrow placements). `ViewThatFits` preserves view
         // identity across the choice — no state reset when the layout flips (WWDC21-10022).
+        // The two layout variants (row/stack) are inlined here — they are pure HStack/VStack
+        // compositions of the extracted ``CosmosToastMessage``/``CosmosToastIcon`` (views.md: prefer
+        // dedicated `View` structs over computed `some View` properties).
         CosmosViewThatFits(in: .horizontal) {
-            toastRow
-            toastStack
+            HStack(spacing: CosmosSpacingTokens.medium) {
+                CosmosToastMessage(message: message, title: title, description: description)
+                CosmosToastIcon(role: role)
+            }
+            VStack(spacing: CosmosSpacingTokens.small) {
+                CosmosToastIcon(role: role)
+                CosmosToastMessage(message: message, title: title, description: description)
+            }
         }
-        .padding(5)
+        .padding(CosmosSpacingTokens.small)
         .overlay {
             // Increased Contrast adds a hairline outline so the toast stays a distinct shape
             // against the surface — the chrome part the role tint alone doesn't reinforce.
@@ -75,27 +72,49 @@ public struct CosmosToastContent<Message: View>: View {
         // Honor consumer accessibility overrides; the host chrome still combines the subtree.
         .applyCosmosAccessibility(configuration.accessibility)
     }
+}
 
-    /// Horizontal layout — icon beside the message (default when width allows).
-    @ViewBuilder
-    private var toastRow: some View {
-        HStack(spacing: CosmosSpacingTokens.medium) {
-            toastMessage
-            toastIcon
-        }
+// MARK: - Extracted pieces (views.md: computed `some View` → dedicated View structs)
+
+/// The role icon for a toast, extracted from ``CosmosToastContent`` (views.md). Honors
+/// Differentiate Without Color (collapses to a monochrome, shape-only icon) — the non-color
+/// differentiator the HIG requires. Reads ``CosmosTheme``/``CosmosConfiguration`` + the
+/// `differentiateWithoutColor` gate directly.
+private struct CosmosToastIcon: View {
+    let role: CosmosToastRole
+
+    @Environment(\.cosmosTheme) private var theme
+    @Environment(\.cosmosConfiguration) private var configuration
+    @Environment(\.accessibilityDifferentiateWithoutColor) private var differentiateWithoutColor
+
+    /// When the Differentiate Without Color gate is active (and respected), the role icon stops
+    /// communicating via color and relies on its distinct SF Symbol shape (`checkmark` /
+    /// `exclamationmark.triangle` / `xmark` / `info`). Otherwise the role tint is applied (default).
+    private var differentiatesWithoutColor: Bool {
+        CosmosAccessibilityPolicy.shouldDifferentiateWithoutColor(
+            respectDifferentiateWithoutColor: configuration.accessibility.respectDifferentiateWithoutColor,
+            differentiateWithoutColor: differentiateWithoutColor
+        )
     }
 
-    /// Vertical fallback — icon above the message (constrained width / accessibility sizes).
-    @ViewBuilder
-    private var toastStack: some View {
-        VStack(spacing: CosmosSpacingTokens.small) {
-            toastIcon
-            toastMessage
-        }
+    var body: some View {
+        Image(systemName: role.icon)
+            .font(theme.typography.font(for: theme.textStyle))
+            .symbolRenderingMode(differentiatesWithoutColor ? .monochrome : .hierarchical)
+            .foregroundStyle(differentiatesWithoutColor ? theme.colors.primary : role.tint.color(in: theme.colors))
+            .accessibilityHidden(true)
     }
+}
 
-    @ViewBuilder
-    private var toastMessage: some View {
+/// The message for a toast — either a custom view or a title/description pair — extracted from
+/// ``CosmosToastContent`` (views.md). No `@Environment`: it composes ``CosmosText`` + modifiers,
+/// which resolve their own theme/env.
+private struct CosmosToastMessage<Message: View>: View {
+    let message: (() -> Message)?
+    let title: String?
+    let description: String?
+
+    var body: some View {
         if let message {
             message()
         } else if let title, let description {
@@ -109,14 +128,6 @@ public struct CosmosToastContent<Message: View>: View {
                     .cosmosForegroundStyle(.secondary)
             }
         }
-    }
-
-    private var toastIcon: some View {
-        Image(systemName: role.icon)
-            .font(theme.typography.font(for: theme.textStyle))
-            .symbolRenderingMode(differentiatesWithoutColor ? .monochrome : .hierarchical)
-            .foregroundStyle(differentiatesWithoutColor ? theme.colors.primary : role.tint.color(in: theme.colors))
-            .accessibilityHidden(true)
     }
 }
 

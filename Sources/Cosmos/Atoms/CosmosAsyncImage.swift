@@ -351,3 +351,30 @@ public enum CosmosAsyncImageAvailability {
         true
     }
 }
+
+// MARK: - Previews
+//
+// `CosmosAsyncImage` is `@available(*, deprecated)` (migrate to ``CosmosImage`` `init(url:)` — the
+// unified image atom). Each preview carries the matching `@available(*, deprecated)` passthrough so
+// constructing the deprecated atom doesn't emit a warning — keeps the build warning-free for the
+// removal runway (same pattern as ``CosmosAsyncImageTests``). The remote URL won't resolve in the
+// preview canvas, so the placeholder slot renders — that exercises the deprecated default slots.
+
+@available(*, deprecated, message: "Preview exercises deprecated CosmosAsyncImage during the removal runway.")
+#Preview("CosmosAsyncImage – deprecated (placeholder)", traits: .sizeThatFitsLayout) {
+    CosmosPreviewContainer {
+        // Deprecated atom — placeholder shows (the URL doesn't resolve in the canvas).
+        CosmosAsyncImage(url: URL(string: "https://example.com/image.png")) { image in image }
+            .frame(width: 120, height: 120)
+    }
+}
+
+@available(*, deprecated, message: "Preview exercises deprecated CosmosAsyncImage during the removal runway.")
+#Preview("CosmosAsyncImage – migration target", traits: .sizeThatFitsLayout) {
+    CosmosPreviewContainer {
+        // Migration target: the unified ``CosmosImage`` `init(url:)` (same remote-image slots,
+        // no deprecation). Shown side by side so the migration is visually verifiable.
+        CosmosImage(url: URL(string: "https://example.com/image.png")) { image in image }
+            .frame(width: 120, height: 120)
+    }
+}

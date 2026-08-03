@@ -28,6 +28,16 @@ public struct CosmosButton<Label: View>: View {
         self.label = { Text(LocalizedStringKey(titleKey), bundle: CosmosResources.bundle) }
     }
 
+    /// Creates a button from a `LocalizedStringResource`. Consumers using Xcode's String Catalog
+    /// symbol codegen can pass their app's generated symbols directly (`CosmosButton(.theirKey,
+    /// action: {})`); `Text(resource)` resolves through SwiftUI's native String Catalog runtime
+    /// (the resource carries its own bundle). A string literal at the call site resolves to the
+    /// ``init(_:action:)-6wkdl`` (`String`) overload, so the two inits don't collide.
+    public init(_ resource: LocalizedStringResource, action: @escaping () -> Void) where Label == Text {
+        self.action = action
+        self.label = { Text(resource) }
+    }
+
     private var effectiveEnabled: Bool {
         configuration.enable.isEnabled && !configuration.enable.isReadOnly && !configuration.loading.isLoading
     }

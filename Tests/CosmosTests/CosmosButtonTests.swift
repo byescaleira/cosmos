@@ -16,6 +16,13 @@ struct CosmosButtonTests {
         _ = CosmosButton("welcome.continue") {}
     }
 
+    @Test(.tags(.smoke)) func buttonConstructsFromLocalizedStringResource() {
+        // The `LocalizedStringResource` init lets consumers pass their app's generated String
+        // Catalog symbols. A bare `String` literal resolves to the `String` overload above, so the
+        // two inits coexist without ambiguity; an explicit `LocalizedStringResource` selects this one.
+        _ = CosmosButton(LocalizedStringResource("welcome.continue", table: "Localizable"), action: {})
+    }
+
     @Test(.tags(.selector), arguments: CosmosButtonStyle.allCases)
     func buttonAcceptsEveryButtonStyleVariant(_ style: CosmosButtonStyle) {
         // The style applier routes each variant (incl. .glass on iOS/macOS 26); construction must

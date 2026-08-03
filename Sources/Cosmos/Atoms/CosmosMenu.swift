@@ -33,10 +33,6 @@ public struct CosmosMenu<Label: View, Content: View>: View {
     private let primaryAction: (() -> Void)?
 
     @Environment(\.cosmosConfiguration) private var configuration
-    @Environment(\.cosmosTheme) private var theme
-    @Environment(\.cosmosTrackingId) private var trackingId
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
-    @State private var tapCounter = 0
 
     /// Creates a menu with custom content and a custom label view.
     public init(@ViewBuilder content: @escaping () -> Content, @ViewBuilder label: @escaping () -> Label) {
@@ -56,22 +52,34 @@ public struct CosmosMenu<Label: View, Content: View>: View {
     public var body: some View {
         if configuration.enable.isVisible {
             #if os(watchOS)
-            // watchOS: Menu is unavailable — render a CosmosButton fallback (action = primary or no-op).
-            // No extra `.isButton` here: CosmosButton already conveys it (native Button trait + its
-            // own applyCosmosAccessibility extraTraits).
-            CosmosButton(action: { primaryAction?() }, label: label)
-                .applyCosmosAccessibility(configuration.accessibility)
-                .onAppear { trackAppear() }
+            CosmosMenuFallback(label: label, primaryAction: primaryAction)
             #else
-            menuBody
+            CosmosMenuBody(content: content, label: label, primaryAction: primaryAction)
             #endif
         } else {
             EmptyView()
         }
     }
+}
 
-    #if !os(watchOS)
-    @ViewBuilder private var menuBody: some View {
+// MARK: - Extracted renderers (views.md: computed `some View` → dedicated View structs)
+
+/// The native `Menu` renderer (iOS/macOS/tvOS/visionOS). Extracted from ``CosmosMenu``'s `body`
+/// (views.md). Owns the primary-tap `@State` counter (the haptic/motion trigger) and the
+/// `performPrimary`/`emitPressMotion`/`trackAppear` logic, reading `@Environment` directly.
+#if !os(watchOS)
+private struct CosmosMenuBody<Label: View, Content: View>: View {
+    let content: () -> Content
+    let label: () -> Label
+    let primaryAction: (() -> Void)?
+
+    @Environment(\.cosmosConfiguration) private var configuration
+    @Environment(\.cosmosTheme) private var theme
+    @Environment(\.cosmosTrackingId) private var trackingId
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @State private var tapCounter = 0
+
+    var body: some View {
         if let primaryAction {
             Menu(content: content, label: label, primaryAction: { performPrimary(primaryAction) })
                 .modifier(CosmosMenuStyleApplier(style: theme.menuStyle))
@@ -112,7 +120,6 @@ public struct CosmosMenu<Label: View, Content: View>: View {
         ) else { return }
         configuration.motion.handler(.motion(.press))
     }
-    #endif
 
     private func trackAppear() {
         configuration.tracking.track(.init(
@@ -123,6 +130,35 @@ public struct CosmosMenu<Label: View, Content: View>: View {
         ))
     }
 }
+#endif
+
+/// The watchOS `CosmosButton` fallback renderer (no `Menu` on watchOS). Extracted from
+/// ``CosmosMenu``'s `body` (views.md). No extra `.isButton` here: CosmosButton already conveys it
+/// (native Button trait + its own `applyCosmosAccessibility` extraTraits).
+#if os(watchOS)
+private struct CosmosMenuFallback<Label: View>: View {
+    let label: () -> Label
+    let primaryAction: (() -> Void)?
+
+    @Environment(\.cosmosConfiguration) private var configuration
+    @Environment(\.cosmosTrackingId) private var trackingId
+
+    var body: some View {
+        CosmosButton(action: { primaryAction?() }, label: label)
+            .applyCosmosAccessibility(configuration.accessibility)
+            .onAppear { trackAppear() }
+    }
+
+    private func trackAppear() {
+        configuration.tracking.track(.init(
+            name: "menu_appear",
+            component: "CosmosMenu",
+            componentId: trackingId ?? configuration.accessibility.identifier,
+            action: .appear
+        ))
+    }
+}
+#endif
 
 // MARK: - Convenience inits
 

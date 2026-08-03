@@ -27,7 +27,7 @@ public struct CosmosTrackEvent: Sendable {
         componentId: String? = nil,
         action: CosmosTrackAction,
         metadata: [String: String] = [:],
-        date: Date = Date()
+        date: Date = Date.now
     ) {
         self.name = name
         self.component = component

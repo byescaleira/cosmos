@@ -44,3 +44,33 @@ public struct CosmosLocalizedText: View {
         }
     }
 }
+
+// MARK: - Previews
+
+#Preview("Localized text – key", traits: .sizeThatFitsLayout) {
+    CosmosPreviewContainer {
+        CosmosLocalizedText(key: "welcome.headline").cosmosFont(.headline)
+    }
+}
+
+#Preview("Localized text – pt-BR locale", traits: .sizeThatFitsLayout) {
+    CosmosPreviewContainer {
+        CosmosLocalizedText(key: "welcome.headline").cosmosFont(.headline)
+            .cosmosPreviewEnv(locale: Locale(identifier: "pt-BR"))
+    }
+}
+
+#Preview("Localized text – dark + accessibility size", traits: .sizeThatFitsLayout) {
+    CosmosPreviewContainer {
+        CosmosLocalizedText(key: "welcome.headline").cosmosFont(.title)
+        CosmosLocalizedText(key: "preview.description").cosmosFont(.body)
+        .cosmosPreviewEnv(colorScheme: .dark, dynamicTypeSize: .accessibility3)
+    }
+}
+
+#Preview("Localized text – RTL", traits: .sizeThatFitsLayout) {
+    CosmosPreviewContainer {
+        CosmosLocalizedText(key: "welcome.headline").cosmosFont(.headline)
+        .cosmosPreviewVariant(.rtl)
+    }
+}

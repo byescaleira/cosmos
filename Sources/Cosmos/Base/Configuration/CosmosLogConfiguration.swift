@@ -15,7 +15,7 @@ public struct CosmosLogEvent: Sendable {
     public var message: String
     public var date: Date
 
-    public init(category: String, level: CosmosLogLevel, message: String, date: Date = Date()) {
+    public init(category: String, level: CosmosLogLevel, message: String, date: Date = Date.now) {
         self.category = category
         self.level = level
         self.message = message

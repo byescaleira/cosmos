@@ -14,7 +14,10 @@ private struct CosmosRedactedModifier: ViewModifier {
                 .overlay {
                     ProgressView()
                 }
-                .accessibilityLabel("Loading")
+                // Route the VoiceOver label through the localization pipeline (the "Loading" key
+                // exists in Localizable.xcstrings with en "Loading…" / pt-BR "Carregando…") so
+                // non-English users hear the localized form; fall back to the literal if unresolved.
+                .accessibilityLabel(configuration.localization.string(for: "Loading") ?? "Loading")
         } else {
             content
         }

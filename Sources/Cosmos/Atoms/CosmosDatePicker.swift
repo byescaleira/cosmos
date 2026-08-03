@@ -45,7 +45,7 @@ public struct CosmosDatePicker<Label: View>: View {
     @Environment(\.cosmosTheme) private var theme
     @Environment(\.cosmosTrackingId) private var trackingId
 
-    private enum Range {
+    fileprivate enum Range {
         case none
         case closed(ClosedRange<Date>)
         case from(PartialRangeFrom<Date>)
@@ -105,7 +105,9 @@ public struct CosmosDatePicker<Label: View>: View {
 
     public var body: some View {
         if configuration.enable.isVisible {
-            datePicker
+            CosmosDatePickerField(
+                selection: selection, range: range,
+                displayedComponents: displayedComponents, label: label)
                 .modifier(CosmosDatePickerStyleApplier(style: theme.datePickerStyle))
                 .controlSize(theme.controlSize.controlSize)
                 .tint(theme.colors.accent)
@@ -118,7 +120,28 @@ public struct CosmosDatePicker<Label: View>: View {
         }
     }
 
-    @ViewBuilder private var datePicker: some View {
+    private func trackAppear() {
+        configuration.tracking.track(.init(
+            name: "datepicker_appear",
+            component: "CosmosDatePicker",
+            componentId: trackingId ?? configuration.accessibility.identifier,
+            action: .appear
+        ))
+    }
+}
+
+// MARK: - Extracted field (views.md: computed `some View` → dedicated View struct)
+
+/// The native `DatePicker` for the resolved `Range` case, extracted from ``CosmosDatePicker``'s
+/// `body` (views.md). Carries the `Label` slot; no `@Environment` (style/tint/accessibility/haptic
+/// modifiers stay on the atom).
+private struct CosmosDatePickerField<Label: View>: View {
+    let selection: Binding<Date>
+    let range: CosmosDatePicker<Label>.Range
+    let displayedComponents: DatePickerComponents
+    let label: () -> Label
+
+    var body: some View {
         switch range {
         case .none:
             DatePicker(selection: selection, displayedComponents: displayedComponents, label: label)
@@ -129,15 +152,6 @@ public struct CosmosDatePicker<Label: View>: View {
         case .through(let r):
             DatePicker(selection: selection, in: r, displayedComponents: displayedComponents, label: label)
         }
-    }
-
-    private func trackAppear() {
-        configuration.tracking.track(.init(
-            name: "datepicker_appear",
-            component: "CosmosDatePicker",
-            componentId: trackingId ?? configuration.accessibility.identifier,
-            action: .appear
-        ))
     }
 }
 

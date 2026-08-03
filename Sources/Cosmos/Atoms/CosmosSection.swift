@@ -74,18 +74,28 @@ public struct CosmosSection<Parent: View, Content: View, Footer: View>: View {
 
     public var body: some View {
         if configuration.enable.isVisible {
-            section
+            CosmosSectionContent(header: header, content: content, footer: footer, isExpanded: isExpanded)
                 .applyCosmosAccessibility(configuration.accessibility)
         } else {
             EmptyView()
         }
     }
+}
 
-    /// Builds the underlying `Section`. The `isExpanded` branch constructs a fresh `Section` with
-    /// an `EmptyContent` footer (ignoring the stored `footer` closure) — correct because the
-    /// `isExpanded` inits constrain `Footer == EmptyView`, so nothing is lost. The two branches
-    /// yield different concrete `Section` types, unified by `@ViewBuilder` into `_ConditionalContent`.
-    @ViewBuilder private var section: some View {
+// MARK: - Extracted content (views.md: computed `some View` → dedicated View struct)
+
+/// Builds the underlying `Section`, extracted from ``CosmosSection``'s `body` (views.md). The
+/// `isExpanded` branch constructs a fresh `Section` with an `EmptyContent` footer (ignoring the
+/// stored `footer` closure) — correct because the `isExpanded` inits constrain `Footer ==
+/// EmptyView`, so nothing is lost. The two branches yield different concrete `Section` types,
+/// unified by `@ViewBuilder` into `_ConditionalContent`.
+private struct CosmosSectionContent<Parent: View, Content: View, Footer: View>: View {
+    let header: () -> Parent
+    let content: () -> Content
+    let footer: () -> Footer
+    let isExpanded: Binding<Bool>?
+
+    var body: some View {
         if let isExpanded {
             Section(isExpanded: isExpanded, content: content, header: header)
         } else {
